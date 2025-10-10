@@ -48,10 +48,15 @@ fi
 
 # Run tests
 echo "Running tests..."
-go test ./... -short
-if [ $? -ne 0 ]; then
-    echo "Error: Tests failed"
-    exit 1
+if command -v go &> /dev/null; then
+    go test ./... -short
+    if [ $? -ne 0 ]; then
+        echo "Error: Tests failed"
+        exit 1
+    fi
+else
+    echo "Warning: go command not found in PATH, skipping tests"
+    echo "Make sure tests pass before pushing the release!"
 fi
 
 # Create annotated tag
