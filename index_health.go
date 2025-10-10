@@ -193,17 +193,59 @@ func (ihm *IndexHealthMonitor) Check(ctx context.Context, entityType string) (*I
 			continue // Object might have been deleted
 		}
 
-		// Verify Redis indexes exist
-		// This is a simplified check - in reality you'd check each registered index spec
-		// For now, just verify the key can be found in at least one index
+		// Check if this object's indexes exist in Redis
+		objectFoundInAnyIndex := false
 
-		// This is a placeholder - actual implementation would:
-		// 1. Parse the object to extract indexed fields
-		// 2. Query Redis for each indexed field
-		// 3. Verify the key appears in the expected sets
+		// Check all registered index specs
+		for _, spec := range ihm.redisIndexer.specs {
+			// Skip if spec doesn't match entity type
+			if spec.EntityType != entityType {
+				continue
+			}
 
-		// For demonstration, we'll just track this
-		_ = data // Use data to verify indexes
+			// Extract index entries from the object
+			entries, err := spec.ExtractFunc(key, data)
+			if err != nil {
+				// Object doesn't have required fields for this index - skip
+				continue
+			}
+
+			// For each index entry, verify it exists in Redis
+			for _, entry := range entries {
+				// Query Redis to see if this key appears in the index
+				keys, err := ihm.redisIndexer.Query(ctx, spec.EntityType, entry.IndexName, entry.IndexValue)
+				if err != nil {
+					ihm.logger.Warn("redis query failed during health check",
+						"entity_type", spec.EntityType,
+						"index_name", entry.IndexName,
+						"index_value", entry.IndexValue,
+						"error", err,
+					)
+					continue
+				}
+
+				// Check if our key is in the results
+				foundInThisIndex := false
+				for _, indexKey := range keys {
+					if indexKey == key {
+						foundInThisIndex = true
+						objectFoundInAnyIndex = true
+						break
+					}
+				}
+
+				// If not found in this index, it's missing
+				if !foundInThisIndex {
+					report.MissingInRedis++
+					report.MissingKeys = append(report.MissingKeys, key)
+					break // Don't count the same key multiple times
+				}
+			}
+
+			if objectFoundInAnyIndex {
+				break // Don't check other specs for this key
+			}
+		}
 	}
 
 	// Calculate drift percentage

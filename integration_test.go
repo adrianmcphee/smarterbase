@@ -2,6 +2,7 @@ package smarterbase
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"testing"
 	"time"
@@ -45,14 +46,16 @@ func TestIntegration_EndToEnd(t *testing.T) {
 	redisIndexer.RegisterMultiIndex(&MultiIndexSpec{
 		Name:       "test-entities",
 		EntityType: "entities",
-		ExtractFunc: func(data []byte) (string, string, error) {
+		ExtractFunc: func(objectKey string, data []byte) ([]IndexEntry, error) {
 			var entity map[string]interface{}
-			if err := unmarshalJSON(data, &entity); err != nil {
-				return "", "", err
+			if err := json.Unmarshal(data, &entity); err != nil {
+				return nil, err
 			}
-			id := entity["id"].(string)
-			category := entity["category"].(string)
-			return id, category, nil
+			category, _ := entity["category"].(string)
+			return []IndexEntry{{
+				IndexName:  "category",
+				IndexValue: category,
+			}}, nil
 		},
 	})
 
@@ -86,13 +89,13 @@ func TestIntegration_EndToEnd(t *testing.T) {
 		}
 
 		// Verify Redis index updated
-		keys, err := redisIndexer.QueryMultiIndex(ctx, "entities", "category", "typeA")
+		keys, err := redisIndexer.Query(ctx, "entities", "category", "typeA")
 		if err != nil {
-			t.Fatalf("QueryMultiIndex failed: %v", err)
+			t.Fatalf("Query failed: %v", err)
 		}
 
-		if len(keys) != 1 || keys[0] != "test-1" {
-			t.Errorf("Expected [test-1], got %v", keys)
+		if len(keys) != 1 || keys[0] != key {
+			t.Errorf("Expected [%s], got %v", key, keys)
 		}
 
 		// Update
@@ -114,18 +117,18 @@ func TestIntegration_EndToEnd(t *testing.T) {
 		}
 
 		// Verify index updated (typeA should be empty, typeB should have the entity)
-		keysA, _ := redisIndexer.QueryMultiIndex(ctx, "entities", "category", "typeA")
+		keysA, _ := redisIndexer.Query(ctx, "entities", "category", "typeA")
 		if len(keysA) != 0 {
 			t.Errorf("Expected typeA index to be empty, got %v", keysA)
 		}
 
-		keysB, err := redisIndexer.QueryMultiIndex(ctx, "entities", "category", "typeB")
+		keysB, err := redisIndexer.Query(ctx, "entities", "category", "typeB")
 		if err != nil {
-			t.Fatalf("QueryMultiIndex for typeB failed: %v", err)
+			t.Fatalf("Query for typeB failed: %v", err)
 		}
 
-		if len(keysB) != 1 || keysB[0] != "test-1" {
-			t.Errorf("Expected [test-1] in typeB, got %v", keysB)
+		if len(keysB) != 1 || keysB[0] != key {
+			t.Errorf("Expected [%s] in typeB, got %v", key, keysB)
 		}
 
 		// Delete
@@ -135,13 +138,13 @@ func TestIntegration_EndToEnd(t *testing.T) {
 		}
 
 		// Verify deleted
-		_, err = store.GetJSON(ctx, key, &retrieved)
+		err = store.GetJSON(ctx, key, &retrieved)
 		if err == nil {
 			t.Error("Expected error when getting deleted entity")
 		}
 
 		// Verify index cleaned up
-		keysB, _ = redisIndexer.QueryMultiIndex(ctx, "entities", "category", "typeB")
+		keysB, _ = redisIndexer.Query(ctx, "entities", "category", "typeB")
 		if len(keysB) != 0 {
 			t.Errorf("Expected empty index after delete, got %v", keysB)
 		}
@@ -166,37 +169,63 @@ func TestIntegration_EndToEnd(t *testing.T) {
 			WithSampleSize(10).
 			WithDriftThreshold(1.0)
 
-		// Run health check
-		report := monitor.CheckHealth(ctx, "entities")
-
-		if report.DriftPercentage > 0 {
-			t.Errorf("Expected no drift, got %.2f%%", report.DriftPercentage)
+		// Run health check - should be clean
+		report, err := monitor.Check(ctx, "entities")
+		if err != nil {
+			t.Fatalf("Check failed: %v", err)
 		}
 
-		// Simulate drift by deleting index entry without deleting data
-		redisIndexer.DeleteFromMultiIndex(ctx, "entities", "category", "health-test", "test-health")
+		if report.DriftPercentage > 0 {
+			t.Errorf("Expected no drift, got %.2f%% (%d missing)", report.DriftPercentage, report.MissingInRedis)
+		}
 
-		// Check again
-		report = monitor.CheckHealth(ctx, "entities")
+		// Simulate drift by manually removing index entry
+		// Get the data first to properly remove from index
+		data, _ := store.Backend().Get(ctx, key)
+		redisIndexer.RemoveFromIndexes(ctx, key, data)
+
+		// Check again - should detect drift
+		report, err = monitor.Check(ctx, "entities")
+		if err != nil {
+			t.Fatalf("Check after drift failed: %v", err)
+		}
 
 		if report.DriftPercentage == 0 {
 			t.Error("Expected drift to be detected")
 		}
 
+		if report.MissingInRedis != 1 {
+			t.Errorf("Expected 1 missing entry, got %d", report.MissingInRedis)
+		}
+
+		if len(report.MissingKeys) != 1 || report.MissingKeys[0] != key {
+			t.Errorf("Expected missing key %s, got %v", key, report.MissingKeys)
+		}
+
 		// Repair drift
-		err = monitor.RepairDrift(ctx, "entities")
+		err = monitor.RepairDrift(ctx, report)
 		if err != nil {
 			t.Fatalf("RepairDrift failed: %v", err)
 		}
 
-		// Verify repair
-		keys, err := redisIndexer.QueryMultiIndex(ctx, "entities", "category", "health-test")
+		// Verify repair worked
+		keys, err := redisIndexer.Query(ctx, "entities", "category", "health-test")
 		if err != nil {
-			t.Fatalf("QueryMultiIndex after repair failed: %v", err)
+			t.Fatalf("Query after repair failed: %v", err)
 		}
 
-		if len(keys) != 1 || keys[0] != "test-health" {
-			t.Errorf("Expected [test-health] after repair, got %v", keys)
+		if len(keys) != 1 || keys[0] != key {
+			t.Errorf("Expected [%s] after repair, got %v", key, keys)
+		}
+
+		// Final health check should be clean again
+		report, err = monitor.Check(ctx, "entities")
+		if err != nil {
+			t.Fatalf("Final check failed: %v", err)
+		}
+
+		if report.DriftPercentage > 0 {
+			t.Errorf("Expected no drift after repair, got %.2f%%", report.DriftPercentage)
 		}
 	})
 
@@ -305,26 +334,13 @@ func TestIntegration_S3Backend(t *testing.T) {
 		t.Skip("Skipping S3 integration test in short mode")
 	}
 
+	// Skip test if S3 bucket not configured
 	s3Bucket := os.Getenv("TEST_S3_BUCKET")
 	if s3Bucket == "" {
 		t.Skip("Skipping S3 integration test - set TEST_S3_BUCKET env var to run")
 	}
 
-	ctx := context.Background()
-
-	// Setup mini-redis
-	mr, err := miniredis.Run()
-	if err != nil {
-		t.Fatalf("Failed to start miniredis: %v", err)
-	}
-	defer mr.Close()
-
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: mr.Addr(),
-	})
-	defer redisClient.Close()
-
-	// Setup S3 backend with Redis lock (requires implementation in test)
-	t.Log("S3 backend integration test placeholder - implement with real S3 client")
-	// This would use NewS3BackendWithRedisLock with real AWS SDK client
+	// TODO: Implement S3 backend integration test
+	// Requires: AWS credentials, S3 client setup, and NewS3BackendWithRedisLock
+	t.Skip("S3 backend integration test not yet implemented - placeholder for future work")
 }

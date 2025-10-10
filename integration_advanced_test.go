@@ -2,6 +2,7 @@ package smarterbase
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -229,7 +230,7 @@ func TestIntegration_IndexDriftDetectionAndRepair(t *testing.T) {
 			"id":       i,
 			"category": "electronics",
 		}
-		key := "products/" + string(rune('0'+i)) + ".json"
+		key := fmt.Sprintf("products/item-%d.json", i)
 		indexManager.Create(ctx, key, product)
 	}
 
@@ -240,7 +241,10 @@ func TestIntegration_IndexDriftDetectionAndRepair(t *testing.T) {
 		WithDriftThreshold(5.0)
 
 	// Initial health check should be clean
-	report := monitor.CheckHealth(ctx, "products")
+	report, err := monitor.Check(ctx, "products")
+	if err != nil {
+		t.Fatalf("Check failed: %v", err)
+	}
 	if report.DriftPercentage > 0 {
 		t.Errorf("Expected no drift initially, got %.2f%%", report.DriftPercentage)
 	}
@@ -249,7 +253,10 @@ func TestIntegration_IndexDriftDetectionAndRepair(t *testing.T) {
 	redisClient.Del(ctx, "idx:products:category:electronics")
 
 	// Check again - should detect drift
-	report = monitor.CheckHealth(ctx, "products")
+	report, err = monitor.Check(ctx, "products")
+	if err != nil {
+		t.Fatalf("Check after drift failed: %v", err)
+	}
 	if report.DriftPercentage == 0 {
 		t.Error("Should detect drift after index deletion")
 	}
@@ -259,7 +266,7 @@ func TestIntegration_IndexDriftDetectionAndRepair(t *testing.T) {
 	}
 
 	// Repair drift
-	err = monitor.RepairDrift(ctx, "products")
+	err = monitor.RepairDrift(ctx, report)
 	if err != nil {
 		t.Fatalf("RepairDrift failed: %v", err)
 	}
@@ -272,6 +279,16 @@ func TestIntegration_IndexDriftDetectionAndRepair(t *testing.T) {
 
 	if count != 10 {
 		t.Errorf("Expected 10 entries after repair, got %d", count)
+	}
+
+	// Final health check should be clean
+	report, err = monitor.Check(ctx, "products")
+	if err != nil {
+		t.Fatalf("Final check failed: %v", err)
+	}
+
+	if report.DriftPercentage > 0 {
+		t.Errorf("Expected no drift after repair, got %.2f%%", report.DriftPercentage)
 	}
 }
 

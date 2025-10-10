@@ -1,6 +1,9 @@
 package smarterbase
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // Metrics provides observability for Smarterbase operations
 type Metrics interface {
@@ -25,8 +28,9 @@ func (m *NoOpMetrics) Gauge(name string, value float64, tags ...string)         
 func (m *NoOpMetrics) Histogram(name string, value float64, tags ...string)     {}
 func (m *NoOpMetrics) Timing(name string, duration time.Duration, tags ...string) {}
 
-// InMemoryMetrics stores metrics in memory for testing
+// InMemoryMetrics stores metrics in memory for testing (thread-safe)
 type InMemoryMetrics struct {
+	mu         sync.RWMutex
 	Counters   map[string]int
 	Gauges     map[string]float64
 	Histograms map[string][]float64
@@ -43,18 +47,26 @@ func NewInMemoryMetrics() *InMemoryMetrics {
 }
 
 func (m *InMemoryMetrics) Increment(name string, tags ...string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Counters[name]++
 }
 
 func (m *InMemoryMetrics) Gauge(name string, value float64, tags ...string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Gauges[name] = value
 }
 
 func (m *InMemoryMetrics) Histogram(name string, value float64, tags ...string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Histograms[name] = append(m.Histograms[name], value)
 }
 
 func (m *InMemoryMetrics) Timing(name string, duration time.Duration, tags ...string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Timings[name] = append(m.Timings[name], duration)
 }
 
