@@ -327,6 +327,42 @@ func TestFilesystemBackend_Specific(t *testing.T) {
 			t.Error("Expected non-empty data")
 		}
 	})
+
+	t.Run("AppendOperations", func(t *testing.T) {
+		key := "logs/events.jsonl"
+
+		// First append (creates file)
+		line1 := []byte(`{"event": "start", "timestamp": 1000}` + "\n")
+		err := backend.Append(ctx, key, line1)
+		if err != nil {
+			t.Fatalf("First Append failed: %v", err)
+		}
+
+		// Second append (appends to existing file)
+		line2 := []byte(`{"event": "process", "timestamp": 2000}` + "\n")
+		err = backend.Append(ctx, key, line2)
+		if err != nil {
+			t.Fatalf("Second Append failed: %v", err)
+		}
+
+		// Third append
+		line3 := []byte(`{"event": "end", "timestamp": 3000}` + "\n")
+		err = backend.Append(ctx, key, line3)
+		if err != nil {
+			t.Fatalf("Third Append failed: %v", err)
+		}
+
+		// Read back and verify all lines are present
+		data, err := backend.Get(ctx, key)
+		if err != nil {
+			t.Fatalf("Get after Append failed: %v", err)
+		}
+
+		expected := string(line1) + string(line2) + string(line3)
+		if string(data) != expected {
+			t.Errorf("Append result mismatch.\nExpected:\n%s\nGot:\n%s", expected, data)
+		}
+	})
 }
 
 // TestGCSBackend_Compliance runs compliance tests against GCS backend

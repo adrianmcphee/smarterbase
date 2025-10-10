@@ -97,6 +97,137 @@ Your App → SmarterBase → Redis (indexes) + S3 (storage)
 go get github.com/adrianmcphee/smarterbase
 ```
 
+---
+
+## ⚠️ Critical Gotchas (Read This First!)
+
+Before using SmarterBase in production, understand these important limitations:
+
+### 1. **S3 Race Conditions: Use S3BackendWithRedisLock in Production**
+
+**Problem:** Plain `S3Backend` has a race window in `PutIfMatch` operations:
+```go
+// ❌ UNSAFE for multi-writer production use
+backend := smarterbase.NewS3Backend(s3Client, "my-bucket")
+// Race condition: HeadObject → another process writes → PutObject overwrites
+```
+
+**Solution:** Always use `S3BackendWithRedisLock` for production:
+```go
+// ✅ SAFE for multi-writer production use
+backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
+// Distributed locks prevent race conditions
+```
+
+Plain `S3Backend` is **only safe for single-writer scenarios** (e.g., batch jobs, development).
+
+---
+
+### 2. **Transactions Are NOT ACID**
+
+**Problem:** `WithTransaction()` does **NOT** provide isolation:
+```go
+// ⚠️ WARNING: Another process can modify data during this transaction
+store.WithTransaction(ctx, func(tx *smarterbase.OptimisticTransaction) error {
+    var account Account
+    tx.Get(ctx, "accounts/123", &account)
+    // ← RACE: Another process can modify account here!
+    account.Balance += 100
+    tx.Put("accounts/123", account) // May conflict with concurrent update
+    return nil
+})
+```
+
+**Solution:** Use `WithAtomicUpdate()` with distributed locks for critical operations:
+```go
+// ✅ SAFE: True isolation with distributed lock
+lock := smarterbase.NewDistributedLock(redisClient, "smarterbase")
+smarterbase.WithAtomicUpdate(ctx, store, lock, "accounts/123", 10*time.Second,
+    func(ctx context.Context) error {
+        // No other process can modify this account during this function
+        var account Account
+        store.GetJSON(ctx, "accounts/123", &account)
+        account.Balance += 100
+        store.PutJSON(ctx, "accounts/123", &account)
+        return nil
+    })
+```
+
+**Use `WithAtomicUpdate()` for:**
+- Financial transactions (balances, payments)
+- Inventory updates
+- Any read-modify-write that must be atomic
+
+**Use `WithTransaction()` only for:**
+- Non-critical updates where conflicts are acceptable
+- Low-contention scenarios
+
+---
+
+### 3. **Query.All() Loads Everything Into Memory**
+
+**Problem:** Can cause OOM on large datasets:
+```go
+// ❌ Loads all users into memory at once
+var users []*User
+store.Query("users/").All(ctx, &users) // OOM risk if millions of users
+```
+
+**Solution:** Use streaming or pagination:
+```go
+// ✅ Process one at a time (memory efficient)
+store.Query("users/").Each(ctx, func(key string, data []byte) error {
+    var user User
+    json.Unmarshal(data, &user)
+    processUser(&user)
+    return nil
+})
+
+// ✅ Or use pagination
+store.Query("users/").Offset(0).Limit(100).All(ctx, &users)
+```
+
+---
+
+### 4. **Index Drift Can Happen**
+
+**Problem:** Redis indexes can become stale due to:
+- Network partitions during writes
+- Application crashes mid-update
+- Redis failures
+
+**Solution:** Enable index health monitoring:
+```go
+monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer).
+    WithInterval(5 * time.Minute).
+    WithDriftThreshold(5.0) // Alert if >5% drift
+monitor.Start(ctx)
+```
+
+**Repair drift when detected:**
+```go
+report, _ := monitor.Check(ctx, "users")
+if report.DriftPercentage > 5.0 {
+    monitor.RepairDrift(ctx, report) // Rebuild from S3
+}
+```
+
+---
+
+### 5. **S3 Has 50-100ms Base Latency**
+
+SmarterBase is **not suitable** for sub-millisecond response requirements. Add caching for hot data:
+```go
+// Add Redis or in-memory cache for frequently accessed data
+cache.Get("users/123") // Check cache first
+if notFound {
+    store.GetJSON(ctx, "users/123", &user) // Fallback to S3
+    cache.Set("users/123", user)
+}
+```
+
+---
+
 ## Architecture: How "No Database" Works
 
 ```
@@ -182,9 +313,14 @@ func main() {
 ### With Indexing
 
 ```go
-// Setup with Redis indexing
-backend := smarterbase.NewS3Backend(s3Client, "my-bucket")
+// Setup Redis client for both locking and indexing
+redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+
+// ✅ Production-safe: S3 backend with distributed locking
+backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
 store := smarterbase.NewStore(backend)
+
+// Create Redis indexer
 redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 
 // Register index
@@ -326,12 +462,21 @@ backend := smarterbase.NewFilesystemBackend("./storage")
 ```go
 cfg, _ := config.LoadDefaultConfig(ctx)
 s3Client := s3.NewFromConfig(cfg)
-backend := smarterbase.NewS3Backend(s3Client, "my-bucket")
+
+// Initialize Redis for distributed locking
+redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+
+// ✅ RECOMMENDED: S3 with Redis distributed locks (prevents race conditions)
+backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
+
+// ⚠️ ONLY for single-writer scenarios (batch jobs, development):
+// backend := smarterbase.NewS3Backend(s3Client, "my-bucket")
 ```
 
 - Works with AWS S3, MinIO, DigitalOcean Spaces, Wasabi, Cloudflare R2
 - Scalable and durable
 - Cost-effective at scale
+- **Always use `S3BackendWithRedisLock` for multi-writer production deployments**
 
 ### Google Cloud Storage
 

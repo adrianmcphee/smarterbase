@@ -130,3 +130,55 @@ func TestErrorWithContextUnwrap(t *testing.T) {
 		t.Error("Unwrap should return base error")
 	}
 }
+
+func TestIsPermanent(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"ErrNotFound is permanent", ErrNotFound, true},
+		{"ErrInvalidConfig is permanent", ErrInvalidConfig, true},
+		{"ErrInvalidData is permanent", ErrInvalidData, true},
+		{"ErrUnauthorized is permanent", ErrUnauthorized, true},
+		{"wrapped ErrNotFound is permanent", WithContext(ErrNotFound, nil), true},
+		{"ErrConflict is not permanent (retryable)", ErrConflict, false},
+		{"ErrLockHeld is not permanent (retryable)", ErrLockHeld, false},
+		{"ErrTimeout is not permanent (retryable)", ErrTimeout, false},
+		{"wrapped ErrConflict is not permanent", WithContext(ErrConflict, nil), false},
+		{"nil error", nil, false},
+		{"generic error is not permanent", errors.New("generic"), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsPermanent(tt.err)
+			if got != tt.want {
+				t.Errorf("IsPermanent() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsConflict(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"direct ErrConflict", ErrConflict, true},
+		{"wrapped ErrConflict", WithContext(ErrConflict, nil), true},
+		{"other error", errors.New("other"), false},
+		{"ErrNotFound", ErrNotFound, false},
+		{"nil error", nil, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsConflict(tt.err)
+			if got != tt.want {
+				t.Errorf("IsConflict() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -248,3 +248,107 @@ func TestEncryptionBackend_CorruptedData(t *testing.T) {
 		t.Error("Expected error when decrypting corrupted data")
 	}
 }
+
+func TestEncryptionBackend_GetStream(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Put data first
+	testData := []byte("streaming test data with encryption")
+	err := encBackend.Put(ctx, "stream-key", testData)
+	if err != nil {
+		t.Fatalf("Put failed: %v", err)
+	}
+
+	// Get stream
+	reader, err := encBackend.GetStream(ctx, "stream-key")
+	if err != nil {
+		t.Fatalf("GetStream failed: %v", err)
+	}
+	defer reader.Close()
+
+	// Read all data from stream
+	retrieved := make([]byte, len(testData))
+	n, err := reader.Read(retrieved)
+	if err != nil && err.Error() != "EOF" {
+		t.Fatalf("Read from stream failed: %v", err)
+	}
+
+	if n != len(testData) {
+		t.Errorf("Expected to read %d bytes, got %d", len(testData), n)
+	}
+
+	if string(retrieved) != string(testData) {
+		t.Errorf("Expected %s, got %s", testData, retrieved)
+	}
+}
+
+func TestEncryptionBackend_PutStream(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Create test data
+	testData := []byte("large streaming data for put stream test with encryption")
+	reader := newBytesReader(testData)
+
+	// Put via stream
+	err := encBackend.PutStream(ctx, "stream-put-key", reader, int64(len(testData)))
+	if err != nil {
+		t.Fatalf("PutStream failed: %v", err)
+	}
+
+	// Retrieve and verify
+	retrieved, err := encBackend.Get(ctx, "stream-put-key")
+	if err != nil {
+		t.Fatalf("Get after PutStream failed: %v", err)
+	}
+
+	if string(retrieved) != string(testData) {
+		t.Errorf("Expected %s, got %s", testData, retrieved)
+	}
+}
+
+func TestEncryptionBackend_Append(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// First append (creates file)
+	line1 := []byte("first line\n")
+	err := encBackend.Append(ctx, "append-key", line1)
+	if err != nil {
+		t.Fatalf("First Append failed: %v", err)
+	}
+
+	// Second append (appends to existing)
+	line2 := []byte("second line\n")
+	err = encBackend.Append(ctx, "append-key", line2)
+	if err != nil {
+		t.Fatalf("Second Append failed: %v", err)
+	}
+
+	// Retrieve and verify both lines
+	retrieved, err := encBackend.Get(ctx, "append-key")
+	if err != nil {
+		t.Fatalf("Get after Append failed: %v", err)
+	}
+
+	expected := string(line1) + string(line2)
+	if string(retrieved) != expected {
+		t.Errorf("Expected %s, got %s", expected, retrieved)
+	}
+}

@@ -46,11 +46,16 @@ func TestIntegration_ConcurrentWrites(t *testing.T) {
 			for j := 0; j < incrementsPerWorker; j++ {
 				// Read-modify-write with optimistic locking
 				var c map[string]int
-				etag, _ := store.GetJSONWithETag(ctx, key, &c)
+				etag, err := store.GetJSONWithETag(ctx, key, &c)
+				if err != nil || c == nil {
+					// Initialize if failed
+					c = map[string]int{"value": 0}
+					etag = ""
+				}
 				c["value"]++
 
 				// This should NOT race due to distributed locks
-				_, err := store.PutJSONWithETag(ctx, key, c, etag)
+				_, err = store.PutJSONWithETag(ctx, key, c, etag)
 				if err != nil {
 					// Retry on conflict
 					time.Sleep(10 * time.Millisecond)
