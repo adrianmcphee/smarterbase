@@ -21,10 +21,14 @@ import (
 // Architecture:
 // - File-based Indexer: Unique 1:1 mappings (email → user)
 // - RedisIndexer: Multi-value 1:N mappings (user_id → sessions)
+//
+// Circuit Breaker: Prevents cascading failures when Redis is unavailable.
+// After 5 consecutive failures, operations fail fast for 30 seconds.
 type RedisIndexer struct {
-	redis      *redis.Client
-	specs      map[string]*MultiIndexSpec
-	ownsClient bool // If true, Close() will close the Redis client
+	redis          *redis.Client
+	specs          map[string]*MultiIndexSpec
+	ownsClient     bool // If true, Close() will close the Redis client
+	circuitBreaker *CircuitBreaker
 }
 
 // MultiIndexSpec defines a multi-value secondary index
@@ -41,22 +45,24 @@ type IndexEntry struct {
 	IndexValue string // e.g., "user-123", "area-456", "1234AB"
 }
 
-// NewRedisIndexer creates a new Redis-backed indexer
-// If ownConnection is true, the indexer will close the Redis client on Close()
+// NewRedisIndexer creates a new Redis-backed indexer with circuit breaker protection.
+// Circuit breaker opens after 5 consecutive failures and retries after 30 seconds.
 func NewRedisIndexer(redis *redis.Client) *RedisIndexer {
 	return &RedisIndexer{
-		redis: redis,
-		specs: make(map[string]*MultiIndexSpec),
+		redis:          redis,
+		specs:          make(map[string]*MultiIndexSpec),
+		circuitBreaker: NewCircuitBreaker(5, 30*time.Second),
 	}
 }
 
-// NewRedisIndexerWithOwnedClient creates a new Redis indexer that owns the client
-// The client will be closed when Close() is called
+// NewRedisIndexerWithOwnedClient creates a new Redis indexer that owns the client.
+// The client will be closed when Close() is called.
 func NewRedisIndexerWithOwnedClient(redis *redis.Client) *RedisIndexer {
 	return &RedisIndexer{
-		redis:      redis,
-		specs:      make(map[string]*MultiIndexSpec),
-		ownsClient: true,
+		redis:          redis,
+		specs:          make(map[string]*MultiIndexSpec),
+		ownsClient:     true,
+		circuitBreaker: NewCircuitBreaker(5, 30*time.Second),
 	}
 }
 
@@ -123,11 +129,17 @@ func (r *RedisIndexer) Query(ctx context.Context, entityType, indexName, indexVa
 
 	setKey := r.getSetKey(entityType, indexName, indexValue)
 
-	// Get all members from Redis Set
-	members, err := r.redis.SMembers(ctx, setKey).Result()
-	if err == redis.Nil {
-		return []string{}, nil // Empty set
-	}
+	var members []string
+	err := r.circuitBreaker.Execute(ctx, func() error {
+		var err error
+		members, err = r.redis.SMembers(ctx, setKey).Result()
+		if err == redis.Nil {
+			members = []string{}
+			return nil
+		}
+		return err
+	})
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to query Redis set %s: %w", setKey, err)
 	}
@@ -172,7 +184,15 @@ func (r *RedisIndexer) Count(ctx context.Context, entityType, indexName, indexVa
 	}
 
 	setKey := r.getSetKey(entityType, indexName, indexValue)
-	return r.redis.SCard(ctx, setKey).Result()
+
+	var count int64
+	err := r.circuitBreaker.Execute(ctx, func() error {
+		var err error
+		count, err = r.redis.SCard(ctx, setKey).Result()
+		return err
+	})
+
+	return count, err
 }
 
 // RemoveFromIndexes removes an object from all indexes

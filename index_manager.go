@@ -45,10 +45,33 @@ func (im *IndexManager) WithRedisIndexer(indexer *RedisIndexer) *IndexManager {
 
 // Create stores data and updates all indexes atomically
 func (im *IndexManager) Create(ctx context.Context, key string, data interface{}) error {
+	// Validate input
+	if key == "" {
+		return WithContext(ErrInvalidData, map[string]interface{}{
+			"operation": "Create",
+			"reason":    "key cannot be empty",
+		})
+	}
+	if data == nil {
+		return WithContext(ErrInvalidData, map[string]interface{}{
+			"operation": "Create",
+			"key":       key,
+			"reason":    "data cannot be nil",
+		})
+	}
+
 	// Marshal once
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal: %w", err)
+	}
+
+	if len(bytes) == 0 {
+		return WithContext(ErrInvalidData, map[string]interface{}{
+			"operation": "Create",
+			"key":       key,
+			"reason":    "marshaled data is empty",
+		})
 	}
 
 	// Write data first
@@ -86,6 +109,21 @@ func (im *IndexManager) Create(ctx context.Context, key string, data interface{}
 
 // Update replaces data and updates all indexes
 func (im *IndexManager) Update(ctx context.Context, key string, newData interface{}) error {
+	// Validate input
+	if key == "" {
+		return WithContext(ErrInvalidData, map[string]interface{}{
+			"operation": "Update",
+			"reason":    "key cannot be empty",
+		})
+	}
+	if newData == nil {
+		return WithContext(ErrInvalidData, map[string]interface{}{
+			"operation": "Update",
+			"key":       key,
+			"reason":    "data cannot be nil",
+		})
+	}
+
 	// Get old data for index cleanup
 	oldBytes, _ := im.store.Backend().Get(ctx, key)
 
@@ -126,6 +164,14 @@ func (im *IndexManager) Update(ctx context.Context, key string, newData interfac
 
 // Delete removes data and cleans up all indexes
 func (im *IndexManager) Delete(ctx context.Context, key string) error {
+	// Validate input
+	if key == "" {
+		return WithContext(ErrInvalidData, map[string]interface{}{
+			"operation": "Delete",
+			"reason":    "key cannot be empty",
+		})
+	}
+
 	// Get data for index cleanup
 	data, err := im.store.Backend().Get(ctx, key)
 	if err != nil {

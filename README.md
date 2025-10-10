@@ -242,19 +242,32 @@ for _, result := range results {
 
 ### Transactions
 
+**⚠️ IMPORTANT LIMITATIONS:**
+- **NOT true ACID transactions** - No isolation between concurrent operations
+- **Best-effort rollback** - Rollback may fail, leaving partial writes
+- **Low-contention only** - High concurrency causes conflicts
+- **For critical updates:** Use `S3BackendWithRedisLock` for atomicity
+
 ```go
-// Best-effort atomic operations
+// ⚠️ Best-effort atomic operations (NOT guaranteed ACID)
 err := store.WithTransaction(ctx, func(tx *smarterbase.Transaction) error {
     var account Account
     tx.GetJSON(ctx, "accounts/123", &account)
 
+    // ⚠️ NO ISOLATION: another process could modify account here
     account.Balance += 100
     tx.PutJSON(ctx, "accounts/123", &account)
 
     tx.PutJSON(ctx, "transactions/"+txnID, &Transaction{...})
 
-    return nil // Commits on success, rolls back on error
+    return nil // Commits on success, rolls back on error (best-effort)
 })
+
+// ✅ For production financial transactions, use distributed locks:
+lock := smarterbase.NewDistributedLock(redisClient, "smarterbase")
+release, _ := lock.TryLockWithRetry(ctx, "accounts/123", 10*time.Second, 3)
+defer release()
+// Now safe to read-modify-write with full atomicity
 ```
 
 ## Storage Backends
@@ -306,6 +319,29 @@ type Backend interface {
 }
 ```
 
+### Encryption at Rest
+
+Wrap any backend with AES-256-GCM encryption:
+
+```go
+// Generate or load 32-byte encryption key
+key := make([]byte, 32)
+rand.Read(key) // Or load from secrets manager
+
+// Wrap backend with encryption
+s3Backend := smarterbase.NewS3Backend(s3Client, "my-bucket")
+encryptedBackend, _ := smarterbase.NewEncryptionBackend(s3Backend, key)
+
+store := smarterbase.NewStore(encryptedBackend)
+// All data now encrypted before S3 upload, decrypted on retrieval
+```
+
+**Features:**
+- AES-256-GCM authenticated encryption
+- Random nonces for each operation
+- Transparent encryption/decryption
+- Works with any backend (S3, GCS, Filesystem)
+
 ## Indexing
 
 ### File-Based Indexes (1:1)
@@ -339,6 +375,31 @@ redisIndexer.RegisterMultiValueIndex("orders", "user_id", func(data []byte) (str
 // Query - O(1) lookup
 orderIDs, _ := redisIndexer.QueryMultiValueIndex(ctx, "orders", "user_id", "user-123")
 ```
+
+## Reliability Features
+
+### Circuit Breaker
+
+Automatic circuit breaker protection prevents cascading failures when Redis becomes unavailable:
+
+```go
+// Circuit breaker is enabled by default in RedisIndexer
+redisIndexer := smarterbase.NewRedisIndexer(redisClient)
+
+// Automatically opens after 5 consecutive failures
+// Retries after 30 seconds in half-open state
+// Fails fast when open (no Redis calls)
+```
+
+**States:**
+- **Closed**: Normal operation, all requests pass through
+- **Open**: Redis failing, requests fail fast without calling Redis (prevents cascading failures)
+- **Half-Open**: Testing recovery, limited requests allowed
+
+**Benefits:**
+- Prevents application slowdown when Redis is down
+- Automatic recovery detection
+- Graceful degradation for non-critical operations
 
 ## Observability
 
@@ -395,19 +456,23 @@ func main() {
         Addr: "localhost:6379",
     })
 
-    // 3. Create backend with distributed locking
-    backend := smarterbase.NewS3BackendWithRedisLock(
+    // 3. Create S3 backend with Redis distributed locking (production-safe)
+    s3Backend := smarterbase.NewS3BackendWithRedisLock(
         s3Client,
         "my-bucket",
         redisClient,
     )
 
-    // 4. Add observability
+    // 4. Wrap with encryption (recommended for sensitive data)
+    encryptionKey := loadEncryptionKeyFromSecretsManager() // 32-byte key
+    backend, _ := smarterbase.NewEncryptionBackend(s3Backend, encryptionKey)
+
+    // 5. Add observability
     logger, _ := smarterbase.NewProductionZapLogger()
     metrics := smarterbase.NewPrometheusMetrics(prometheus.DefaultRegisterer)
     store := smarterbase.NewStoreWithObservability(backend, logger, metrics)
 
-    // 5. Configure Redis indexes
+    // 6. Configure Redis indexes
     redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 
     // Multi-value index: user_id → [order1, order2, ...]
@@ -425,11 +490,11 @@ func main() {
         TTL:        24 * time.Hour, // Auto-expire after 24h
     })
 
-    // 6. Create index manager
+    // 7. Create index manager
     indexManager := smarterbase.NewIndexManager(store).
         WithRedisIndexer(redisIndexer)
 
-    // 7. Start health monitoring
+    // 8. Start health monitoring
     monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer).
         WithInterval(5 * time.Minute).
         WithDriftThreshold(5.0)
@@ -439,7 +504,7 @@ func main() {
     }
     defer monitor.Stop()
 
-    // 8. Use in application
+    // 9. Use in application
     order := &Order{
         ID:      smarterbase.NewID(),
         UserID:  "user-123",
@@ -889,26 +954,30 @@ All tests use filesystem backend - no external dependencies required.
 - Graph queries (use Neo4j)
 - Time-series analytics (use TimescaleDB)
 
-## Production Checklist
+## Production Deployment
 
-- [ ] Use S3Backend (or equivalent) in production
-- [ ] Enable Redis for multi-value indexes
-- [ ] Configure observability (metrics + logging)
-- [ ] Set up automated backups
-- [ ] Test failover scenarios
-- [ ] Monitor index health
-- [ ] Benchmark with your data volumes
+**Critical requirements:**
+
+- ✅ Use `S3BackendWithRedisLock` (NOT plain `S3Backend`) - prevents race conditions
+- ✅ Enable encryption (`EncryptionBackend` wrapper) - 32-byte key from secrets manager
+- ✅ Redis cluster with persistence (AOF + RDB) - circuit breaker protects against failures
+- ✅ Observability configured (Prometheus + Zap) - monitor drift, locks, errors
+- ✅ Index health monitoring (5min checks, 5% drift threshold, auto-repair)
+- ✅ Load testing completed (20+ concurrent, failover scenarios validated)
+
+**Performance targets:** P95 < 200ms (reads), P99 < 500ms (writes), drift < 1%
 
 ## Known Limitations
 
-- ⚠️ S3 PutIfMatch has small race window (see code comments)
-- ⚠️ Query.All() loads into memory (use Each() for large datasets)
-- ⚠️ Transaction rollback is best-effort
-- ⚠️ No true ACID transactions (no isolation guarantees)
+- ⚠️ Plain `S3Backend` has race window in PutIfMatch - **Use `S3BackendWithRedisLock` for production**
+- ⚠️ Transactions are NOT ACID (no isolation) - **Use distributed locks for critical operations**
+- ⚠️ Query.All() loads into memory - **Use Each() or pagination for large datasets**
+- ⚠️ S3 base latency is 50-100ms - **Add caching layer for read-heavy workloads**
 
 ## Documentation
 
 - [DATASHEET.md](./DATASHEET.md) - Technical specifications and architecture
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing guidelines
 
 ## Contributing
 
