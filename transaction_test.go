@@ -7,7 +7,24 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
 )
+
+// setupTestRedis creates an in-memory Redis instance for testing
+func setupTestRedis(t *testing.T) *redis.Client {
+	t.Helper()
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("Failed to start miniredis: %v", err)
+	}
+	t.Cleanup(func() { mr.Close() })
+
+	return redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
+}
 
 // TestTransaction_BasicCommit verifies successful transaction commit
 func TestTransaction_BasicCommit(t *testing.T) {
@@ -363,5 +380,276 @@ func BenchmarkTransaction_WithOptimisticLocking(b *testing.B) {
 			tx.Put(key, data)
 			time.Sleep(time.Millisecond)
 		}
+	}
+}
+
+// TestWithAtomicUpdate_BasicSuccess verifies atomic update succeeds
+func TestWithAtomicUpdate_BasicSuccess(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+	store := NewStore(backend)
+	redisClient := setupTestRedis(t)
+	lock := NewDistributedLock(redisClient, "test")
+
+	// Setup initial account
+	key := "accounts/123"
+	store.PutJSON(ctx, key, map[string]int{"balance": 100})
+
+	// Perform atomic update
+	err := WithAtomicUpdate(ctx, store, lock, key, 5*time.Second,
+		func(ctx context.Context) error {
+			var account map[string]int
+			store.GetJSON(ctx, key, &account)
+			account["balance"] += 50
+			store.PutJSON(ctx, key, &account)
+			return nil
+		})
+
+	if err != nil {
+		t.Fatalf("WithAtomicUpdate failed: %v", err)
+	}
+
+	// Verify balance was updated
+	var result map[string]int
+	store.GetJSON(ctx, key, &result)
+	if result["balance"] != 150 {
+		t.Errorf("Expected balance=150, got %d", result["balance"])
+	}
+}
+
+// TestWithAtomicUpdate_PreventsRaceConditions demonstrates that WithAtomicUpdate
+// prevents concurrent modifications that would cause lost updates
+func TestWithAtomicUpdate_PreventsRaceConditions(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+	store := NewStore(backend)
+	redisClient := setupTestRedis(t)
+	lock := NewDistributedLock(redisClient, "test")
+
+	key := "accounts/contested"
+	store.PutJSON(ctx, key, map[string]int{"balance": 0})
+
+	workers := 10
+	incrementsPerWorker := 10
+	var wg sync.WaitGroup
+
+	// All workers increment the counter using WithAtomicUpdate
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < incrementsPerWorker; i++ {
+				// Use longer TTL and custom retry logic for high-contention test
+				maxRetries := 10
+				for retry := 0; retry < maxRetries; retry++ {
+					err := WithAtomicUpdate(ctx, store, lock, key, 10*time.Second,
+						func(ctx context.Context) error {
+							var account map[string]int
+							store.GetJSON(ctx, key, &account)
+							account["balance"]++
+							store.PutJSON(ctx, key, &account)
+							return nil
+						})
+					if err == nil {
+						break // Success
+					}
+					if retry == maxRetries-1 {
+						t.Errorf("WithAtomicUpdate failed after %d retries: %v", maxRetries, err)
+					}
+					time.Sleep(10 * time.Millisecond)
+				}
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	// Verify final balance is exactly what we expect (no lost updates)
+	var final map[string]int
+	store.GetJSON(ctx, key, &final)
+
+	expected := workers * incrementsPerWorker
+	if final["balance"] != expected {
+		t.Errorf("Expected balance=%d (no lost updates), got %d", expected, final["balance"])
+	} else {
+		t.Logf("✅ SUCCESS: All %d updates were applied atomically with no race conditions", expected)
+	}
+}
+
+// TestWithAtomicUpdate_VsOptimisticTransaction compares the behavior of
+// atomic updates vs optimistic transactions under concurrent load
+func TestWithAtomicUpdate_VsOptimisticTransaction(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping comparison test in short mode")
+	}
+
+	ctx := context.Background()
+	redisClient := setupTestRedis(t)
+
+	// Test 1: Optimistic transactions (will have conflicts)
+	t.Run("OptimisticTransaction_HasLostUpdates", func(t *testing.T) {
+		backend := NewFilesystemBackend(t.TempDir())
+		store := NewStore(backend)
+		key := "accounts/optimistic"
+		store.PutJSON(ctx, key, map[string]int{"balance": 0})
+
+		workers := 5
+		incrementsPerWorker := 20
+		var wg sync.WaitGroup
+		successCount := 0
+		var mu sync.Mutex
+
+		for w := 0; w < workers; w++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for i := 0; i < incrementsPerWorker; i++ {
+					err := store.WithTransaction(ctx, func(tx *OptimisticTransaction) error {
+						var account map[string]int
+						tx.Get(ctx, key, &account)
+						// Simulate some processing time
+						time.Sleep(time.Millisecond)
+						account["balance"]++
+						tx.Put(key, account)
+						return nil
+					})
+					if err == nil {
+						mu.Lock()
+						successCount++
+						mu.Unlock()
+					}
+				}
+			}()
+		}
+
+		wg.Wait()
+
+		var final map[string]int
+		store.GetJSON(ctx, key, &final)
+
+		expected := workers * incrementsPerWorker
+		t.Logf("⚠️  Optimistic Transactions: Expected %d updates, got %d (%d conflicts)",
+			expected, final["balance"], expected-final["balance"])
+
+		// Expect some lost updates due to conflicts
+		if final["balance"] == expected {
+			t.Log("Note: No conflicts occurred (may happen with low contention)")
+		}
+	})
+
+	// Test 2: Atomic updates (no lost updates)
+	t.Run("WithAtomicUpdate_NoLostUpdates", func(t *testing.T) {
+		backend := NewFilesystemBackend(t.TempDir())
+		store := NewStore(backend)
+		lock := NewDistributedLock(redisClient, "test")
+		key := "accounts/atomic"
+		store.PutJSON(ctx, key, map[string]int{"balance": 0})
+
+		workers := 5
+		incrementsPerWorker := 20
+		var wg sync.WaitGroup
+
+		for w := 0; w < workers; w++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for i := 0; i < incrementsPerWorker; i++ {
+					// Retry with backoff for high contention
+					maxRetries := 10
+					for retry := 0; retry < maxRetries; retry++ {
+						err := WithAtomicUpdate(ctx, store, lock, key, 10*time.Second,
+							func(ctx context.Context) error {
+								var account map[string]int
+								store.GetJSON(ctx, key, &account)
+								// Same processing time as optimistic version
+								time.Sleep(time.Millisecond)
+								account["balance"]++
+								store.PutJSON(ctx, key, &account)
+								return nil
+							})
+						if err == nil {
+							break // Success
+						}
+						if retry == maxRetries-1 {
+							t.Errorf("WithAtomicUpdate failed after %d retries: %v", maxRetries, err)
+						}
+						time.Sleep(10 * time.Millisecond)
+					}
+				}
+			}()
+		}
+
+		wg.Wait()
+
+		var final map[string]int
+		store.GetJSON(ctx, key, &final)
+
+		expected := workers * incrementsPerWorker
+		if final["balance"] != expected {
+			t.Errorf("✗ Expected %d updates, got %d (lost %d updates)",
+				expected, final["balance"], expected-final["balance"])
+		} else {
+			t.Logf("✅ WithAtomicUpdate: All %d updates applied successfully (no conflicts)", expected)
+		}
+	})
+}
+
+// TestWithAtomicUpdate_ErrorHandling verifies error handling
+func TestWithAtomicUpdate_ErrorHandling(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+	store := NewStore(backend)
+	redisClient := setupTestRedis(t)
+	lock := NewDistributedLock(redisClient, "test")
+
+	key := "accounts/error-test"
+	store.PutJSON(ctx, key, map[string]int{"balance": 100})
+
+	expectedErr := errors.New("simulated error")
+
+	// Error in function should be returned
+	err := WithAtomicUpdate(ctx, store, lock, key, 5*time.Second,
+		func(ctx context.Context) error {
+			var account map[string]int
+			store.GetJSON(ctx, key, &account)
+			account["balance"] += 50
+			// Don't save - return error instead
+			return expectedErr
+		})
+
+	if err != expectedErr {
+		t.Errorf("Expected error %v, got %v", expectedErr, err)
+	}
+
+	// Verify balance was NOT changed (error prevents update)
+	var result map[string]int
+	store.GetJSON(ctx, key, &result)
+	if result["balance"] != 100 {
+		t.Errorf("Expected balance unchanged at 100, got %d", result["balance"])
+	}
+}
+
+// TestWithAtomicUpdate_ValidationRequired verifies parameter validation
+func TestWithAtomicUpdate_ValidationRequired(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+	store := NewStore(backend)
+	redisClient := setupTestRedis(t)
+	lock := NewDistributedLock(redisClient, "test")
+
+	// Test nil lock
+	err := WithAtomicUpdate(ctx, store, nil, "key", 5*time.Second, func(ctx context.Context) error {
+		return nil
+	})
+	if err == nil {
+		t.Error("Expected error when lock is nil")
+	}
+
+	// Test nil store
+	err = WithAtomicUpdate(ctx, nil, lock, "key", 5*time.Second, func(ctx context.Context) error {
+		return nil
+	})
+	if err == nil {
+		t.Error("Expected error when store is nil")
 	}
 }

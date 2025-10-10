@@ -80,6 +80,9 @@ const (
 	MetricLockAcquired    = "smarterbase.lock.acquired"
 	MetricLockFailed      = "smarterbase.lock.failed"
 	MetricLockDuration    = "smarterbase.lock.duration"
+	MetricLockContention  = "smarterbase.lock.contention"    // Number of retries needed
+	MetricLockTimeout     = "smarterbase.lock.timeout"       // Locks that timed out
+	MetricLockWaitTime    = "smarterbase.lock.wait_duration" // Time spent waiting for locks
 
 	// Additional metrics for Prometheus integration
 	MetricBackendOps      = "smarterbase.backend.ops"

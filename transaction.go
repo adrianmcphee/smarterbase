@@ -175,7 +175,28 @@ func (tx *OptimisticTransaction) rollback(ctx context.Context, written []string,
 // WithTransaction executes a function within an optimistic transaction.
 // Automatically commits on success, rolls back on error.
 //
-// Example:
+// ⚠️ WARNING: This does NOT provide isolation guarantees!
+// Another process can modify data between your Get() and Put() calls.
+//
+// ❌ DO NOT USE for critical updates like:
+// - Financial transactions (account balances, payments)
+// - Inventory updates
+// - Counter increments
+// - Any operation where race conditions would cause data corruption
+//
+// ✅ USE distributed locks instead for critical updates:
+//
+//	lock := smarterbase.NewDistributedLock(redisClient, "smarterbase")
+//	err := smarterbase.WithAtomicUpdate(ctx, store, lock, "accounts/123", 10*time.Second,
+//	    func(ctx context.Context) error {
+//	        var account Account
+//	        store.GetJSON(ctx, "accounts/123", &account)
+//	        account.Balance += 100 // Safe: protected by distributed lock
+//	        store.PutJSON(ctx, "accounts/123", &account)
+//	        return nil
+//	    })
+//
+// Example (optimistic transaction - use only for low-contention scenarios):
 //
 //	err := store.WithTransaction(ctx, func(tx *OptimisticTransaction) error {
 //	    // Read with optimistic lock
@@ -184,8 +205,8 @@ func (tx *OptimisticTransaction) rollback(ctx context.Context, written []string,
 //	        return err
 //	    }
 //
-//	    // Modify
-//	    user.Balance += 100
+//	    // ⚠️ CAUTION: Another process could modify user here!
+//	    user.LastSeen = time.Now()
 //
 //	    // Queue write (will check ETag on commit)
 //	    tx.Put("users/123", user)
