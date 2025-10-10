@@ -3,7 +3,6 @@ package smarterbase
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"testing"
 	"time"
 
@@ -328,19 +327,8 @@ func TestIntegration_EndToEnd(t *testing.T) {
 }
 
 // TestIntegration_S3Backend validates S3 backend with Redis locking
-// Requires AWS credentials to be configured
+// NOTE: Full S3 integration tests moved to s3_integration_test.go
+// This stub remains for backward compatibility
 func TestIntegration_S3Backend(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping S3 integration test in short mode")
-	}
-
-	// Skip test if S3 bucket not configured
-	s3Bucket := os.Getenv("TEST_S3_BUCKET")
-	if s3Bucket == "" {
-		t.Skip("Skipping S3 integration test - set TEST_S3_BUCKET env var to run")
-	}
-
-	// TODO: Implement S3 backend integration test
-	// Requires: AWS credentials, S3 client setup, and NewS3BackendWithRedisLock
-	t.Skip("S3 backend integration test not yet implemented - placeholder for future work")
+	t.Skip("S3 integration tests moved to s3_integration_test.go - run TestIntegration_S3Backend_MinIO instead")
 }
