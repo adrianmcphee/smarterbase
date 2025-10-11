@@ -264,7 +264,7 @@ func (b *S3Backend) PutStream(ctx context.Context, key string, reader io.Reader,
 func (b *S3Backend) Append(ctx context.Context, key string, data []byte) error {
 	// Read existing content (if exists)
 	existing, err := b.Get(ctx, key)
-	if err != nil && !strings.Contains(err.Error(), "NoSuchKey") {
+	if err != nil && !IsNotFound(err) {
 		return fmt.Errorf("failed to read existing object: %w", err)
 	}
 
