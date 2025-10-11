@@ -83,7 +83,7 @@
         <section class="py-8 lg:py-20" id="home">
             <div class="container">
                 <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
-                    <div class="max-lg:order-2">
+                    <div>
                         <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
                             Skip the Database.
                             <span class="text-primary">Use Redis + S3 Instead.</span>
@@ -110,8 +110,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-base-200 rounded-box p-6 max-lg:order-1">
-                        <pre class="text-sm overflow-x-auto"><code>// You already have Redis and S3.
+                    <div class="bg-base-200 rounded-box p-6">
+                        <pre class="text-sm overflow-x-auto max-w-full"><code>// You already have Redis and S3.
 // Use them as your database.
 
 backend := smarterbase.NewS3BackendWithRedisLock(
