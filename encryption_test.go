@@ -352,3 +352,194 @@ func TestEncryptionBackend_Append(t *testing.T) {
 		t.Errorf("Expected %s, got %s", expected, retrieved)
 	}
 }
+
+func TestEncryptionBackend_ShortEncryptedData(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Put short data directly into backend (too short to be valid encrypted data)
+	backend.Put(ctx, "short-key", []byte("abc"))
+
+	// Try to decrypt - should fail
+	_, err := encBackend.Get(ctx, "short-key")
+	if err == nil {
+		t.Error("Expected error when decrypting data shorter than nonce size")
+	}
+}
+
+func TestEncryptionBackend_GetWithETagNonExistent(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Try to get non-existent key with ETag
+	_, _, err := encBackend.GetWithETag(ctx, "nonexistent-key")
+	if err == nil {
+		t.Error("Expected error when getting non-existent key")
+	}
+}
+
+func TestEncryptionBackend_PutIfMatchWrongETag(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Initial put
+	data1 := []byte("version 1")
+	_, err := encBackend.PutIfMatch(ctx, "versioned-key", data1, "")
+	if err != nil {
+		t.Fatalf("Initial PutIfMatch failed: %v", err)
+	}
+
+	// Try to update with wrong ETag
+	data2 := []byte("version 2")
+	_, err = encBackend.PutIfMatch(ctx, "versioned-key", data2, "wrong-etag")
+	if err == nil {
+		t.Error("Expected error when using wrong ETag")
+	}
+}
+
+func TestEncryptionBackend_GetStreamNonExistent(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Try to get stream for non-existent key
+	_, err := encBackend.GetStream(ctx, "nonexistent-stream-key")
+	if err == nil {
+		t.Error("Expected error when getting stream for non-existent key")
+	}
+}
+
+func TestEncryptionBackend_List(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Create multiple encrypted files
+	for i := 0; i < 3; i++ {
+		keyName := "list-test/item-" + string(rune('0'+i)) + ".json"
+		encBackend.Put(ctx, keyName, []byte("data"))
+	}
+
+	// List keys
+	keys, err := encBackend.List(ctx, "list-test/")
+	if err != nil {
+		t.Fatalf("List failed: %v", err)
+	}
+
+	if len(keys) != 3 {
+		t.Errorf("Expected 3 keys, got %d", len(keys))
+	}
+}
+
+func TestEncryptionBackend_ListPaginated(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Create multiple encrypted files
+	for i := 0; i < 5; i++ {
+		keyName := "paginated-test/item-" + string(rune('0'+i)) + ".json"
+		encBackend.Put(ctx, keyName, []byte("data"))
+	}
+
+	// List paginated
+	var collected []string
+	err := encBackend.ListPaginated(ctx, "paginated-test/", func(keys []string) error {
+		collected = append(collected, keys...)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("ListPaginated failed: %v", err)
+	}
+
+	if len(collected) != 5 {
+		t.Errorf("Expected 5 keys, got %d", len(collected))
+	}
+}
+
+func TestEncryptionBackend_Exists(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	// Check non-existent key
+	exists, err := encBackend.Exists(ctx, "nonexistent-key")
+	if err != nil {
+		t.Fatalf("Exists failed: %v", err)
+	}
+	if exists {
+		t.Error("Expected key to not exist")
+	}
+
+	// Put data
+	encBackend.Put(ctx, "exists-key", []byte("data"))
+
+	// Check existing key
+	exists, err = encBackend.Exists(ctx, "exists-key")
+	if err != nil {
+		t.Fatalf("Exists failed: %v", err)
+	}
+	if !exists {
+		t.Error("Expected key to exist")
+	}
+}
+
+func TestEncryptionBackend_Ping(t *testing.T) {
+	ctx := context.Background()
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	err := encBackend.Ping(ctx)
+	if err != nil {
+		t.Fatalf("Ping failed: %v", err)
+	}
+}
+
+func TestEncryptionBackend_Close(t *testing.T) {
+	backend := NewFilesystemBackend(t.TempDir())
+
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	encBackend, _ := NewEncryptionBackend(backend, key)
+
+	err := encBackend.Close()
+	if err != nil {
+		t.Fatalf("Close failed: %v", err)
+	}
+}

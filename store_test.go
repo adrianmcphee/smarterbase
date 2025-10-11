@@ -133,6 +133,64 @@ func TestStore_BasicOperations(t *testing.T) {
 			t.Errorf("Expected 3 keys, got %d", len(keys))
 		}
 	})
+
+	t.Run("ListPaginated", func(t *testing.T) {
+		// Create test data
+		for i := 1; i <= 5; i++ {
+			key := fmt.Sprintf("paginated-test/item%d.json", i)
+			data := map[string]int{"id": i}
+			if err := store.PutJSON(ctx, key, data); err != nil {
+				t.Fatalf("Failed to create test data: %v", err)
+			}
+		}
+
+		// Process in batches
+		var collectedKeys []string
+		err := store.ListPaginated(ctx, "paginated-test/", func(keys []string) error {
+			collectedKeys = append(collectedKeys, keys...)
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("ListPaginated failed: %v", err)
+		}
+
+		if len(collectedKeys) != 5 {
+			t.Errorf("Expected 5 keys, got %d", len(collectedKeys))
+		}
+	})
+
+	t.Run("MarshalObject", func(t *testing.T) {
+		data := map[string]interface{}{
+			"name":   "test",
+			"count":  42,
+			"active": true,
+		}
+
+		bytes, err := store.MarshalObject(data)
+		if err != nil {
+			t.Fatalf("MarshalObject failed: %v", err)
+		}
+
+		if len(bytes) == 0 {
+			t.Error("Expected non-empty marshaled data")
+		}
+
+		// Verify it's valid JSON
+		var unmarshaled map[string]interface{}
+		if err := store.GetJSON(ctx, "marshal-test.json", &unmarshaled); err == nil {
+			t.Error("Should not exist yet")
+		}
+	})
+
+	t.Run("Close", func(t *testing.T) {
+		tempBackend := NewFilesystemBackend(t.TempDir())
+		tempStore := NewStore(tempBackend)
+
+		err := tempStore.Close()
+		if err != nil {
+			t.Fatalf("Close failed: %v", err)
+		}
+	})
 }
 
 func TestStore_IndexOperations(t *testing.T) {
@@ -238,6 +296,74 @@ func TestStore_IndexOperations(t *testing.T) {
 
 		if updated.Entries["item2"] != "parent2" {
 			t.Error("item2 should still exist")
+		}
+	})
+
+	t.Run("RemoveFromIndex_NonExistent", func(t *testing.T) {
+		// Try to remove from non-existent index
+		err := store.RemoveFromIndex(ctx, "indexes/nonexistent.json", "item1")
+		if err == nil {
+			t.Error("Expected error when removing from non-existent index")
+		}
+	})
+
+	t.Run("UpdateIndex_ErrorPaths", func(t *testing.T) {
+		indexKey := "indexes/error-test.json"
+
+		// First update should succeed
+		err := store.UpdateIndex(ctx, indexKey, "item1", "parent1")
+		if err != nil {
+			t.Fatalf("Initial UpdateIndex failed: %v", err)
+		}
+
+		// Verify update worked
+		idx, err := store.GetIndex(ctx, indexKey)
+		if err != nil {
+			t.Fatalf("GetIndex failed: %v", err)
+		}
+
+		if idx.Entries["item1"] != "parent1" {
+			t.Error("Index entry mismatch")
+		}
+	})
+
+	t.Run("RemoveFromIndex_MultipleEntries", func(t *testing.T) {
+		indexKey := "indexes/multi-remove-test.json"
+
+		// Create index with 3 entries
+		idx := &Index{
+			Key: indexKey,
+			Entries: map[string]string{
+				"item1": "parent1",
+				"item2": "parent2",
+				"item3": "parent3",
+			},
+		}
+		store.PutIndex(ctx, idx)
+
+		// Remove two entries
+		err := store.RemoveFromIndex(ctx, indexKey, "item1")
+		if err != nil {
+			t.Fatalf("First RemoveFromIndex failed: %v", err)
+		}
+
+		err = store.RemoveFromIndex(ctx, indexKey, "item2")
+		if err != nil {
+			t.Fatalf("Second RemoveFromIndex failed: %v", err)
+		}
+
+		// Verify only item3 remains
+		updated, err := store.GetIndex(ctx, indexKey)
+		if err != nil {
+			t.Fatalf("GetIndex failed: %v", err)
+		}
+
+		if len(updated.Entries) != 1 {
+			t.Errorf("Expected 1 entry, got %d", len(updated.Entries))
+		}
+
+		if updated.Entries["item3"] != "parent3" {
+			t.Error("item3 should still exist with correct value")
 		}
 	})
 
