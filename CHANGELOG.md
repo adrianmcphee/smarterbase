@@ -1,3 +1,9 @@
+## [1.2.5](https://github.com/adrianmcphee/smarterbase/compare/v1.2.4...v1.2.5) (2025-10-11)
+
+### Bug Fixes
+
+* add horizontal padding to containers for mobile responsiveness ([565cb8e](https://github.com/adrianmcphee/smarterbase/commit/565cb8eb44b0472ae6e3c310c671582629c050d5))
+
 ## [1.2.4](https://github.com/adrianmcphee/smarterbase/compare/v1.2.3...v1.2.4) (2025-10-11)
 
 ### Bug Fixes
