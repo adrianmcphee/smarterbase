@@ -1,3 +1,9 @@
+## [1.2.6](https://github.com/adrianmcphee/smarterbase/compare/v1.2.5...v1.2.6) (2025-10-11)
+
+### Bug Fixes
+
+* force container padding with !important to override framework CSS ([82fcefd](https://github.com/adrianmcphee/smarterbase/commit/82fcefd19376bc493d91c636fc5c83e8b771d67b))
+
 ## [1.2.5](https://github.com/adrianmcphee/smarterbase/compare/v1.2.4...v1.2.5) (2025-10-11)
 
 ### Bug Fixes
