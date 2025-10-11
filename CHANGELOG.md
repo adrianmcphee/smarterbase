@@ -1,3 +1,9 @@
+## [1.1.1](https://github.com/adrianmcphee/smarterbase/compare/v1.1.0...v1.1.1) (2025-10-11)
+
+### Bug Fixes
+
+* resolve lint errors and add examples compilation check to CI ([5024884](https://github.com/adrianmcphee/smarterbase/commit/50248844fef5cbabb70019046074ddac02f4de8e))
+
 ## [1.1.0](https://github.com/adrianmcphee/smarterbase/compare/v1.0.2...v1.1.0) (2025-10-11)
 
 ### Features
