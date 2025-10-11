@@ -80,7 +80,7 @@ func (l *DistributedLock) Lock(ctx context.Context, key string, ttl time.Duratio
 
 	// Return a release function
 	release := func() {
-		// Use a background context for cleanup (don't fail if parent context cancelled)
+		// Use a background context for cleanup (don't fail if parent context canceled)
 		cleanupCtx := context.Background()
 
 		// Only delete if we still own the lock (check value matches)
@@ -91,7 +91,7 @@ func (l *DistributedLock) Lock(ctx context.Context, key string, ttl time.Duratio
 				return 0
 			end
 		`
-		l.redis.Eval(cleanupCtx, script, []string{lockKey}, lockValue).Result()
+		_, _ = l.redis.Eval(cleanupCtx, script, []string{lockKey}, lockValue).Result() //nolint:errcheck // Cleanup operation, safe to ignore
 	}
 
 	return release, nil
@@ -112,7 +112,7 @@ func (l *DistributedLock) TryLockWithRetry(ctx context.Context, key string, ttl 
 
 		lastErr = err
 
-		// Check if context cancelled
+		// Check if context canceled
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()

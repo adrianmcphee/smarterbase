@@ -96,7 +96,7 @@ func (tx *OptimisticTransaction) Commit(ctx context.Context) error {
 	for _, op := range tx.writes {
 		data, err := json.Marshal(op.value)
 		if err != nil {
-			tx.rollback(ctx, written, originalValues)
+			_ = tx.rollback(ctx, written, originalValues) //nolint:errcheck // Rollback after commit failure
 			return fmt.Errorf("marshal error for %s: %w", op.key, err)
 		}
 
@@ -104,13 +104,13 @@ func (tx *OptimisticTransaction) Commit(ctx context.Context) error {
 		if expectedETag, tracked := tx.etags[op.key]; tracked {
 			_, err = tx.store.backend.PutIfMatch(ctx, op.key, data, expectedETag)
 			if err != nil {
-				tx.rollback(ctx, written, originalValues)
+				_ = tx.rollback(ctx, written, originalValues) //nolint:errcheck // Rollback after commit failure
 				return fmt.Errorf("optimistic lock failed for %s: %w", op.key, err)
 			}
 		} else {
 			// Regular put for keys we didn't read
 			if err := tx.store.backend.Put(ctx, op.key, data); err != nil {
-				tx.rollback(ctx, written, originalValues)
+				_ = tx.rollback(ctx, written, originalValues) //nolint:errcheck // Rollback after commit failure
 				return fmt.Errorf("write error for %s: %w", op.key, err)
 			}
 		}
@@ -125,7 +125,7 @@ func (tx *OptimisticTransaction) Commit(ctx context.Context) error {
 		}
 
 		if err := tx.store.backend.Delete(ctx, key); err != nil {
-			tx.rollback(ctx, written, originalValues)
+			_ = tx.rollback(ctx, written, originalValues) //nolint:errcheck // Rollback after commit failure
 			return fmt.Errorf("delete error for %s: %w", key, err)
 		}
 	}
@@ -216,7 +216,7 @@ func (s *Store) WithTransaction(ctx context.Context, fn func(tx *OptimisticTrans
 	tx := s.BeginTx(ctx)
 
 	if err := fn(tx); err != nil {
-		tx.Rollback(ctx)
+		_ = tx.Rollback(ctx) //nolint:errcheck // Rollback on panic
 		return err
 	}
 

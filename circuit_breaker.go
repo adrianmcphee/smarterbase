@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+const (
+	stateClosed   = "closed"
+	stateOpen     = "open"
+	stateHalfOpen = "half-open"
+)
+
 // CircuitBreaker prevents cascading failures when dependencies are unavailable.
 // Implements the circuit breaker pattern with three states: closed, open, half-open.
 //
@@ -41,7 +47,7 @@ func NewCircuitBreaker(maxFailures int, resetTimeout time.Duration) *CircuitBrea
 	return &CircuitBreaker{
 		maxFailures:  maxFailures,
 		resetTimeout: resetTimeout,
-		state:        "closed",
+		state:        stateClosed,
 	}
 }
 
@@ -73,14 +79,14 @@ func (cb *CircuitBreaker) allow() bool {
 	defer cb.mu.Unlock()
 
 	switch cb.state {
-	case "open":
+	case stateOpen:
 		// Check if we should transition to half-open
 		if time.Since(cb.lastFailTime) > cb.resetTimeout {
-			cb.setState("half-open")
+			cb.setState(stateHalfOpen)
 			return true
 		}
 		return false
-	case "half-open":
+	case stateHalfOpen:
 		return true
 	default: // closed
 		return true
@@ -96,15 +102,15 @@ func (cb *CircuitBreaker) recordResult(err error) {
 		cb.failures++
 		cb.lastFailTime = time.Now()
 
-		if cb.failures >= cb.maxFailures && cb.state != "open" {
-			cb.setState("open")
+		if cb.failures >= cb.maxFailures && cb.state != stateOpen {
+			cb.setState(stateOpen)
 		}
 	} else {
 		// Success - reset or close circuit
-		if cb.state == "half-open" {
-			cb.setState("closed")
+		if cb.state == stateHalfOpen {
+			cb.setState(stateClosed)
 			cb.failures = 0
-		} else if cb.state == "closed" {
+		} else if cb.state == stateClosed {
 			cb.failures = 0
 		}
 	}
@@ -131,7 +137,7 @@ func (cb *CircuitBreaker) Reset() {
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
 	cb.failures = 0
-	cb.setState("closed")
+	cb.setState(stateClosed)
 }
 
 // Failures returns the current failure count

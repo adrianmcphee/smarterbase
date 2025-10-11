@@ -11,12 +11,13 @@ import (
 // QueryComplexity represents the time complexity of a query
 type QueryComplexity string
 
+// Query complexity constants for profiling and optimization
 const (
-	ComplexityO1     QueryComplexity = "O(1)"       // Redis index lookup
-	ComplexityOLogN  QueryComplexity = "O(log N)"   // Binary search
-	ComplexityON     QueryComplexity = "O(N)"       // Full scan
-	ComplexityONM    QueryComplexity = "O(N*M)"     // Nested loops
-	ComplexityONLogN QueryComplexity = "O(N log N)" // Sort
+	ComplexityO1     QueryComplexity = "O(1)"       // ComplexityO1 represents Redis index lookup
+	ComplexityOLogN  QueryComplexity = "O(log N)"   // ComplexityOLogN represents binary search operations
+	ComplexityON     QueryComplexity = "O(N)"       // ComplexityON represents full table scan
+	ComplexityONM    QueryComplexity = "O(N*M)"     // ComplexityONM represents nested loop operations
+	ComplexityONLogN QueryComplexity = "O(N log N)" // ComplexityONLogN represents sorting operations
 )
 
 // QueryProfile tracks execution details for a single query
@@ -158,7 +159,8 @@ func (p *QueryProfiler) Clear() {
 	p.profiles = make([]QueryProfile, 0)
 }
 
-// Summary returns a summary of query performance
+// ProfileSummary returns a summary of query performance metrics
+// ProfileSummary provides an aggregated view of query performance metrics
 type ProfileSummary struct {
 	TotalQueries    int
 	SlowQueries     int
@@ -172,6 +174,7 @@ type ProfileSummary struct {
 	ByComplexity    map[QueryComplexity]int
 }
 
+// MethodStats tracks statistics for a specific query method
 type MethodStats struct {
 	Count           int
 	TotalDuration   time.Duration

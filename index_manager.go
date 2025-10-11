@@ -125,7 +125,10 @@ func (im *IndexManager) Update(ctx context.Context, key string, newData interfac
 	}
 
 	// Get old data for index cleanup
-	oldBytes, _ := im.store.Backend().Get(ctx, key)
+	oldBytes, err := im.store.Backend().Get(ctx, key)
+	if err != nil && !IsNotFound(err) {
+		return err
+	}
 
 	// Marshal new data
 	newBytes, err := json.Marshal(newData)

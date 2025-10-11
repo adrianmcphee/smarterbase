@@ -81,7 +81,7 @@ func (idx *Indexer) QueryIndex(ctx context.Context, indexName, indexKey string) 
 	return mapping["object_key"], nil
 }
 
-// Example usage helper - creates common index patterns
+// ReverseIndexSpec creates common index patterns for reverse lookups
 func ReverseIndexSpec(name, indexPrefix string, extractID func(interface{}) string) *IndexSpec {
 	return &IndexSpec{
 		Name: name,

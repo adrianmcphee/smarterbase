@@ -185,7 +185,7 @@ type BatchOperationResult struct {
 	Errors     []BatchOperation
 }
 
-// Analyze analyzes batch operation results
+// AnalyzeBatchResults analyzes batch operation results
 func AnalyzeBatchResults(operations []BatchOperation) *BatchOperationResult {
 	result := &BatchOperationResult{
 		Total:  len(operations),

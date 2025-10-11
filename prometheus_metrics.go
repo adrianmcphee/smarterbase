@@ -153,6 +153,7 @@ func (p *PrometheusMetrics) registerDefaultMetrics() {
 	)
 }
 
+// Increment increments a Prometheus counter
 func (p *PrometheusMetrics) Increment(name string, tags ...string) {
 	counter, ok := p.counters[name]
 	if !ok {
@@ -172,6 +173,7 @@ func (p *PrometheusMetrics) Increment(name string, tags ...string) {
 	counter.With(labels).Inc()
 }
 
+// Gauge sets a Prometheus gauge value
 func (p *PrometheusMetrics) Gauge(name string, value float64, tags ...string) {
 	gauge, ok := p.gauges[name]
 	if !ok {
@@ -191,6 +193,7 @@ func (p *PrometheusMetrics) Gauge(name string, value float64, tags ...string) {
 	gauge.With(labels).Set(value)
 }
 
+// Histogram records a value in a Prometheus histogram
 func (p *PrometheusMetrics) Histogram(name string, value float64, tags ...string) {
 	histogram, ok := p.histograms[name]
 	if !ok {
@@ -211,6 +214,7 @@ func (p *PrometheusMetrics) Histogram(name string, value float64, tags ...string
 	histogram.With(labels).Observe(value)
 }
 
+// Timing records a duration in a Prometheus histogram
 func (p *PrometheusMetrics) Timing(name string, duration time.Duration, tags ...string) {
 	p.Histogram(name, duration.Seconds(), tags...)
 }

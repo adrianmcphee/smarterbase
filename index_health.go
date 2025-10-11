@@ -95,7 +95,7 @@ func (ihm *IndexHealthMonitor) Start(ctx context.Context) error {
 		for {
 			select {
 			case <-ctx.Done():
-				ihm.logger.Info("index health monitor stopped", "reason", "context cancelled")
+				ihm.logger.Info("index health monitor stopped", "reason", "context canceled")
 				return
 			case <-ihm.stopChan:
 				ihm.logger.Info("index health monitor stopped", "reason", "stop requested")
@@ -137,6 +137,8 @@ func (ihm *IndexHealthMonitor) Stop() {
 
 // Check performs a single health check on the specified entity type
 // If entityType is empty, checks all registered indexes
+//
+//nolint:gocyclo // Complexity is inherent to comprehensive health checking
 func (ihm *IndexHealthMonitor) Check(ctx context.Context, entityType string) (*IndexHealthReport, error) {
 	if ihm.redisIndexer == nil {
 		return nil, fmt.Errorf("redis indexer not configured")
@@ -325,7 +327,7 @@ func (ihm *IndexHealthMonitor) RepairDrift(ctx context.Context, report *IndexHea
 		// Check for cancellation
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("repair cancelled: %w", ctx.Err())
+			return fmt.Errorf("repair canceled: %w", ctx.Err())
 		default:
 		}
 	}
@@ -350,7 +352,7 @@ func (ihm *IndexHealthMonitor) RepairDrift(ctx context.Context, report *IndexHea
 
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("repair cancelled: %w", ctx.Err())
+			return fmt.Errorf("repair canceled: %w", ctx.Err())
 		default:
 		}
 	}

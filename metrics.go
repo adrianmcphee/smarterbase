@@ -23,9 +23,16 @@ type Metrics interface {
 // NoOpMetrics is a metrics collector that does nothing
 type NoOpMetrics struct{}
 
-func (m *NoOpMetrics) Increment(name string, tags ...string)                      {}
-func (m *NoOpMetrics) Gauge(name string, value float64, tags ...string)           {}
-func (m *NoOpMetrics) Histogram(name string, value float64, tags ...string)       {}
+// Increment increments a counter (no-op implementation)
+func (m *NoOpMetrics) Increment(name string, tags ...string) {}
+
+// Gauge sets a gauge value (no-op implementation)
+func (m *NoOpMetrics) Gauge(name string, value float64, tags ...string) {}
+
+// Histogram records a histogram value (no-op implementation)
+func (m *NoOpMetrics) Histogram(name string, value float64, tags ...string) {}
+
+// Timing records a timing duration (no-op implementation)
 func (m *NoOpMetrics) Timing(name string, duration time.Duration, tags ...string) {}
 
 // InMemoryMetrics stores metrics in memory for testing (thread-safe)
@@ -37,6 +44,7 @@ type InMemoryMetrics struct {
 	Timings    map[string][]time.Duration
 }
 
+// NewInMemoryMetrics creates an in-memory metrics collector for testing
 func NewInMemoryMetrics() *InMemoryMetrics {
 	return &InMemoryMetrics{
 		Counters:   make(map[string]int),
@@ -46,24 +54,28 @@ func NewInMemoryMetrics() *InMemoryMetrics {
 	}
 }
 
+// Increment increments a counter in memory
 func (m *InMemoryMetrics) Increment(name string, tags ...string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Counters[name]++
 }
 
+// Gauge sets a gauge value in memory
 func (m *InMemoryMetrics) Gauge(name string, value float64, tags ...string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Gauges[name] = value
 }
 
+// Histogram records a histogram value in memory
 func (m *InMemoryMetrics) Histogram(name string, value float64, tags ...string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Histograms[name] = append(m.Histograms[name], value)
 }
 
+// Timing records a timing duration in memory
 func (m *InMemoryMetrics) Timing(name string, duration time.Duration, tags ...string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

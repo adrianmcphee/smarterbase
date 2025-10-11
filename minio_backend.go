@@ -9,6 +9,11 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	schemeHTTP  = "http"
+	schemeHTTPS = "https"
+)
+
 // MinIOConfig contains MinIO-specific configuration
 type MinIOConfig struct {
 	Endpoint        string // e.g., "localhost:9000" or "minio.example.com"
@@ -21,9 +26,9 @@ type MinIOConfig struct {
 // NewMinIOBackend creates a new MinIO backend
 // MinIO is S3-compatible, so this wraps S3Backend with MinIO-specific configuration
 func NewMinIOBackend(cfg MinIOConfig) (Backend, error) {
-	scheme := "http"
+	scheme := schemeHTTP
 	if cfg.UseSSL {
-		scheme = "https"
+		scheme = schemeHTTPS
 	}
 	endpoint := fmt.Sprintf("%s://%s", scheme, cfg.Endpoint)
 
@@ -40,9 +45,9 @@ func NewMinIOBackend(cfg MinIOConfig) (Backend, error) {
 
 // NewMinIOBackendWithRedisLock creates a MinIO backend with distributed locking
 func NewMinIOBackendWithRedisLock(cfg MinIOConfig, redisClient *redis.Client) (Backend, error) {
-	scheme := "http"
+	scheme := schemeHTTP
 	if cfg.UseSSL {
-		scheme = "https"
+		scheme = schemeHTTPS
 	}
 	endpoint := fmt.Sprintf("%s://%s", scheme, cfg.Endpoint)
 

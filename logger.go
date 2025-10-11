@@ -13,8 +13,13 @@ type Logger interface {
 // NoOpLogger is a logger that does nothing
 type NoOpLogger struct{}
 
+// Debug logs a debug message (no-op implementation)
 func (l *NoOpLogger) Debug(msg string, fields ...interface{}) {}
-func (l *NoOpLogger) Info(msg string, fields ...interface{})  {}
+
+// Info logs an info message (no-op implementation)
+func (l *NoOpLogger) Info(msg string, fields ...interface{}) {}
+
+// Warn logs a warning message (no-op implementation)
 func (l *NoOpLogger) Warn(msg string, fields ...interface{})  {}
 func (l *NoOpLogger) Error(msg string, fields ...interface{}) {}
 
@@ -24,18 +29,22 @@ type StdLogger struct {
 	prefix string
 }
 
+// NewStdLogger creates a logger that writes to standard output
 func NewStdLogger(prefix string) *StdLogger {
 	return &StdLogger{prefix: prefix}
 }
 
+// Debug logs a debug message to standard output
 func (l *StdLogger) Debug(msg string, fields ...interface{}) {
 	l.log("DEBUG", msg, fields...)
 }
 
+// Info logs an info message to standard output
 func (l *StdLogger) Info(msg string, fields ...interface{}) {
 	l.log("INFO", msg, fields...)
 }
 
+// Warn logs a warning message to standard output
 func (l *StdLogger) Warn(msg string, fields ...interface{}) {
 	l.log("WARN", msg, fields...)
 }

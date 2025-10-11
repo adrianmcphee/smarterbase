@@ -39,7 +39,7 @@ var (
 	ErrInvalidConfig = errors.New("invalid configuration")
 )
 
-// Error wrapping helpers
+// ErrorWithContext adds additional context to errors for better debugging and logging
 type ErrorWithContext struct {
 	Err     error
 	Context map[string]interface{}

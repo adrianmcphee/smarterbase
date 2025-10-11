@@ -50,14 +50,17 @@ func NewDevelopmentZapLogger() (*ZapLogger, error) {
 	return NewZapLogger(logger), nil
 }
 
+// Debug logs a debug message using Zap
 func (l *ZapLogger) Debug(msg string, fields ...interface{}) {
 	l.logger.Debugw(msg, fields...)
 }
 
+// Info logs an info message using Zap
 func (l *ZapLogger) Info(msg string, fields ...interface{}) {
 	l.logger.Infow(msg, fields...)
 }
 
+// Warn logs a warning message using Zap
 func (l *ZapLogger) Warn(msg string, fields ...interface{}) {
 	l.logger.Warnw(msg, fields...)
 }

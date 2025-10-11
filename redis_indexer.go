@@ -316,7 +316,7 @@ func (r *RedisIndexer) GetIndexStats(ctx context.Context, entityType, indexName 
 	return stats, nil
 }
 
-// Helper function to extract a simple field from JSON
+// ExtractJSONField extracts a simple field from JSON data
 func ExtractJSONField(fieldName string) func(objectKey string, data []byte) ([]IndexEntry, error) {
 	return func(objectKey string, data []byte) ([]IndexEntry, error) {
 		var obj map[string]interface{}
@@ -345,7 +345,7 @@ func ExtractJSONField(fieldName string) func(objectKey string, data []byte) ([]I
 	}
 }
 
-// Helper function to extract nested JSON field (e.g., "gallery.postcode")
+// ExtractNestedJSONField extracts nested JSON field paths like "gallery.postcode" (e.g., "gallery.postcode")
 func ExtractNestedJSONField(fieldPath ...string) func(objectKey string, data []byte) ([]IndexEntry, error) {
 	return func(objectKey string, data []byte) ([]IndexEntry, error) {
 		var obj map[string]interface{}

@@ -211,7 +211,7 @@ func TestTransaction_ContextCancellation(t *testing.T) {
 	err := tx.Commit(ctx)
 	// Behavior depends on implementation - may succeed or fail
 	// At minimum, should not panic
-	t.Logf("Commit with cancelled context: %v", err)
+	t.Logf("Commit with canceled context: %v", err)
 }
 
 // TestTransaction_ConcurrentConflicts tests multiple transactions on same key

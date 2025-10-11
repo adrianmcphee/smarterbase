@@ -145,7 +145,7 @@ func TestDistributedLock_ContextCancellation(t *testing.T) {
 		cancel()
 	}()
 
-	// Second process should fail when context is cancelled
+	// Second process should fail when context is canceled
 	_, err = lock.TryLockWithRetry(ctx, "test-key", 5*time.Second, 10)
 	if err == nil {
 		t.Error("should have failed due to context cancellation")

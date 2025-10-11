@@ -25,6 +25,7 @@ func NewS3Backend(client *s3.Client, bucket string) Backend {
 	}
 }
 
+// Get retrieves data for the given key from S3
 func (b *S3Backend) Get(ctx context.Context, key string) ([]byte, error) {
 	result, err := b.client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(b.bucket),
@@ -39,11 +40,12 @@ func (b *S3Backend) Get(ctx context.Context, key string) ([]byte, error) {
 		}
 		return nil, err
 	}
-	defer result.Body.Close()
+	defer func() { _ = result.Body.Close() }() //nolint:errcheck // Deferred close
 
 	return io.ReadAll(result.Body)
 }
 
+// Put stores data for the given key to S3
 func (b *S3Backend) Put(ctx context.Context, key string, data []byte) error {
 	_, err := b.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(b.bucket),
@@ -53,6 +55,7 @@ func (b *S3Backend) Put(ctx context.Context, key string, data []byte) error {
 	return err
 }
 
+// Delete removes the object at the given key from S3
 func (b *S3Backend) Delete(ctx context.Context, key string) error {
 	_, err := b.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(b.bucket),
@@ -61,6 +64,7 @@ func (b *S3Backend) Delete(ctx context.Context, key string) error {
 	return err
 }
 
+// Exists checks if an object exists at the given key in S3
 func (b *S3Backend) Exists(ctx context.Context, key string) (bool, error) {
 	_, err := b.client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(b.bucket),
@@ -75,6 +79,7 @@ func (b *S3Backend) Exists(ctx context.Context, key string) (bool, error) {
 	return true, nil
 }
 
+// GetWithETag retrieves data and its ETag for optimistic locking from S3
 func (b *S3Backend) GetWithETag(ctx context.Context, key string) ([]byte, string, error) {
 	result, err := b.client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(b.bucket),
@@ -83,7 +88,7 @@ func (b *S3Backend) GetWithETag(ctx context.Context, key string) ([]byte, string
 	if err != nil {
 		return nil, "", err
 	}
-	defer result.Body.Close()
+	defer func() { _ = result.Body.Close() }() //nolint:errcheck // Deferred close
 
 	data, err := io.ReadAll(result.Body)
 	if err != nil {
@@ -171,6 +176,7 @@ func (b *S3Backend) PutIfMatch(ctx context.Context, key string, data []byte, exp
 	return newETag, nil
 }
 
+// List returns all keys with the given prefix from S3
 func (b *S3Backend) List(ctx context.Context, prefix string) ([]string, error) {
 	var keys []string
 
@@ -194,6 +200,7 @@ func (b *S3Backend) List(ctx context.Context, prefix string) ([]string, error) {
 	return keys, nil
 }
 
+// ListPaginated streams keys with the given prefix in batches from S3
 func (b *S3Backend) ListPaginated(ctx context.Context, prefix string, handler func(keys []string) error) error {
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(b.bucket),
@@ -220,6 +227,7 @@ func (b *S3Backend) ListPaginated(ctx context.Context, prefix string, handler fu
 	return nil
 }
 
+// GetStream returns a reader for streaming large objects from S3
 func (b *S3Backend) GetStream(ctx context.Context, key string) (io.ReadCloser, error) {
 	result, err := b.client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(b.bucket),
@@ -232,6 +240,7 @@ func (b *S3Backend) GetStream(ctx context.Context, key string) (io.ReadCloser, e
 	return result.Body, nil
 }
 
+// PutStream writes large objects from a stream to S3
 func (b *S3Backend) PutStream(ctx context.Context, key string, reader io.Reader, size int64) error {
 	_, err := b.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(b.bucket),
@@ -266,6 +275,7 @@ func (b *S3Backend) Append(ctx context.Context, key string, data []byte) error {
 	return b.Put(ctx, key, combined)
 }
 
+// Ping checks if the S3 backend is accessible and operational
 func (b *S3Backend) Ping(ctx context.Context) error {
 	_, err := b.client.HeadBucket(ctx, &s3.HeadBucketInput{
 		Bucket: aws.String(b.bucket),
@@ -273,6 +283,7 @@ func (b *S3Backend) Ping(ctx context.Context) error {
 	return err
 }
 
+// Close releases any resources held by the S3 backend
 func (b *S3Backend) Close() error {
 	// S3 client doesn't need explicit closing
 	return nil

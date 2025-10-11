@@ -43,6 +43,7 @@ func NewGCSBackend(ctx context.Context, cfg GCSConfig) (Backend, error) {
 	}, nil
 }
 
+// Get retrieves data for the given key from GCS
 func (b *GCSBackend) Get(ctx context.Context, key string) ([]byte, error) {
 	obj := b.client.Bucket(b.bucket).Object(key)
 	reader, err := obj.NewReader(ctx)
@@ -52,15 +53,16 @@ func (b *GCSBackend) Get(ctx context.Context, key string) ([]byte, error) {
 		}
 		return nil, err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }() //nolint:errcheck // Deferred close
 
 	return io.ReadAll(reader)
 }
 
+// Put stores data for the given key to GCS
 func (b *GCSBackend) Put(ctx context.Context, key string, data []byte) error {
 	obj := b.client.Bucket(b.bucket).Object(key)
 	writer := obj.NewWriter(ctx)
-	defer writer.Close()
+	defer func() { _ = writer.Close() }() //nolint:errcheck // Deferred close
 
 	if _, err := writer.Write(data); err != nil {
 		return err
@@ -69,11 +71,13 @@ func (b *GCSBackend) Put(ctx context.Context, key string, data []byte) error {
 	return writer.Close()
 }
 
+// Delete removes the object at the given key from GCS
 func (b *GCSBackend) Delete(ctx context.Context, key string) error {
 	obj := b.client.Bucket(b.bucket).Object(key)
 	return obj.Delete(ctx)
 }
 
+// Exists checks if an object exists at the given key in GCS
 func (b *GCSBackend) Exists(ctx context.Context, key string) (bool, error) {
 	obj := b.client.Bucket(b.bucket).Object(key)
 	_, err := obj.Attrs(ctx)
@@ -86,6 +90,7 @@ func (b *GCSBackend) Exists(ctx context.Context, key string) (bool, error) {
 	return true, nil
 }
 
+// GetWithETag retrieves data and its ETag for optimistic locking from GCS
 func (b *GCSBackend) GetWithETag(ctx context.Context, key string) ([]byte, string, error) {
 	obj := b.client.Bucket(b.bucket).Object(key)
 
@@ -99,7 +104,7 @@ func (b *GCSBackend) GetWithETag(ctx context.Context, key string) ([]byte, strin
 	if err != nil {
 		return nil, "", err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }() //nolint:errcheck // Deferred close
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
@@ -126,7 +131,7 @@ func (b *GCSBackend) PutIfMatch(ctx context.Context, key string, data []byte, ex
 
 	// Create writer with precondition
 	writer := obj.If(storage.Conditions{GenerationMatch: expectedGen}).NewWriter(ctx)
-	defer writer.Close()
+	defer func() { _ = writer.Close() }() //nolint:errcheck // Deferred close
 
 	if _, err := writer.Write(data); err != nil {
 		return "", err
@@ -152,6 +157,7 @@ func (b *GCSBackend) PutIfMatch(ctx context.Context, key string, data []byte, ex
 	return newETag, nil
 }
 
+// List returns all keys with the given prefix from GCS
 func (b *GCSBackend) List(ctx context.Context, prefix string) ([]string, error) {
 	var keys []string
 
@@ -172,6 +178,7 @@ func (b *GCSBackend) List(ctx context.Context, prefix string) ([]string, error) 
 	return keys, nil
 }
 
+// ListPaginated streams keys with the given prefix in batches from GCS
 func (b *GCSBackend) ListPaginated(ctx context.Context, prefix string, handler func(keys []string) error) error {
 	query := &storage.Query{Prefix: prefix}
 	it := b.client.Bucket(b.bucket).Objects(ctx, query)
@@ -206,15 +213,17 @@ func (b *GCSBackend) ListPaginated(ctx context.Context, prefix string, handler f
 	return nil
 }
 
+// GetStream returns a reader for streaming large objects from GCS
 func (b *GCSBackend) GetStream(ctx context.Context, key string) (io.ReadCloser, error) {
 	obj := b.client.Bucket(b.bucket).Object(key)
 	return obj.NewReader(ctx)
 }
 
+// PutStream writes large objects from a stream to GCS
 func (b *GCSBackend) PutStream(ctx context.Context, key string, reader io.Reader, size int64) error {
 	obj := b.client.Bucket(b.bucket).Object(key)
 	writer := obj.NewWriter(ctx)
-	defer writer.Close()
+	defer func() { _ = writer.Close() }() //nolint:errcheck // Deferred close
 
 	if _, err := io.Copy(writer, reader); err != nil {
 		return err
@@ -239,6 +248,7 @@ func (b *GCSBackend) Append(ctx context.Context, key string, data []byte) error 
 	return b.Put(ctx, key, combined)
 }
 
+// Ping checks if the GCS backend is accessible and operational
 func (b *GCSBackend) Ping(ctx context.Context) error {
 	// Check bucket access
 	bucket := b.client.Bucket(b.bucket)
@@ -246,6 +256,7 @@ func (b *GCSBackend) Ping(ctx context.Context) error {
 	return err
 }
 
+// Close releases any resources held by the GCS backend
 func (b *GCSBackend) Close() error {
 	return b.client.Close()
 }
