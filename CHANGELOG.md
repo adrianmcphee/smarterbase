@@ -1,3 +1,9 @@
+## [1.2.3](https://github.com/adrianmcphee/smarterbase/compare/v1.2.2...v1.2.3) (2025-10-11)
+
+### Bug Fixes
+
+* resolve race condition in TestIntegration_ConcurrentWrites ([e60b751](https://github.com/adrianmcphee/smarterbase/commit/e60b75192862c10f2be8f7e6186244ea5123337e))
+
 ## [1.2.2](https://github.com/adrianmcphee/smarterbase/compare/v1.2.1...v1.2.2) (2025-10-11)
 
 ### Bug Fixes
