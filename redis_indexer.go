@@ -106,14 +106,23 @@ func (r *RedisIndexer) updateIndex(ctx context.Context, spec *MultiIndexSpec, ob
 	for _, entry := range entries {
 		setKey := r.getSetKey(spec.EntityType, entry.IndexName, entry.IndexValue)
 
-		// Add to Redis Set (SADD is idempotent)
-		if err := r.redis.SAdd(ctx, setKey, objectKey).Err(); err != nil {
-			return fmt.Errorf("failed to add to Redis set %s: %w", setKey, err)
-		}
+		// Add to Redis Set (SADD is idempotent) with circuit breaker protection
+		err := r.circuitBreaker.Execute(ctx, func() error {
+			if err := r.redis.SAdd(ctx, setKey, objectKey).Err(); err != nil {
+				return fmt.Errorf("failed to add to Redis set %s: %w", setKey, err)
+			}
 
-		// Set TTL if configured
-		if spec.TTL > 0 {
-			r.redis.Expire(ctx, setKey, spec.TTL)
+			// Set TTL if configured
+			if spec.TTL > 0 {
+				if err := r.redis.Expire(ctx, setKey, spec.TTL).Err(); err != nil {
+					return fmt.Errorf("failed to set TTL for Redis set %s: %w", setKey, err)
+				}
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
 		}
 	}
 
@@ -166,11 +175,18 @@ func (r *RedisIndexer) QueryMultiple(ctx context.Context, entityType, indexName 
 		setKeys[i] = r.getSetKey(entityType, indexName, value)
 	}
 
-	// Use SUNION for efficient multi-value query
-	members, err := r.redis.SUnion(ctx, setKeys...).Result()
-	if err == redis.Nil {
-		return []string{}, nil
-	}
+	// Use SUNION for efficient multi-value query with circuit breaker protection
+	var members []string
+	err := r.circuitBreaker.Execute(ctx, func() error {
+		var err error
+		members, err = r.redis.SUnion(ctx, setKeys...).Result()
+		if err == redis.Nil {
+			members = []string{}
+			return nil
+		}
+		return err
+	})
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to query multiple Redis sets: %w", err)
 	}
@@ -226,8 +242,17 @@ func (r *RedisIndexer) removeFromIndex(ctx context.Context, spec *MultiIndexSpec
 	// Remove object from each index value's set
 	for _, entry := range entries {
 		setKey := r.getSetKey(spec.EntityType, entry.IndexName, entry.IndexValue)
-		if err := r.redis.SRem(ctx, setKey, objectKey).Err(); err != nil {
-			return fmt.Errorf("failed to remove from Redis set %s: %w", setKey, err)
+
+		// Remove with circuit breaker protection
+		err := r.circuitBreaker.Execute(ctx, func() error {
+			if err := r.redis.SRem(ctx, setKey, objectKey).Err(); err != nil {
+				return fmt.Errorf("failed to remove from Redis set %s: %w", setKey, err)
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
 		}
 	}
 

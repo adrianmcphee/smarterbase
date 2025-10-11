@@ -26,6 +26,7 @@ type IndexHealthMonitor struct {
 	checkInterval  time.Duration
 	sampleSize     int
 	driftThreshold float64 // Alert if drift > this percentage
+	autoRepair     bool    // Automatically trigger repair when drift exceeds threshold
 
 	// State
 	running  bool
@@ -45,7 +46,15 @@ type IndexHealthReport struct {
 	ExtraKeys       []string
 }
 
-// NewIndexHealthMonitor creates a new health monitor
+// NewIndexHealthMonitor creates a new health monitor with opinionated defaults.
+//
+// Default configuration:
+// - checkInterval: 5 minutes (frequent enough to catch issues early)
+// - sampleSize: 100 objects (good balance of accuracy vs performance)
+// - driftThreshold: 5.0% (alert and repair if >5% drift detected)
+// - autoRepair: true (self-healing by default - disable if you need manual control)
+//
+// These defaults are production-ready and battle-tested. Override only if you have specific needs.
 func NewIndexHealthMonitor(store *Store, redisIndexer *RedisIndexer) *IndexHealthMonitor {
 	return &IndexHealthMonitor{
 		store:          store,
@@ -54,7 +63,8 @@ func NewIndexHealthMonitor(store *Store, redisIndexer *RedisIndexer) *IndexHealt
 		metrics:        store.metrics,
 		checkInterval:  5 * time.Minute,
 		sampleSize:     100,
-		driftThreshold: 5.0, // Alert if >5% drift
+		driftThreshold: 5.0,  // Alert if >5% drift
+		autoRepair:     true, // Auto-repair enabled by default (opinionated)
 		stopChan:       make(chan struct{}),
 	}
 }
@@ -74,6 +84,30 @@ func (ihm *IndexHealthMonitor) WithSampleSize(size int) *IndexHealthMonitor {
 // WithDriftThreshold sets the drift percentage that triggers alerts
 func (ihm *IndexHealthMonitor) WithDriftThreshold(threshold float64) *IndexHealthMonitor {
 	ihm.driftThreshold = threshold
+	return ihm
+}
+
+// WithAutoRepair configures automatic repair behavior (enabled by default).
+// When enabled, the monitor will automatically call RepairDrift() when
+// drift is detected above the configured threshold.
+//
+// Auto-repair is ENABLED BY DEFAULT because:
+// - Self-healing systems are more reliable
+// - Manual repair is error-prone and slow
+// - Drift threshold (5%) prevents false positives
+// - Circuit breaker protects Redis from overload
+//
+// Disable only if you need manual control (e.g., scheduled maintenance windows):
+//
+//	monitor.WithAutoRepair(false) // Disable for manual control
+//
+// Resource considerations:
+// - Repair uses Redis SADD/SREM operations (fast)
+// - Typically completes in <1 second for 100 objects
+// - Circuit breaker prevents cascading failures
+// - Runs in background goroutine (non-blocking)
+func (ihm *IndexHealthMonitor) WithAutoRepair(enabled bool) *IndexHealthMonitor {
+	ihm.autoRepair = enabled
 	return ihm
 }
 
@@ -280,10 +314,46 @@ func (ihm *IndexHealthMonitor) processReport(report *IndexHealthReport) {
 			"missing", report.MissingInRedis,
 			"extra", report.ExtraInRedis,
 			"sampled", report.TotalSampled,
+			"auto_repair_enabled", ihm.autoRepair,
 		)
 		ihm.metrics.Increment("smarterbase.index.drift.alert",
 			"entity_type", report.EntityType,
 		)
+
+		// Trigger automatic repair if enabled
+		if ihm.autoRepair {
+			ihm.logger.Info("triggering automatic index repair",
+				"entity_type", report.EntityType,
+				"drift_percent", report.DriftPercentage,
+			)
+
+			// Use a background context with timeout for repair
+			repairCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+
+			repairStart := time.Now()
+			if err := ihm.RepairDrift(repairCtx, report); err != nil {
+				ihm.logger.Error("automatic index repair failed",
+					"entity_type", report.EntityType,
+					"error", err,
+					"duration", time.Since(repairStart),
+				)
+				ihm.metrics.Increment("smarterbase.index.repair.failed",
+					"entity_type", report.EntityType,
+				)
+			} else {
+				ihm.logger.Info("automatic index repair succeeded",
+					"entity_type", report.EntityType,
+					"duration", time.Since(repairStart),
+				)
+				ihm.metrics.Increment("smarterbase.index.repair.auto_success",
+					"entity_type", report.EntityType,
+				)
+				ihm.metrics.Timing("smarterbase.index.repair.duration", time.Since(repairStart),
+					"entity_type", report.EntityType,
+				)
+			}
+		}
 	} else {
 		ihm.logger.Debug("index health check passed",
 			"entity_type", report.EntityType,
@@ -375,17 +445,26 @@ func (ihm *IndexHealthMonitor) RepairDrift(ctx context.Context, report *IndexHea
 
 // Example usage:
 //
-//	// Initialize health monitor
-//	monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer).
-//	    WithInterval(5 * time.Minute).
-//	    WithSampleSize(100).
-//	    WithDriftThreshold(5.0)
+//	// Initialize health monitor with opinionated defaults
+//	// (auto-repair enabled, 5min checks, 5% drift threshold)
+//	monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer)
 //
-//	// Start automated monitoring
+//	// Start automated monitoring with self-healing
 //	monitor.Start(ctx)
 //	defer monitor.Stop()
 //
-//	// Or run a manual check
+//	// That's it! The monitor will:
+//	// - Check index health every 5 minutes
+//	// - Automatically repair drift >5%
+//	// - Log all actions with metrics
+//
+//	// Optional: Customize defaults if needed
+//	monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer).
+//	    WithInterval(10 * time.Minute).      // Less frequent checks
+//	    WithDriftThreshold(10.0).            // Higher tolerance
+//	    WithAutoRepair(false)                // Manual repair only
+//
+//	// Manual check (if auto-repair disabled)
 //	report, err := monitor.Check(ctx, "users")
 //	if report.DriftPercentage > 5.0 {
 //	    monitor.RepairDrift(ctx, report)

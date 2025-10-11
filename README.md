@@ -199,20 +199,16 @@ store.Query("users/").Offset(0).Limit(100).All(ctx, &users)
 - Application crashes mid-update
 - Redis failures
 
-**Solution:** Enable index health monitoring:
+**Solution:** Enable index health monitoring (auto-repair by default):
 ```go
-monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer).
-    WithInterval(5 * time.Minute).
-    WithDriftThreshold(5.0) // Alert if >5% drift
+// Self-healing index monitoring with opinionated defaults
+monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer)
 monitor.Start(ctx)
-```
 
-**Repair drift when detected:**
-```go
-report, _ := monitor.Check(ctx, "users")
-if report.DriftPercentage > 5.0 {
-    monitor.RepairDrift(ctx, report) // Rebuild from S3
-}
+// Monitor automatically:
+// - Checks every 5 minutes
+// - Repairs drift >5%
+// - Logs and emits metrics
 ```
 
 ---
@@ -681,15 +677,18 @@ func main() {
     indexManager := smarterbase.NewIndexManager(store).
         WithRedisIndexer(redisIndexer)
 
-    // 8. Start health monitoring
-    monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer).
-        WithInterval(5 * time.Minute).
-        WithDriftThreshold(5.0)
+    // 8. Start health monitoring with self-healing (opinionated defaults)
+    monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer)
 
     if err := monitor.Start(ctx); err != nil {
         log.Fatal(err)
     }
     defer monitor.Stop()
+
+    // That's it! Monitor will automatically:
+    // - Check index health every 5 minutes
+    // - Repair drift >5% automatically
+    // - Log all actions with Prometheus metrics
 
     // 9. Use in application
     order := &Order{
@@ -934,7 +933,23 @@ if analysis.Failed > 0 {
 ### Index Health Monitoring
 
 ```go
-// Manual health check
+// Simple: Just start the monitor with opinionated defaults
+// - Checks every 5 minutes
+// - Auto-repairs drift >5%
+// - Logs everything with metrics
+monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer)
+monitor.Start(ctx)
+defer monitor.Stop()
+
+// That's it! Self-healing by default.
+
+// Optional: Customize if needed
+monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer).
+    WithInterval(10 * time.Minute).  // Less frequent checks
+    WithDriftThreshold(10.0).         // Higher tolerance
+    WithAutoRepair(false)             // Disable auto-repair
+
+// Manual health check (if auto-repair disabled)
 report, err := monitor.Check(ctx, "users")
 if err != nil {
     log.Printf("Health check failed: %v", err)
@@ -945,26 +960,9 @@ if report.DriftPercentage > 5.0 {
     log.Printf("Missing in Redis: %d", report.MissingInRedis)
     log.Printf("Extra in Redis: %d", report.ExtraInRedis)
 
-    // Trigger repair
+    // Manual repair
     if err := monitor.RepairDrift(ctx, report); err != nil {
         log.Printf("Repair failed: %v", err)
-    }
-}
-
-// Scheduled repair job (run during off-peak hours)
-func scheduleRepair() {
-    ticker := time.NewTicker(24 * time.Hour)
-    defer ticker.Stop()
-
-    for range ticker.C {
-        // Run at 3 AM
-        now := time.Now()
-        if now.Hour() == 3 {
-            report, _ := monitor.Check(ctx, "")
-            if report.DriftPercentage > 1.0 {
-                monitor.RepairDrift(ctx, report)
-            }
-        }
     }
 }
 ```

@@ -96,7 +96,9 @@ func (tx *OptimisticTransaction) Commit(ctx context.Context) error {
 	for _, op := range tx.writes {
 		data, err := json.Marshal(op.value)
 		if err != nil {
-			_ = tx.rollback(ctx, written, originalValues) //nolint:errcheck // Rollback after commit failure
+			if rollbackErr := tx.rollback(ctx, written, originalValues); rollbackErr != nil {
+				return fmt.Errorf("marshal error for %s AND rollback failed (data may be inconsistent): %w, rollback error: %v", op.key, err, rollbackErr)
+			}
 			return fmt.Errorf("marshal error for %s: %w", op.key, err)
 		}
 
@@ -104,13 +106,17 @@ func (tx *OptimisticTransaction) Commit(ctx context.Context) error {
 		if expectedETag, tracked := tx.etags[op.key]; tracked {
 			_, err = tx.store.backend.PutIfMatch(ctx, op.key, data, expectedETag)
 			if err != nil {
-				_ = tx.rollback(ctx, written, originalValues) //nolint:errcheck // Rollback after commit failure
+				if rollbackErr := tx.rollback(ctx, written, originalValues); rollbackErr != nil {
+					return fmt.Errorf("optimistic lock failed for %s AND rollback failed (data may be inconsistent): %w, rollback error: %v", op.key, err, rollbackErr)
+				}
 				return fmt.Errorf("optimistic lock failed for %s: %w", op.key, err)
 			}
 		} else {
 			// Regular put for keys we didn't read
 			if err := tx.store.backend.Put(ctx, op.key, data); err != nil {
-				_ = tx.rollback(ctx, written, originalValues) //nolint:errcheck // Rollback after commit failure
+				if rollbackErr := tx.rollback(ctx, written, originalValues); rollbackErr != nil {
+					return fmt.Errorf("write error for %s AND rollback failed (data may be inconsistent): %w, rollback error: %v", op.key, err, rollbackErr)
+				}
 				return fmt.Errorf("write error for %s: %w", op.key, err)
 			}
 		}
@@ -125,7 +131,9 @@ func (tx *OptimisticTransaction) Commit(ctx context.Context) error {
 		}
 
 		if err := tx.store.backend.Delete(ctx, key); err != nil {
-			_ = tx.rollback(ctx, written, originalValues) //nolint:errcheck // Rollback after commit failure
+			if rollbackErr := tx.rollback(ctx, written, originalValues); rollbackErr != nil {
+				return fmt.Errorf("delete error for %s AND rollback failed (data may be inconsistent): %w, rollback error: %v", key, err, rollbackErr)
+			}
 			return fmt.Errorf("delete error for %s: %w", key, err)
 		}
 	}
@@ -216,7 +224,13 @@ func (s *Store) WithTransaction(ctx context.Context, fn func(tx *OptimisticTrans
 	tx := s.BeginTx(ctx)
 
 	if err := fn(tx); err != nil {
-		_ = tx.Rollback(ctx) //nolint:errcheck // Rollback on panic
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			s.logger.Error("transaction rollback failed after function error",
+				"fn_error", err,
+				"rollback_error", rollbackErr,
+			)
+			return fmt.Errorf("transaction function failed AND rollback failed (data may be inconsistent): %w, rollback error: %v", err, rollbackErr)
+		}
 		return err
 	}
 
