@@ -13,24 +13,24 @@
 
       <link rel="stylesheet" href="./assets/index.css">
       <style>
-        /* Add horizontal padding to containers on all screens */
+        /* Add horizontal padding to containers on all screens - force override */
         .container {
-          padding-left: 1rem;
-          padding-right: 1rem;
+          padding-left: 1rem !important;
+          padding-right: 1rem !important;
         }
 
         /* Increase padding on larger screens */
         @media (min-width: 640px) {
           .container {
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
           }
         }
 
         @media (min-width: 1024px) {
           .container {
-            padding-left: 2rem;
-            padding-right: 2rem;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
           }
         }
       </style>
