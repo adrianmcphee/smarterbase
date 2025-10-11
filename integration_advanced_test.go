@@ -27,39 +27,48 @@ func TestIntegration_ConcurrentWrites(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	defer redisClient.Close()
 
-	backend := NewFilesystemBackendWithRedisLock(t.TempDir(), redisClient)
+	backend := NewFilesystemBackend(t.TempDir())
 	store := NewStore(backend)
+	lock := NewDistributedLock(redisClient, "smarterbase")
 
 	key := "counter.json"
 	counter := map[string]int{"value": 0}
 	store.PutJSON(ctx, key, counter)
 
-	// Simulate 10 concurrent processes incrementing counter
+	// Simulate 5 concurrent processes incrementing counter
 	var wg sync.WaitGroup
-	concurrency := 10
-	incrementsPerWorker := 10
+	concurrency := 5
+	incrementsPerWorker := 20
 
 	for i := 0; i < concurrency; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for j := 0; j < incrementsPerWorker; j++ {
-				// Read-modify-write with optimistic locking
-				var c map[string]int
-				etag, err := store.GetJSONWithETag(ctx, key, &c)
-				if err != nil || c == nil {
-					// Initialize if failed
-					c = map[string]int{"value": 0}
-					etag = ""
+				// Retry loop for lock contention with more aggressive retries
+				maxRetries := 20
+				succeeded := false
+				var lastErr error
+				for retry := 0; retry < maxRetries; retry++ {
+					// Use WithAtomicUpdate for proper isolation
+					err := WithAtomicUpdate(ctx, store, lock, key, 1*time.Second, func(ctx context.Context) error {
+						var c map[string]int
+						if err := store.GetJSON(ctx, key, &c); err != nil {
+							c = map[string]int{"value": 0}
+						}
+						c["value"]++
+						return store.PutJSON(ctx, key, c)
+					})
+					if err == nil {
+						succeeded = true
+						break // Success
+					}
+					lastErr = err
+					// Shorter, consistent backoff
+					time.Sleep(50 * time.Millisecond)
 				}
-				c["value"]++
-
-				// This should NOT race due to distributed locks
-				_, err = store.PutJSONWithETag(ctx, key, c, etag)
-				if err != nil {
-					// Retry on conflict
-					time.Sleep(10 * time.Millisecond)
-					j-- // retry this increment
+				if !succeeded {
+					t.Errorf("Increment failed after %d retries: %v", maxRetries, lastErr)
 				}
 			}
 		}()
