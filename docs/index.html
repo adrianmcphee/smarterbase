@@ -13,10 +13,17 @@
 
       <link rel="stylesheet" href="./assets/index.css">
       <style>
+        /* Prevent horizontal scroll on the entire page */
+        html, body {
+          overflow-x: hidden !important;
+          max-width: 100vw !important;
+        }
+
         /* Add horizontal padding to containers on all screens - force override */
         .container {
           padding-left: 1rem !important;
           padding-right: 1rem !important;
+          max-width: 100% !important;
         }
 
         /* Increase padding on larger screens */
@@ -32,6 +39,17 @@
             padding-left: 2rem !important;
             padding-right: 2rem !important;
           }
+        }
+
+        /* Ensure pre/code blocks don't overflow on mobile */
+        pre {
+          max-width: 100% !important;
+          overflow-x: auto !important;
+        }
+
+        /* Make sure grids don't cause horizontal overflow on small screens */
+        .grid {
+          max-width: 100% !important;
         }
       </style>
     </head>
