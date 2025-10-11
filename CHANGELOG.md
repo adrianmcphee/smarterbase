@@ -1,3 +1,9 @@
+## [1.1.3](https://github.com/adrianmcphee/smarterbase/compare/v1.1.2...v1.1.3) (2025-10-11)
+
+### Bug Fixes
+
+* resolve all golangci-lint errors across codebase ([3f87909](https://github.com/adrianmcphee/smarterbase/commit/3f879098de90506aa03b79091de0bd8e02a0ab01))
+
 ## [1.1.2](https://github.com/adrianmcphee/smarterbase/compare/v1.1.1...v1.1.2) (2025-10-11)
 
 ### Bug Fixes
