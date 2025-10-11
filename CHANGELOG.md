@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/adrianmcphee/smarterbase/compare/v1.1.3...v1.2.0) (2025-10-11)
+
+### Features
+
+* add circuit breaker to Redis writes and enable auto-repair by default ([d04fffb](https://github.com/adrianmcphee/smarterbase/commit/d04fffb2230aca03580b32c3dcef19e5b7e948ce))
+
 ## [1.1.3](https://github.com/adrianmcphee/smarterbase/compare/v1.1.2...v1.1.3) (2025-10-11)
 
 ### Bug Fixes
