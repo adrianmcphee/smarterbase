@@ -1,3 +1,13 @@
+## [1.2.2](https://github.com/adrianmcphee/smarterbase/compare/v1.2.1...v1.2.2) (2025-10-11)
+
+### Bug Fixes
+
+* S3 Append should use IsNotFound instead of string matching ([4361f8a](https://github.com/adrianmcphee/smarterbase/commit/4361f8ab29998ff29eba523b9b97b734bb2da062))
+
+### Documentation
+
+* update datasheet to reflect v1.2.0 features ([15b9b74](https://github.com/adrianmcphee/smarterbase/commit/15b9b7496376a8016b98ffaa5ad359a01c1f133b))
+
 ## [1.2.1](https://github.com/adrianmcphee/smarterbase/compare/v1.2.0...v1.2.1) (2025-10-11)
 
 ### Bug Fixes
