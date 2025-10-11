@@ -289,8 +289,8 @@ func TestFilesystemBackend_Specific(t *testing.T) {
 
 		// Test with non-writable directory
 		readOnlyDir := filepath.Join(t.TempDir(), "readonly")
-		os.Mkdir(readOnlyDir, 0555) // read + execute only
-		defer os.Chmod(readOnlyDir, 0755)
+		_ = os.Mkdir(readOnlyDir, 0555) // read + execute only
+		defer func() { _ = os.Chmod(readOnlyDir, 0755) }()
 
 		roBackend := NewFilesystemBackend(readOnlyDir)
 		err = roBackend.Ping(ctx)
@@ -307,7 +307,7 @@ func TestFilesystemBackend_Specific(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			go func(n int) {
 				data := []byte(`{"value": ` + string(rune(n+'0')) + `}`)
-				backend.Put(ctx, key, data)
+				_ = backend.Put(ctx, key, data)
 				done <- true
 			}(i)
 		}
@@ -414,10 +414,10 @@ func TestGCSBackend_Compliance(t *testing.T) {
 	// Clean up test data
 	keys, _ := backend.List(ctx, "test/")
 	for _, key := range keys {
-		backend.Delete(ctx, key)
+		_ = backend.Delete(ctx, key)
 	}
 	keys, _ = backend.List(ctx, "list-test/")
 	for _, key := range keys {
-		backend.Delete(ctx, key)
+		_ = backend.Delete(ctx, key)
 	}
 }

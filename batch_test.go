@@ -73,8 +73,8 @@ func TestBatchGetJSON_MixedResults(t *testing.T) {
 	store := NewStore(backend)
 
 	// Create only 2 of 3 items
-	store.PutJSON(ctx, "batch/exists1.json", map[string]string{"id": "1"})
-	store.PutJSON(ctx, "batch/exists2.json", map[string]string{"id": "2"})
+	_ = store.PutJSON(ctx, "batch/exists1.json", map[string]string{"id": "1"})
+	_ = store.PutJSON(ctx, "batch/exists2.json", map[string]string{"id": "2"})
 	// batch/missing.json intentionally not created
 
 	keys := []string{
@@ -120,7 +120,7 @@ func TestBatchDelete_AllSucceed(t *testing.T) {
 	}
 
 	for _, key := range keys {
-		store.PutJSON(ctx, key, map[string]string{"test": "data"})
+		_ = store.PutJSON(ctx, key, map[string]string{"test": "data"})
 	}
 
 	// Delete all
@@ -209,7 +209,7 @@ func TestBatchWriter_ManualFlush(t *testing.T) {
 	// Add 3 items (less than batch size)
 	for i := 0; i < 3; i++ {
 		key := fmt.Sprintf("batch/item%d.json", i)
-		writer.Add(ctx, key, map[string]int{"id": i})
+		_ = writer.Add(ctx, key, map[string]int{"id": i})
 	}
 
 	// Items should NOT be written yet

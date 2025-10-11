@@ -112,6 +112,15 @@ jobs:
       - name: Build with race detector
         run: go build -race -v ./...
 
+      - name: Verify examples compile
+        run: |
+          for dir in examples/*/; do
+            if [ -f "$dir/main.go" ]; then
+              echo "Building example: $(basename $dir)"
+              (cd "$dir" && go build -v .)
+            fi
+          done
+
   lint:
     name: Lint
     runs-on: ubuntu-latest

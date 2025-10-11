@@ -201,8 +201,8 @@ func BenchmarkObservability_Overhead(b *testing.B) {
 	})
 
 	// Clean up for next run
-	os.RemoveAll(tmpDir)
-	os.MkdirAll(tmpDir, 0755)
+	_ = os.RemoveAll(tmpDir)
+	_ = os.MkdirAll(tmpDir, 0755)
 	backend = NewFilesystemBackend(tmpDir)
 
 	b.Run("WithObservability", func(b *testing.B) {
