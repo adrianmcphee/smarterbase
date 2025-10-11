@@ -1,3 +1,9 @@
+## [1.2.4](https://github.com/adrianmcphee/smarterbase/compare/v1.2.3...v1.2.4) (2025-10-11)
+
+### Bug Fixes
+
+* update mobile layout and codecov integration ([341696c](https://github.com/adrianmcphee/smarterbase/commit/341696cb49c8875df64ef46396836dff8adee1d7))
+
 ## [1.2.3](https://github.com/adrianmcphee/smarterbase/compare/v1.2.2...v1.2.3) (2025-10-11)
 
 ### Bug Fixes
