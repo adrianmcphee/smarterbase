@@ -16,28 +16,16 @@ jobs:
         go-version: ['1.24', '1.25']
 
     services:
-      minio:
-        image: minio/minio:latest
-        ports:
-          - 9000:9000
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
       redis:
         image: redis:7-alpine
         ports:
           - 6379:6379
         options: >-
-          --health-cmd "redis-cli ping"
+          --health-cmd "redis-cli ping || exit 1"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
+          --health-start-period 20s
 
     steps:
       - name: Checkout code
@@ -52,12 +40,33 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Create MinIO test bucket
+      - name: Start MinIO in background
         run: |
+          # Download and start MinIO server
+          wget -q https://dl.min.io/server/minio/release/linux-amd64/minio
+          chmod +x minio
+          mkdir -p /tmp/minio-data
+          export MINIO_ROOT_USER=minioadmin
+          export MINIO_ROOT_PASSWORD=minioadmin
+          ./minio server /tmp/minio-data --address ":9000" --console-address ":9001" &
+          echo "✓ MinIO started in background"
+
+      - name: Wait for services and setup MinIO
+        run: |
+          # Wait for Redis
+          timeout 30s bash -c 'until redis-cli -h localhost ping; do sleep 1; done'
+          echo "✓ Redis is ready"
+
+          # Wait for MinIO
+          timeout 60s bash -c 'until curl -f http://localhost:9000/minio/health/live 2>/dev/null; do sleep 2; done'
+          echo "✓ MinIO is ready"
+
+          # Setup MinIO client and create bucket
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
           chmod +x mc
           ./mc alias set minio http://localhost:9000 minioadmin minioadmin
           ./mc mb minio/test-bucket || true
+          echo "✓ MinIO bucket created"
 
       - name: Run unit tests
         run: go test -v -short -race -coverprofile=coverage-unit.out
@@ -75,13 +84,17 @@ jobs:
       - name: Combine coverage
         run: |
           go install github.com/wadey/gocovmerge@latest
-          gocovmerge coverage-*.out > coverage.out
-          go tool cover -func=coverage.out | grep total
+          gocovmerge coverage-*.out > coverage.out || echo "No coverage files to merge"
+          if [ -f coverage.out ]; then
+            go tool cover -func=coverage.out | grep total
+          fi
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           file: ./coverage.out
+          fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

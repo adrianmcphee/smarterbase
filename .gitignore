@@ -10,8 +10,16 @@
 
 # Output of the go coverage tool
 *.out
+coverage*.out
 coverage.txt
 coverage.html
+
+# Example binaries (built from examples/)
+/ecommerce-orders
+/event-logging
+/multi-tenant-config
+/user-management
+/metrics-dashboard
 
 # Go workspace file
 go.work
@@ -19,6 +27,10 @@ go.work.sum
 
 # Dependency directories
 vendor/
+
+# Test data directories
+/data/
+examples/*/data/
 
 # IDE and editor files
 .vscode/

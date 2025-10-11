@@ -174,7 +174,7 @@ encryptionKey := loadFromSecretsManager() // 32-byte key
 backend, _ := smarterbase.NewEncryptionBackend(s3Backend, encryptionKey)
 ```
 
-See [DEPLOYMENT.md](../DEPLOYMENT.md) for complete production setup guide.
+See the main [README.md](../README.md) for complete production setup guide.
 
 ## Learning Path
 
@@ -272,9 +272,9 @@ docker run -d -p 6379:6379 redis:7-alpine
 ## Next Steps
 
 1. Run all examples to understand capabilities
-2. Review [DEPLOYMENT.md](../DEPLOYMENT.md) for production setup
-3. Check main [README.md](../README.md) for API reference
-4. See [DATASHEET.md](../DATASHEET.md) for architecture details
+2. Check main [README.md](../README.md) for API reference and production setup
+3. See [DATASHEET.md](../DATASHEET.md) for architecture details
+4. Review [SECURITY.md](../SECURITY.md) for security best practices
 
 ## Contributing
 
