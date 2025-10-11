@@ -196,10 +196,10 @@ users, _ := store.Query("users/").
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-arrow-trend-up text-4xl text-primary"></i>
+                                <i class="fa-solid fa-shield-heart text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">Infinite Scale</h3>
-                            <p class="text-sm text-base-content/70">S3 scales infinitely, Redis clusters handle billions of indexes</p>
+                            <h3 class="text-xl font-bold text-primary">Self-Healing</h3>
+                            <p class="text-sm text-base-content/70">Automatic index repair and circuit breaker protection built-in</p>
                         </div>
                     </div>
 
@@ -281,7 +281,8 @@ orderIDs, _ := redisIndexer.QueryMultiValueIndex(
                                 <li>O(1) index queries</li>
                                 <li>1:N relationships (user → orders)</li>
                                 <li>Automatic index updates</li>
-                                <li>Health monitoring & auto-repair</li>
+                                <li>Self-healing with auto-repair</li>
+                                <li>Circuit breaker protection</li>
                             </ul>
                         </div>
                     </div>
@@ -338,7 +339,9 @@ store := smarterbase.NewStoreWithObservability(
 // Automatic tracking:
 // - Operation latency (histogram)
 // - Success/error rates
+// - Circuit breaker state
 // - Index health & drift
+// - Transaction rollback failures
 // - Query performance</code></pre>
                         </div>
 
@@ -354,6 +357,7 @@ store := smarterbase.NewStoreWithObservability(
                                 <li>15+ Prometheus metrics</li>
                                 <li>Zap structured logging</li>
                                 <li>Index health monitoring</li>
+                                <li>Transaction error tracking</li>
                                 <li>Query profiling</li>
                             </ul>
                         </div>
