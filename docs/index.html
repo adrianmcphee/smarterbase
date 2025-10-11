@@ -9,7 +9,7 @@
 <link rel="shortcut icon" href="./images/favicon.ico" />
 
 <script src="https://cdn.jsdelivr.net/npm/card3d@2.6.5/dist/card3d.min.js"></script>
-<script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
       <link rel="stylesheet" href="./assets/index.css">
     </head>
@@ -33,7 +33,7 @@
                     id="menu-drawer-trigger"
                     aria-label="open sidebar"
                     class="btn btn-square btn-ghost btn-sm lg:hidden">
-                    <span class="iconify lucide--menu size-5"></span>
+                    <i class="fa-solid fa-bars"></i>
                 </label>
 
                 <!-- Navbar Brand logo -->
@@ -52,7 +52,7 @@
 
             <div class="space-x-2">
                 <a class="btn btn-ghost btn-sm" href="https://github.com/adrianmcphee/smarterbase" target="_blank">
-                    <span class="iconify lucide--github size-4"></span>
+                    <i class="fa-brands fa-github"></i>
                     GitHub
                 </a>
                 <a class="btn btn-primary btn-sm" href="#quickstart">Get Started</a>
@@ -95,7 +95,7 @@
                         <div class="mt-8 inline-flex gap-3 sm:mt-16">
                             <a href="https://github.com/adrianmcphee/smarterbase" target="_blank">
                                 <button class="btn btn-primary">
-                                    <span class="iconify lucide--github size-4"></span>
+                                    <i class="fa-brands fa-github"></i>
                                     View on GitHub
                                 </button>
                             </a>
@@ -186,7 +186,7 @@ users, _ := store.Query("users/").
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <span class="iconify lucide--shield-check size-10 text-primary"></span>
+                                <i class="fa-solid fa-shield-halved text-4xl text-primary"></i>
                             </div>
                             <h3 class="text-xl font-bold text-primary">11 9s Durability</h3>
                             <p class="text-sm text-base-content/70">99.999999999% data durability via S3 multi-AZ replication</p>
@@ -196,7 +196,7 @@ users, _ := store.Query("users/").
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <span class="iconify lucide--trending-up size-10 text-primary"></span>
+                                <i class="fa-solid fa-arrow-trend-up text-4xl text-primary"></i>
                             </div>
                             <h3 class="text-xl font-bold text-primary">Infinite Scale</h3>
                             <p class="text-sm text-base-content/70">S3 scales infinitely, Redis clusters handle billions of indexes</p>
@@ -206,7 +206,7 @@ users, _ := store.Query("users/").
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <span class="iconify lucide--database-backup size-10 text-primary"></span>
+                                <i class="fa-solid fa-database text-4xl text-primary"></i>
                             </div>
                             <h3 class="text-xl font-bold text-primary">Zero Backups</h3>
                             <p class="text-sm text-base-content/70">S3 handles durability automatically, no backup strategies needed</p>
@@ -216,7 +216,7 @@ users, _ := store.Query("users/").
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <span class="iconify lucide--file-json size-10 text-primary"></span>
+                                <i class="fa-solid fa-file-code text-4xl text-primary"></i>
                             </div>
                             <h3 class="text-xl font-bold text-primary">Schema-less</h3>
                             <p class="text-sm text-base-content/70">JSON documents, no migrations ever, change structure anytime</p>
@@ -226,7 +226,7 @@ users, _ := store.Query("users/").
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <span class="iconify lucide--file-plus size-10 text-primary"></span>
+                                <i class="fa-solid fa-file-circle-plus text-4xl text-primary"></i>
                             </div>
                             <h3 class="text-xl font-bold text-primary">JSONL Support</h3>
                             <p class="text-sm text-base-content/70">Append-only event logs, perfect for audit trails and activity logs</p>
@@ -376,7 +376,7 @@ store := smarterbase.NewStoreWithObservability(
                         <div class="card-body">
                             <div class="flex items-center gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--user-circle size-6 text-primary"></span>
+                                    <i class="fa-solid fa-circle-user text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium">User Management</h3>
                             </div>
@@ -390,7 +390,7 @@ store := smarterbase.NewStoreWithObservability(
                         <div class="card-body">
                             <div class="flex items-center gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--shopping-bag size-6 text-primary"></span>
+                                    <i class="fa-solid fa-bag-shopping text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium">E-commerce</h3>
                             </div>
@@ -404,7 +404,7 @@ store := smarterbase.NewStoreWithObservability(
                         <div class="card-body">
                             <div class="flex items-center gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--sliders size-6 text-primary"></span>
+                                    <i class="fa-solid fa-sliders text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium">Configuration</h3>
                             </div>
@@ -418,7 +418,7 @@ store := smarterbase.NewStoreWithObservability(
                         <div class="card-body">
                             <div class="flex items-center gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--newspaper size-6 text-primary"></span>
+                                    <i class="fa-solid fa-newspaper text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium">Content Management</h3>
                             </div>
@@ -432,7 +432,7 @@ store := smarterbase.NewStoreWithObservability(
                         <div class="card-body">
                             <div class="flex items-center gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--scroll size-6 text-primary"></span>
+                                    <i class="fa-solid fa-scroll text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium">Event Logging</h3>
                             </div>
@@ -446,7 +446,7 @@ store := smarterbase.NewStoreWithObservability(
                         <div class="card-body">
                             <div class="flex items-center gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--layers size-6 text-primary"></span>
+                                    <i class="fa-solid fa-layer-group text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium">Multi-tenant SaaS</h3>
                             </div>
@@ -632,7 +632,7 @@ userIDs, _ := redisIndexer.QueryMultiValueIndex(
 
                 <div class="mt-12 text-center">
                     <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="btn btn-primary btn-lg">
-                        <span class="iconify lucide--github size-5"></span>
+                        <i class="fa-brands fa-github text-lg"></i>
                         View Full Documentation on GitHub
                     </a>
                 </div>
@@ -654,10 +654,10 @@ userIDs, _ := redisIndexer.QueryMultiValueIndex(
                         <div class="card-body">
                             <div class="flex items-center justify-between gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--book-open size-6 text-primary"></span>
+                                    <i class="fa-solid fa-book-open text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium flex-1">README</h3>
-                                <span class="iconify lucide--arrow-right size-4"></span>
+                                <i class="fa-solid fa-arrow-right"></i>
                             </div>
                             <p class="mt-2">
                                 Complete user guide with examples, quick start, and best practices.
@@ -670,10 +670,10 @@ userIDs, _ := redisIndexer.QueryMultiValueIndex(
                         <div class="card-body">
                             <div class="flex items-center justify-between gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--file-text size-6 text-primary"></span>
+                                    <i class="fa-solid fa-file-lines text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium flex-1">Technical Datasheet</h3>
-                                <span class="iconify lucide--arrow-right size-4"></span>
+                                <i class="fa-solid fa-arrow-right"></i>
                             </div>
                             <p class="mt-2">
                                 Architecture, performance characteristics, and detailed specifications.
@@ -686,10 +686,10 @@ userIDs, _ := redisIndexer.QueryMultiValueIndex(
                         <div class="card-body">
                             <div class="flex items-center justify-between gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--git-pull-request size-6 text-primary"></span>
+                                    <i class="fa-solid fa-code-pull-request text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium flex-1">Contributing Guide</h3>
-                                <span class="iconify lucide--arrow-right size-4"></span>
+                                <i class="fa-solid fa-arrow-right"></i>
                             </div>
                             <p class="mt-2">
                                 Development setup, testing guidelines, and contribution workflow.
@@ -702,10 +702,10 @@ userIDs, _ := redisIndexer.QueryMultiValueIndex(
                         <div class="card-body">
                             <div class="flex items-center justify-between gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <span class="iconify lucide--code size-6 text-primary"></span>
+                                    <i class="fa-solid fa-code text-2xl text-primary"></i>
                                 </div>
                                 <h3 class="text-lg font-medium flex-1">Examples</h3>
-                                <span class="iconify lucide--arrow-right size-4"></span>
+                                <i class="fa-solid fa-arrow-right"></i>
                             </div>
                             <p class="mt-2">
                                 Working examples for user management, e-commerce, event logging, and more.
