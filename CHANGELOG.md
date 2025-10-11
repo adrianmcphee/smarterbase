@@ -1,3 +1,15 @@
+## [1.1.2](https://github.com/adrianmcphee/smarterbase/compare/v1.1.1...v1.1.2) (2025-10-11)
+
+### Bug Fixes
+
+* resolve CI test failures and add developer tooling ([5a58686](https://github.com/adrianmcphee/smarterbase/commit/5a5868677fb2e765f15e8db6de08dc3b5f4ce223))
+
+### Documentation
+
+* add GitHub Pages site with dark theme and benefits section ([6883341](https://github.com/adrianmcphee/smarterbase/commit/6883341e6fa27a83ff4b657aba18c24235c2f897))
+* enhance examples with compelling value propositions ([7ae5a88](https://github.com/adrianmcphee/smarterbase/commit/7ae5a883d11f3fba51679b3b10ff01bc989cf8dd))
+* switch to Font Awesome icons for better reliability ([195316d](https://github.com/adrianmcphee/smarterbase/commit/195316d540715ea23f0f2c133fcbd40c5d854088))
+
 ## [1.1.1](https://github.com/adrianmcphee/smarterbase/compare/v1.1.0...v1.1.1) (2025-10-11)
 
 ### Bug Fixes
