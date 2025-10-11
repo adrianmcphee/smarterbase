@@ -1,3 +1,9 @@
+## [1.2.7](https://github.com/adrianmcphee/smarterbase/compare/v1.2.6...v1.2.7) (2025-10-11)
+
+### Bug Fixes
+
+* prevent horizontal scroll and overflow on mobile with comprehensive CSS fixes ([5e3fa2d](https://github.com/adrianmcphee/smarterbase/commit/5e3fa2dfa6eb401a2cf325df499ff4092ab81e99))
+
 ## [1.2.6](https://github.com/adrianmcphee/smarterbase/compare/v1.2.5...v1.2.6) (2025-10-11)
 
 ### Bug Fixes
