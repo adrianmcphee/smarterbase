@@ -1,3 +1,9 @@
+## [1.2.8](https://github.com/adrianmcphee/smarterbase/compare/v1.2.7...v1.2.8) (2025-10-11)
+
+### Bug Fixes
+
+* apply aggressive width constraints to prevent mobile overflow ([adc6be9](https://github.com/adrianmcphee/smarterbase/commit/adc6be91983d145ae3a1008afacf848cf238597e))
+
 ## [1.2.7](https://github.com/adrianmcphee/smarterbase/compare/v1.2.6...v1.2.7) (2025-10-11)
 
 ### Bug Fixes
