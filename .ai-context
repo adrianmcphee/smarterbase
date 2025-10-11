@@ -1,0 +1,329 @@
+# SmarterBase - LLM Context File
+
+## Project Overview
+
+**SmarterBase** is a production-ready Go library that provides database-like functionality using Redis (for indexes) + S3/GCS (for storage) instead of traditional databases. It offers 85% cost savings compared to managed databases like RDS while maintaining high durability (S3's 11 9s) and availability.
+
+**Key Value Proposition**: Turn existing infrastructure (Redis for caching, S3 for files) into a queryable, transactional document store with zero database operations overhead.
+
+## Core Architecture
+
+```
+Application Layer
+    ↓
+IndexManager (coordinates all index updates)
+    ↓
+Store Layer (JSON marshaling, queries, transactions)
+    ↓
+Backend Layer (storage abstraction interface)
+    ↓
+Infrastructure (S3, GCS, Filesystem, MinIO)
+```
+
+### Key Components
+
+1. **Backend Interface** (backend.go)
+   - Abstraction for different storage systems
+   - Implementations: S3, GCS, Filesystem, MinIO
+   - Supports: Get/Put/Delete, streaming, append (JSONL), optimistic locking (ETags)
+
+2. **Store** (store.go)
+   - High-level operations on Backend
+   - JSON marshaling/unmarshaling
+   - Query builder with filtering/sorting
+   - Batch operations
+   - Observability (metrics, logging)
+
+3. **Indexing System**
+   - **File-based indexes** (indexer.go): 1:1 mappings (email → user)
+   - **Redis indexes** (redis_indexer.go): 1:N mappings (user_id → [order1, order2])
+   - **IndexManager** (index_manager.go): Coordinates updates across all index types
+
+4. **Distributed Locking** (distributed_lock.go)
+   - Redis-based locks prevent race conditions
+   - Exponential backoff with retry
+   - TTL protection prevents deadlocks
+   - Lua scripts for atomic operations
+
+5. **Reliability Features**
+   - **Circuit Breaker** (circuit_breaker.go): Automatic failover when Redis unavailable
+   - **Index Health Monitor** (index_health.go): Auto-detects and repairs drift
+   - **Striped Locks** (striped_lock.go): 32x concurrency improvement for filesystem
+
+6. **Transactions** (transaction.go)
+   - Optimistic locking with ETag validation
+   - Best-effort rollback (NOT ACID)
+   - Use `WithAtomicUpdate()` + distributed locks for critical operations
+
+7. **Encryption** (encryption.go)
+   - AES-256-GCM encryption at rest
+   - Random nonces per operation
+   - Wraps any backend transparently
+
+## Important Design Decisions & Limitations
+
+### What SmarterBase IS:
+- ✅ Document store with secondary indexes
+- ✅ Queryable object storage
+- ✅ Cost-effective database alternative for simple schemas
+- ✅ Schema-less (JSON) with no migrations
+
+### What SmarterBase is NOT:
+- ❌ NOT a relational database (no JOINs)
+- ❌ NOT ACID transactions (optimistic locking only)
+- ❌ NOT for sub-millisecond latency (S3 = 50-100ms base latency)
+- ❌ NOT for complex aggregations (use ClickHouse/BigQuery)
+
+### Critical Gotchas
+
+1. **S3 Race Conditions**: Always use `S3BackendWithRedisLock` for production (multi-writer)
+2. **Transaction Isolation**: `WithTransaction()` is NOT isolated - use `WithAtomicUpdate()` + locks for critical operations
+3. **Memory Usage**: `Query.All()` loads everything into memory - use `Each()` or pagination for large datasets
+4. **Index Drift**: Enable `IndexHealthMonitor` to auto-detect and repair stale indexes
+
+## Development Guidelines
+
+### Code Style
+- Follow standard Go conventions (gofmt, golint)
+- Use interfaces for testability
+- All operations accept `context.Context` as first parameter
+- Comprehensive error handling with sentinel errors (errors.go)
+- Add observability (metrics, logging) to all operations
+
+### Testing Requirements
+- Write tests for all new features
+- Use table-driven tests for multiple scenarios
+- Run with race detector: `go test -race`
+- Separate fast unit tests from slow integration tests
+- Integration tests use miniredis (in-memory) and testcontainers (MinIO)
+- Maintain high coverage (current: 70%+)
+
+### Commit Message Standards
+
+**IMPORTANT**: All commit messages MUST follow this format:
+
+```
+<type>: <concise single sentence description>
+```
+
+**Allowed types** (semantic versioning):
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation changes
+- `refactor:` - Code refactoring (no functional changes)
+- `test:` - Adding or updating tests
+- `chore:` - Maintenance tasks (deps, build, release)
+- `perf:` - Performance improvements
+- `style:` - Code style changes (formatting, etc.)
+
+**Examples**:
+- ✅ `feat: add DynamoDB backend support`
+- ✅ `fix: resolve race condition in concurrent index updates`
+- ✅ `docs: update README with encryption examples`
+- ✅ `refactor: simplify query builder interface`
+
+**CRITICAL RULES**:
+1. ❌ **Never mention AI/LLM assistance in commits**
+2. ❌ Do NOT write multi-line commit messages unless absolutely necessary
+3. ❌ Do NOT include Co-Authored-By unless user explicitly requests
+4. ✅ Keep it simple, clear, and focused on WHAT changed
+5. ✅ Use imperative mood ("add feature" not "added feature")
+
+### Pre-commit Hooks
+- Install hooks: `./scripts/install-hooks.sh`
+- commit-msg hook validates conventional commit format
+- pre-commit hook runs build and tests
+
+## Key Files to Understand
+
+### Core Implementation
+- `store.go` - Main Store API
+- `backend.go` - Backend interface definition
+- `s3_backend.go` - S3 implementation (190 lines)
+- `s3_backend_with_lock.go` - S3 with Redis locking (63 lines)
+- `redis_indexer.go` - Multi-value Redis indexes (424 lines)
+- `distributed_lock.go` - Distributed locking (252 lines)
+- `transaction.go` - Optimistic transactions (238 lines)
+- `query.go` - Query builder (355 lines)
+
+### Reliability
+- `circuit_breaker.go` - Automatic failover
+- `index_health.go` - Self-healing index monitoring (471 lines)
+- `index_repair.go` - Index repair logic
+
+### Observability
+- `metrics.go` - Metrics interface
+- `prometheus_metrics.go` - Prometheus implementation
+- `logger.go` - Logging interface
+- `zap_logger.go` - Zap structured logging
+
+### Testing
+- `*_test.go` - Unit tests
+- `integration_test.go` - Integration tests (334 lines)
+- `integration_advanced_test.go` - Advanced scenarios (374 lines)
+- `*_comprehensive_test.go` - Comprehensive test suites
+- `benchmark_test.go` - Performance benchmarks
+
+## Common Patterns
+
+### Creating a Production Store
+```go
+// S3 + Redis + Encryption + Observability
+s3Client := s3.NewFromConfig(cfg)
+redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+
+backend := smarterbase.NewS3BackendWithRedisLock(s3Client, bucket, redisClient)
+encKey := loadFromSecretsManager() // 32 bytes
+encBackend, _ := smarterbase.NewEncryptionBackend(backend, encKey)
+
+logger, _ := smarterbase.NewProductionZapLogger()
+metrics := smarterbase.NewPrometheusMetrics(prometheus.DefaultRegisterer)
+store := smarterbase.NewStoreWithObservability(encBackend, logger, metrics)
+```
+
+### Registering Indexes
+```go
+redisIndexer := smarterbase.NewRedisIndexer(redisClient)
+redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
+    Name:       "users-by-email",
+    EntityType: "users",
+    ExtractFunc: smarterbase.ExtractJSONField("email"),
+})
+
+indexManager := smarterbase.NewIndexManager(store).
+    WithRedisIndexer(redisIndexer)
+```
+
+### Atomic Updates (Critical Operations)
+```go
+lock := smarterbase.NewDistributedLock(redisClient, "smarterbase")
+err := smarterbase.WithAtomicUpdate(ctx, store, lock, "accounts/123", 10*time.Second,
+    func(ctx context.Context) error {
+        var account Account
+        store.GetJSON(ctx, "accounts/123", &account)
+        account.Balance += 100
+        store.PutJSON(ctx, "accounts/123", &account)
+        return nil
+    })
+```
+
+## Observability
+
+### Metrics Tracked
+- Backend operations: get/put/delete success/error counts
+- Operation latency: histograms for all operations
+- Query performance: duration and result counts
+- Index health: drift percentage, repair success
+- Circuit breaker: state transitions
+- Lock contention: wait times, timeouts
+- Transaction rollbacks: failure counts
+
+### Logging
+- Structured logging with Zap
+- All operations logged with key, duration, error
+- Index health checks and repairs logged
+- Lock acquisition and contention logged
+
+## CI/CD
+
+### GitHub Actions
+- **Test workflow** (.github/workflows/test.yml)
+  - Matrix testing: Go 1.24 and 1.25
+  - Unit tests with race detector
+  - Integration tests with Redis and MinIO
+  - Coverage reporting
+- **Release workflow** (.github/workflows/release.yml)
+  - Semantic versioning (semantic-release)
+  - Automatic changelog generation
+  - Git tag creation
+
+### Running Tests Locally
+```bash
+# Quick tests (unit only)
+go test -short -v
+
+# All tests with race detection
+go test -v -race
+
+# Integration tests
+go test -v -run Integration
+
+# With coverage
+go test -v -race -coverprofile=coverage.out
+go tool cover -html=coverage.out
+```
+
+## Performance Characteristics
+
+### Latency (Typical)
+- Filesystem Get: 1-3ms
+- S3 Get: 50-80ms
+- Put with indexes: +5-10ms (Redis updates)
+- Distributed lock: +2-5ms (no contention)
+
+### Throughput
+- Filesystem: 10,000+ ops/sec (with striped locks)
+- S3: Up to 3,500 PUT/sec per prefix (AWS limit)
+
+### Scalability
+- Tested with millions of objects
+- Redis can handle billions of index entries
+- S3 scales infinitely
+
+## Roadmap
+
+### Completed ✅
+- All storage backends (S3, GCS, Filesystem, MinIO)
+- Distributed locking
+- Multi-value Redis indexes
+- Circuit breaker protection
+- Self-healing index monitoring
+- Encryption at rest
+- Prometheus metrics
+- Load testing framework
+- Batch operations
+- UUIDv7 IDs
+
+### Future ✨
+- DynamoDB backend
+- Full-text search (Elasticsearch integration)
+- Index rebuild CLI tool
+- Streaming query support
+- Multi-backend replication
+- Schema validation
+
+## Contact & Resources
+
+- **Repository**: https://github.com/adrianmcphee/smarterbase
+- **License**: MIT
+- **Documentation**: README.md, DATASHEET.md, CONTRIBUTING.md, SECURITY.md
+- **Examples**: examples/ directory
+- **Issues**: GitHub Issues for bugs and features
+- **Security**: See SECURITY.md for reporting vulnerabilities
+
+---
+
+## Quick Reference for LLMs
+
+**When making changes**:
+1. Always run tests: `go test -v -race`
+2. Check lint: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest && golangci-lint run`
+3. Verify commit message format (semantic versioning)
+4. Update tests for new features
+5. Update documentation if adding public APIs
+6. Never reference AI assistance in commits
+
+**Common tasks**:
+- Adding backend: Implement `Backend` interface (backend.go)
+- Adding metrics: Update `metrics.go` and `prometheus_metrics.go`
+- Adding index type: Extend `redis_indexer.go` or create new indexer
+- Performance improvement: Profile first, add benchmarks, then optimize
+- Bug fix: Add failing test first, then fix, ensure test passes
+
+**Architecture decisions to maintain**:
+- Keep Backend interface simple and focused
+- All operations use context.Context
+- Observability is mandatory (metrics + logging)
+- Security by default (encryption, locking available)
+- Graceful degradation (circuit breakers, fallbacks)
+- Clear error types with helpful context

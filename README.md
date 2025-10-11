@@ -11,8 +11,8 @@ SmarterBase turns **Redis** (fast indexes) + **S3** (durable storage) into a que
 [![Go Version](https://img.shields.io/badge/Go-1.18+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![Tests](https://github.com/adrianmcphee/smarterbase/workflows/Tests/badge.svg)](https://github.com/adrianmcphee/smarterbase/actions/workflows/test.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/adrianmcphee/smarterbase)](https://goreportcard.com/report/github.com/adrianmcphee/smarterbase)
+[![codecov](https://codecov.io/gh/adrianmcphee/smarterbase/branch/main/graph/badge.svg)](https://codecov.io/gh/adrianmcphee/smarterbase)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen)](https://github.com/adrianmcphee/smarterbase)
 
 ---
 

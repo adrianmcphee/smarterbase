@@ -11,18 +11,28 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 # Testing
-test: ## Run all tests
-	go test -v -short ./...
+test: ## Run all tests (including integration tests)
+	go test -v ./...
 
-test-race: ## Run tests with race detector
-	go test -v -race -short ./...
+test-quick: ## Run unit tests only (fast, skips integration tests)
+	go test -short -v ./...
+
+test-all: ## Run all tests with race detector (thorough)
+	go test -v -race ./...
+
+test-integration: ## Run integration tests only
+	go test -v -run Integration ./...
 
 test-coverage: ## Run tests with coverage report
-	go test -v -short -coverprofile=coverage.out ./...
-	go tool cover -func=coverage.out | tail -1
+	go test -v -race -coverprofile=coverage.out ./...
+	@echo ""
+	@echo "Coverage summary:"
+	@go tool cover -func=coverage.out | tail -1
+	@echo ""
+	@echo "Generate HTML report: make test-coverage-html"
 
 test-coverage-html: ## Generate HTML coverage report
-	go test -v -short -coverprofile=coverage.out ./...
+	go test -v -race -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 
 # Code quality
@@ -94,22 +104,33 @@ godoc: ## Start godoc server
 	@echo "View docs at: http://localhost:6060/pkg/github.com/adrianmcphee/smarterbase/"
 	godoc -http=:6060
 
+# Benchmarking
+bench: ## Run benchmarks
+	go test -bench=. -benchmem -run=^$$ ./...
+
+bench-compare: ## Run benchmarks and save for comparison
+	go test -bench=. -benchmem -run=^$$ ./... | tee bench-new.txt
+	@echo ""
+	@echo "Saved to bench-new.txt. Compare with: benchstat bench-old.txt bench-new.txt"
+
 # CI simulation
-ci: deps tidy fmt vet lint test-race build build-examples ## Run all CI checks locally
+ci: deps tidy fmt vet lint test-all build build-examples ## Run all CI checks locally
 
 # Quick development cycle
-dev: fmt vet test ## Quick dev cycle: format, vet, test
+dev: fmt vet test-quick ## Quick dev cycle: format, vet, quick tests
 
 # Release (for maintainers)
 release-check: ## Check if ready for release
 	@echo "Checking release readiness..."
-	@echo "1. Running tests..."
-	@make test-race
+	@echo "1. Running tests with race detector..."
+	@make test-all
 	@echo "2. Checking coverage..."
 	@make test-coverage
 	@echo "3. Running linter..."
 	@make lint
-	@echo "4. Building all packages..."
+	@echo "4. Running benchmarks..."
+	@make bench
+	@echo "5. Building all packages..."
 	@make build build-examples
 	@echo ""
 	@echo "✅ All checks passed! Ready for release."
@@ -138,8 +159,10 @@ onboard: ## Setup for new contributors
 	@echo "✅ Setup complete!"
 	@echo ""
 	@echo "Quick commands:"
-	@echo "  make test          - Run tests"
-	@echo "  make dev           - Format, vet, and test"
+	@echo "  make test-quick    - Run unit tests (fast)"
+	@echo "  make test          - Run all tests"
+	@echo "  make test-all      - Run all tests with race detector"
+	@echo "  make dev           - Format, vet, and quick test"
 	@echo "  make lint          - Run linter"
 	@echo "  make run-example   - Run an example"
 	@echo ""
