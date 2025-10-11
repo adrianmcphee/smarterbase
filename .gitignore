@@ -15,11 +15,15 @@ coverage.txt
 coverage.html
 
 # Example binaries (built from examples/)
-/ecommerce-orders
-/event-logging
-/multi-tenant-config
-/user-management
-/metrics-dashboard
+examples/*/ecommerce-orders
+examples/*/event-logging
+examples/*/multi-tenant-config
+examples/*/user-management
+examples/*/metrics-dashboard
+examples/*/*[!.go]
+!examples/*/*.go
+!examples/*/go.mod
+!examples/*/go.sum
 
 # Go workspace file
 go.work
