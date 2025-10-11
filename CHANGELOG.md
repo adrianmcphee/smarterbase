@@ -1,3 +1,13 @@
+## [1.2.1](https://github.com/adrianmcphee/smarterbase/compare/v1.2.0...v1.2.1) (2025-10-11)
+
+### Bug Fixes
+
+* resolve CI test failures and golangci-lint deprecation warnings ([81bf882](https://github.com/adrianmcphee/smarterbase/commit/81bf8821ed0bce52b1bb5e9a91393b7030bf276c))
+
+### Documentation
+
+* highlight self-healing and circuit breaker capabilities ([ae513ee](https://github.com/adrianmcphee/smarterbase/commit/ae513ee854cc0de5aa3c65cf34ee687da0876d24))
+
 ## [1.2.0](https://github.com/adrianmcphee/smarterbase/compare/v1.1.3...v1.2.0) (2025-10-11)
 
 ### Features
