@@ -12,11 +12,12 @@ import (
 // the race condition in PutIfMatch operations.
 //
 // Race condition eliminated:
-//   T1: Thread A acquires lock for key
-//   T2: Thread A: HeadObject (get ETag)
-//   T3: Thread A: PutObject (write)
-//   T4: Thread A releases lock
-//   ✓ No other thread can modify the object while A holds the lock
+//
+//	T1: Thread A acquires lock for key
+//	T2: Thread A: HeadObject (get ETag)
+//	T3: Thread A: PutObject (write)
+//	T4: Thread A releases lock
+//	✓ No other thread can modify the object while A holds the lock
 //
 // Use this for:
 //   - Critical data requiring strong consistency (financial, counters)
@@ -26,9 +27,9 @@ import (
 // Note: Requires Redis for distributed locking
 type S3BackendWithRedisLock struct {
 	*S3Backend
-	lock          *DistributedLock
+	lock           *DistributedLock
 	defaultLockTTL time.Duration
-	maxRetries    int
+	maxRetries     int
 }
 
 // NewS3BackendWithRedisLock creates an S3 backend with distributed locking

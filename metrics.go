@@ -23,9 +23,9 @@ type Metrics interface {
 // NoOpMetrics is a metrics collector that does nothing
 type NoOpMetrics struct{}
 
-func (m *NoOpMetrics) Increment(name string, tags ...string)                    {}
-func (m *NoOpMetrics) Gauge(name string, value float64, tags ...string)         {}
-func (m *NoOpMetrics) Histogram(name string, value float64, tags ...string)     {}
+func (m *NoOpMetrics) Increment(name string, tags ...string)                      {}
+func (m *NoOpMetrics) Gauge(name string, value float64, tags ...string)           {}
+func (m *NoOpMetrics) Histogram(name string, value float64, tags ...string)       {}
 func (m *NoOpMetrics) Timing(name string, duration time.Duration, tags ...string) {}
 
 // InMemoryMetrics stores metrics in memory for testing (thread-safe)
@@ -72,29 +72,29 @@ func (m *InMemoryMetrics) Timing(name string, duration time.Duration, tags ...st
 
 // Common metric names
 const (
-	MetricGetSuccess      = "smarterbase.get.success"
-	MetricGetError        = "smarterbase.get.error"
-	MetricGetDuration     = "smarterbase.get.duration"
-	MetricPutSuccess      = "smarterbase.put.success"
-	MetricPutError        = "smarterbase.put.error"
-	MetricPutDuration     = "smarterbase.put.duration"
-	MetricDeleteSuccess   = "smarterbase.delete.success"
-	MetricDeleteError     = "smarterbase.delete.error"
-	MetricDeleteDuration  = "smarterbase.delete.duration"
-	MetricQueryDuration   = "smarterbase.query.duration"
-	MetricQueryResults    = "smarterbase.query.results"
-	MetricIndexUpdate     = "smarterbase.index.update"
-	MetricIndexRetries    = "smarterbase.index.retries"
-	MetricIndexErrors     = "smarterbase.index.errors"
-	MetricTransactionSuccess = "smarterbase.transaction.success"
+	MetricGetSuccess          = "smarterbase.get.success"
+	MetricGetError            = "smarterbase.get.error"
+	MetricGetDuration         = "smarterbase.get.duration"
+	MetricPutSuccess          = "smarterbase.put.success"
+	MetricPutError            = "smarterbase.put.error"
+	MetricPutDuration         = "smarterbase.put.duration"
+	MetricDeleteSuccess       = "smarterbase.delete.success"
+	MetricDeleteError         = "smarterbase.delete.error"
+	MetricDeleteDuration      = "smarterbase.delete.duration"
+	MetricQueryDuration       = "smarterbase.query.duration"
+	MetricQueryResults        = "smarterbase.query.results"
+	MetricIndexUpdate         = "smarterbase.index.update"
+	MetricIndexRetries        = "smarterbase.index.retries"
+	MetricIndexErrors         = "smarterbase.index.errors"
+	MetricTransactionSuccess  = "smarterbase.transaction.success"
 	MetricTransactionConflict = "smarterbase.transaction.conflict"
 	MetricTransactionRollback = "smarterbase.transaction.rollback"
-	MetricLockAcquired    = "smarterbase.lock.acquired"
-	MetricLockFailed      = "smarterbase.lock.failed"
-	MetricLockDuration    = "smarterbase.lock.duration"
-	MetricLockContention  = "smarterbase.lock.contention"    // Number of retries needed
-	MetricLockTimeout     = "smarterbase.lock.timeout"       // Locks that timed out
-	MetricLockWaitTime    = "smarterbase.lock.wait_duration" // Time spent waiting for locks
+	MetricLockAcquired        = "smarterbase.lock.acquired"
+	MetricLockFailed          = "smarterbase.lock.failed"
+	MetricLockDuration        = "smarterbase.lock.duration"
+	MetricLockContention      = "smarterbase.lock.contention"    // Number of retries needed
+	MetricLockTimeout         = "smarterbase.lock.timeout"       // Locks that timed out
+	MetricLockWaitTime        = "smarterbase.lock.wait_duration" // Time spent waiting for locks
 
 	// Additional metrics for Prometheus integration
 	MetricBackendOps      = "smarterbase.backend.ops"

@@ -270,7 +270,7 @@ func main() {
 	eventLogger := NewEventLogger(store)
 	auditLogger := NewAuditLogger(eventLogger)
 
-	fmt.Println("\n=== Event Logging with JSONL Example ===\n")
+	fmt.Println("\n=== Event Logging with JSONL Example ===")
 
 	// 1. Log various events
 	fmt.Println("1. Logging events...")

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -35,14 +36,14 @@ func NewUserManager(store *smarterbase.Store, redisClient *redis.Client) *UserMa
 
 	// Register indexes
 	redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: smarterbase.ExtractJSONField("email"),
 	})
 
 	redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
-		Name:       "users-by-role",
-		EntityType: "users",
+		Name:        "users-by-role",
+		EntityType:  "users",
 		ExtractFunc: smarterbase.ExtractJSONField("role"),
 	})
 
@@ -129,16 +130,19 @@ func (m *UserManager) ListUsersByRole(ctx context.Context, role string) ([]*User
 
 	// Batch fetch all users
 	users := make([]*User, 0, len(keys))
-	results := m.store.BatchGetJSON(ctx, keys)
+	results, err := m.store.BatchGetJSON(ctx, keys, User{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch get users: %w", err)
+	}
 
-	for _, result := range results {
-		if result.Error != nil {
-			log.Printf("Warning: failed to fetch user %s: %v", result.Key, result.Error)
+	for key, value := range results {
+		// Convert map to User struct
+		data, _ := json.Marshal(value)
+		var user User
+		if err := json.Unmarshal(data, &user); err != nil {
+			log.Printf("Warning: failed to unmarshal user %s: %v", key, err)
 			continue
 		}
-
-		var user User
-		result.Unmarshal(&user)
 		users = append(users, &user)
 	}
 
@@ -148,12 +152,6 @@ func (m *UserManager) ListUsersByRole(ctx context.Context, role string) ([]*User
 // UpdateUser updates an existing user
 func (m *UserManager) UpdateUser(ctx context.Context, userID string, updateFn func(*User) error) error {
 	key := fmt.Sprintf("users/%s.json", userID)
-
-	// Get old data for index updates
-	oldData, err := m.store.Backend().Get(ctx, key)
-	if err != nil {
-		return fmt.Errorf("failed to get user: %w", err)
-	}
 
 	// Get current user
 	var user User
@@ -169,7 +167,7 @@ func (m *UserManager) UpdateUser(ctx context.Context, userID string, updateFn fu
 	user.UpdatedAt = time.Now()
 
 	// Update with index coordination
-	err = m.indexManager.Update(ctx, key, &user, oldData)
+	err := m.indexManager.Update(ctx, key, &user)
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
 	}
@@ -182,14 +180,8 @@ func (m *UserManager) UpdateUser(ctx context.Context, userID string, updateFn fu
 func (m *UserManager) DeleteUser(ctx context.Context, userID string) error {
 	key := fmt.Sprintf("users/%s.json", userID)
 
-	// Get old data for index cleanup
-	oldData, err := m.store.Backend().Get(ctx, key)
-	if err != nil {
-		return fmt.Errorf("failed to get user: %w", err)
-	}
-
 	// Delete with index cleanup
-	err = m.indexManager.Delete(ctx, key, oldData)
+	err := m.indexManager.Delete(ctx, key)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
@@ -261,7 +253,7 @@ func main() {
 	userManager := NewUserManager(store, redisClient)
 
 	// Example operations
-	fmt.Println("\n=== User Management Example ===\n")
+	fmt.Println("\n=== User Management Example ===")
 
 	// 1. Create users
 	fmt.Println("1. Creating users...")

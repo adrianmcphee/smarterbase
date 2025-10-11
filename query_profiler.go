@@ -12,25 +12,25 @@ import (
 type QueryComplexity string
 
 const (
-	ComplexityO1    QueryComplexity = "O(1)"     // Redis index lookup
-	ComplexityOLogN QueryComplexity = "O(log N)" // Binary search
-	ComplexityON    QueryComplexity = "O(N)"     // Full scan
-	ComplexityONM   QueryComplexity = "O(N*M)"   // Nested loops
+	ComplexityO1     QueryComplexity = "O(1)"       // Redis index lookup
+	ComplexityOLogN  QueryComplexity = "O(log N)"   // Binary search
+	ComplexityON     QueryComplexity = "O(N)"       // Full scan
+	ComplexityONM    QueryComplexity = "O(N*M)"     // Nested loops
 	ComplexityONLogN QueryComplexity = "O(N log N)" // Sort
 )
 
 // QueryProfile tracks execution details for a single query
 type QueryProfile struct {
-	Method       string          // "ListUserSessions", "GetVisionCardsByPostcode"
+	Method       string // "ListUserSessions", "GetVisionCardsByPostcode"
 	StartTime    time.Time
 	Duration     time.Duration
 	Complexity   QueryComplexity // O(1), O(N), O(N*M)
 	IndexUsed    string          // "redis:sessions-by-user-id" or "none:full-scan"
 	ResultCount  int
-	FilterFields []string        // ["user_id", "status"]
-	FallbackPath bool            // Did we fall back from index to scan?
-	StorageOps   int             // Number of backend Get/List operations
-	Error        error           // Any error that occurred
+	FilterFields []string // ["user_id", "status"]
+	FallbackPath bool     // Did we fall back from index to scan?
+	StorageOps   int      // Number of backend Get/List operations
+	Error        error    // Any error that occurred
 }
 
 // QueryProfiler collects and reports query performance
@@ -160,16 +160,16 @@ func (p *QueryProfiler) Clear() {
 
 // Summary returns a summary of query performance
 type ProfileSummary struct {
-	TotalQueries     int
-	SlowQueries      int
-	FullScans        int
-	Fallbacks        int
-	AverageDuration  time.Duration
-	P50Duration      time.Duration
-	P95Duration      time.Duration
-	P99Duration      time.Duration
-	ByMethod         map[string]MethodStats
-	ByComplexity     map[QueryComplexity]int
+	TotalQueries    int
+	SlowQueries     int
+	FullScans       int
+	Fallbacks       int
+	AverageDuration time.Duration
+	P50Duration     time.Duration
+	P95Duration     time.Duration
+	P99Duration     time.Duration
+	ByMethod        map[string]MethodStats
+	ByComplexity    map[QueryComplexity]int
 }
 
 type MethodStats struct {

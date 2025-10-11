@@ -15,11 +15,11 @@ import (
 // - Graceful degradation if Redis is unavailable
 // - Reduces boilerplate in domain stores
 type IndexManager struct {
-	store         *Store
-	fileIndexer   *Indexer
-	redisIndexer  *RedisIndexer
-	logger        Logger
-	metrics       Metrics
+	store        *Store
+	fileIndexer  *Indexer
+	redisIndexer *RedisIndexer
+	logger       Logger
+	metrics      Metrics
 }
 
 // NewIndexManager creates a new index manager

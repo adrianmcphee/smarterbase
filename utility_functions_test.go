@@ -77,8 +77,8 @@ func TestIndexManagerWithRedisIndexer(t *testing.T) {
 
 	// Register an index
 	redisIndexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -149,4 +149,3 @@ func TestSimpleIndexSpec(t *testing.T) {
 		t.Errorf("expected key 'test@example.com', got '%s'", key)
 	}
 }
-

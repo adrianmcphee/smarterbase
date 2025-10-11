@@ -33,10 +33,10 @@ type RedisIndexer struct {
 
 // MultiIndexSpec defines a multi-value secondary index
 type MultiIndexSpec struct {
-	Name        string                                      // e.g., "sessions-by-user-id"
-	EntityType  string                                      // e.g., "sessions" (for key namespacing)
+	Name        string                                                    // e.g., "sessions-by-user-id"
+	EntityType  string                                                    // e.g., "sessions" (for key namespacing)
 	ExtractFunc func(objectKey string, data []byte) ([]IndexEntry, error) // Extract index values from object
-	TTL         time.Duration                               // Optional TTL for index keys (0 = no expiry)
+	TTL         time.Duration                                             // Optional TTL for index keys (0 = no expiry)
 }
 
 // IndexEntry represents a single index value for an object
@@ -74,8 +74,9 @@ func (r *RedisIndexer) RegisterMultiIndex(spec *MultiIndexSpec) {
 // UpdateIndexes updates all registered multi-value indexes for an object
 //
 // Call this after Put() operations:
-//   store.PutJSON(ctx, key, session)
-//   redisIndexer.UpdateIndexes(ctx, key, data)
+//
+//	store.PutJSON(ctx, key, session)
+//	redisIndexer.UpdateIndexes(ctx, key, data)
 func (r *RedisIndexer) UpdateIndexes(ctx context.Context, objectKey string, data []byte) error {
 	if r.redis == nil {
 		return nil // Graceful degradation if Redis unavailable
@@ -198,8 +199,9 @@ func (r *RedisIndexer) Count(ctx context.Context, entityType, indexName, indexVa
 // RemoveFromIndexes removes an object from all indexes
 //
 // Call this before Delete() operations:
-//   redisIndexer.RemoveFromIndexes(ctx, key, oldData)
-//   store.Delete(ctx, key)
+//
+//	redisIndexer.RemoveFromIndexes(ctx, key, oldData)
+//	store.Delete(ctx, key)
 func (r *RedisIndexer) RemoveFromIndexes(ctx context.Context, objectKey string, data []byte) error {
 	if r.redis == nil {
 		return nil // Graceful degradation
@@ -236,9 +238,10 @@ func (r *RedisIndexer) removeFromIndex(ctx context.Context, spec *MultiIndexSpec
 //
 // This removes the object from old index values and adds it to new ones.
 // Call this for Update() operations:
-//   oldData, _ := store.Backend().Get(ctx, key)
-//   store.PutJSON(ctx, key, newObject)
-//   redisIndexer.ReplaceIndexes(ctx, key, oldData, newData)
+//
+//	oldData, _ := store.Backend().Get(ctx, key)
+//	store.PutJSON(ctx, key, newObject)
+//	redisIndexer.ReplaceIndexes(ctx, key, oldData, newData)
 //
 // If oldData is nil/empty, behaves like UpdateIndexes (create case)
 func (r *RedisIndexer) ReplaceIndexes(ctx context.Context, objectKey string, oldData, newData []byte) error {

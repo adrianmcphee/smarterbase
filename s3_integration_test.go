@@ -59,11 +59,12 @@ func TestIntegration_S3Backend_MinIO(t *testing.T) {
 
 // testS3BackendWithManualMinIO tests against a locally running MinIO instance
 // To run:
-//   docker run -d -p 9000:9000 -p 9001:9001 \
-//     -e "MINIO_ROOT_USER=minioadmin" \
-//     -e "MINIO_ROOT_PASSWORD=minioadmin" \
-//     minio/minio server /data --console-address ":9001"
-//   TEST_MINIO=true go test -run TestIntegration_S3Backend_MinIO -v
+//
+//	docker run -d -p 9000:9000 -p 9001:9001 \
+//	  -e "MINIO_ROOT_USER=minioadmin" \
+//	  -e "MINIO_ROOT_PASSWORD=minioadmin" \
+//	  minio/minio server /data --console-address ":9001"
+//	TEST_MINIO=true go test -run TestIntegration_S3Backend_MinIO -v
 func testS3BackendWithManualMinIO(t *testing.T, ctx context.Context) {
 	// Setup MinIO client
 	minioConfig := MinIOConfig{
@@ -100,8 +101,9 @@ func testS3BackendWithManualMinIO(t *testing.T, ctx context.Context) {
 
 // testS3BackendWithRealS3 tests against real AWS S3 (requires AWS credentials)
 // To run:
-//   export AWS_PROFILE=your-profile  # or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY
-//   TEST_S3_BUCKET=your-test-bucket go test -run TestIntegration_S3Backend_MinIO -v
+//
+//	export AWS_PROFILE=your-profile  # or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY
+//	TEST_S3_BUCKET=your-test-bucket go test -run TestIntegration_S3Backend_MinIO -v
 func testS3BackendWithRealS3(t *testing.T, ctx context.Context, bucketName string) {
 	t.Logf("Testing with real S3 bucket: %s", bucketName)
 
@@ -387,6 +389,7 @@ func cleanupS3TestObjects(t *testing.T, ctx context.Context, backend Backend) {
 
 	t.Logf("Cleaned up %d test objects", len(keys))
 }
+
 // testS3BackendWithTestcontainers auto-starts MinIO using testcontainers
 // This is the most pragmatic mode - zero manual setup, just requires Docker
 //

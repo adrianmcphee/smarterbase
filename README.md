@@ -1169,11 +1169,39 @@ All tests use filesystem backend - no external dependencies required.
 - [DATASHEET.md](./DATASHEET.md) - Technical specifications and architecture
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing guidelines
 
+## Development Setup
+
+### Installing Git Hooks
+
+Install pre-commit hooks to ensure code quality and proper commit messages:
+
+```bash
+./scripts/install-hooks.sh
+```
+
+This installs:
+- **commit-msg hook** - Validates [Conventional Commits](https://www.conventionalcommits.org/) format
+- **pre-commit hook** - Runs build and tests before committing
+
+Commit messages must follow the format:
+```
+<type>: <description>
+
+Types: feat, fix, docs, refactor, test, chore
+Examples:
+  feat: add distributed lock support
+  fix: resolve race condition in index updates
+```
+
+See [.github/SEMANTIC_VERSIONING.md](./.github/SEMANTIC_VERSIONING.md) for details on semantic versioning.
+
 ## Contributing
 
 Contributions welcome! Please ensure:
+- Git hooks installed: `./scripts/install-hooks.sh`
 - Tests pass: `go test -v -race`
 - Code is formatted: `go fmt`
+- Commit messages follow Conventional Commits format
 - Documentation is updated
 
 ## License

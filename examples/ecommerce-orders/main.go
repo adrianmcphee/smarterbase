@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -44,14 +45,14 @@ func NewOrderManager(store *smarterbase.Store, redisClient *redis.Client) *Order
 
 	// Register multi-value indexes
 	redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
-		Name:       "orders-by-user",
-		EntityType: "orders",
+		Name:        "orders-by-user",
+		EntityType:  "orders",
 		ExtractFunc: smarterbase.ExtractJSONField("user_id"),
 	})
 
 	redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
-		Name:       "orders-by-status",
-		EntityType: "orders",
+		Name:        "orders-by-status",
+		EntityType:  "orders",
 		ExtractFunc: smarterbase.ExtractJSONField("status"),
 	})
 
@@ -131,16 +132,18 @@ func (m *OrderManager) ListOrdersByUser(ctx context.Context, userID string) ([]*
 
 	// Batch fetch all orders
 	orders := make([]*Order, 0, len(keys))
-	results := m.store.BatchGetJSON(ctx, keys)
+	results, err := m.store.BatchGetJSON(ctx, keys, Order{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch get orders: %w", err)
+	}
 
-	for _, result := range results {
-		if result.Error != nil {
-			log.Printf("Warning: failed to fetch order %s: %v", result.Key, result.Error)
+	for key, value := range results {
+		data, _ := json.Marshal(value)
+		var order Order
+		if err := json.Unmarshal(data, &order); err != nil {
+			log.Printf("Warning: failed to unmarshal order %s: %v", key, err)
 			continue
 		}
-
-		var order Order
-		result.Unmarshal(&order)
 		orders = append(orders, &order)
 	}
 
@@ -159,15 +162,18 @@ func (m *OrderManager) ListOrdersByStatus(ctx context.Context, status string) ([
 	}
 
 	orders := make([]*Order, 0, len(keys))
-	results := m.store.BatchGetJSON(ctx, keys)
+	results, err := m.store.BatchGetJSON(ctx, keys, Order{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch get orders: %w", err)
+	}
 
-	for _, result := range results {
-		if result.Error != nil {
+	for key, value := range results {
+		data, _ := json.Marshal(value)
+		var order Order
+		if err := json.Unmarshal(data, &order); err != nil {
+			log.Printf("Warning: failed to unmarshal order %s: %v", key, err)
 			continue
 		}
-
-		var order Order
-		result.Unmarshal(&order)
 		orders = append(orders, &order)
 	}
 
@@ -182,12 +188,6 @@ func (m *OrderManager) UpdateOrderStatus(ctx context.Context, orderID, newStatus
 	// Use atomic update with distributed lock for consistency
 	err := smarterbase.WithAtomicUpdate(ctx, m.store, m.lock, key, 10*time.Second,
 		func(ctx context.Context) error {
-			// Get old data for index updates
-			oldData, err := m.store.Backend().Get(ctx, key)
-			if err != nil {
-				return fmt.Errorf("failed to get order: %w", err)
-			}
-
 			// Get current order
 			var order Order
 			if err := m.store.GetJSON(ctx, key, &order); err != nil {
@@ -204,7 +204,7 @@ func (m *OrderManager) UpdateOrderStatus(ctx context.Context, orderID, newStatus
 			order.UpdatedAt = time.Now()
 
 			// Update with index coordination
-			return m.indexManager.Update(ctx, key, &order, oldData)
+			return m.indexManager.Update(ctx, key, &order)
 		})
 
 	if err != nil {
@@ -317,7 +317,7 @@ func main() {
 	// Create order manager
 	orderManager := NewOrderManager(store, redisClient)
 
-	fmt.Println("\n=== E-Commerce Order Management Example ===\n")
+	fmt.Println("\n=== E-Commerce Order Management Example ===")
 
 	// 1. Create orders
 	fmt.Println("1. Creating orders...")

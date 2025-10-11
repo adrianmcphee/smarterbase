@@ -8,11 +8,11 @@ import (
 
 // IndexSpec defines how to extract and maintain an index
 type IndexSpec struct {
-	Name         string                                          // Index name (e.g., "users-by-email")
-	KeyFunc      func(data interface{}) (string, error)          // Extract index key from object
-	ExtractFunc  func(data []byte) (interface{}, error)          // Deserialize object
-	IndexKey     func(key string) string                         // Generate index storage key
-	ReverseIndex bool                                            // If true, maintains itemID → parentID mapping
+	Name         string                                 // Index name (e.g., "users-by-email")
+	KeyFunc      func(data interface{}) (string, error) // Extract index key from object
+	ExtractFunc  func(data []byte) (interface{}, error) // Deserialize object
+	IndexKey     func(key string) string                // Generate index storage key
+	ReverseIndex bool                                   // If true, maintains itemID → parentID mapping
 }
 
 // Indexer manages automatic index updates

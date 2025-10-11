@@ -102,10 +102,11 @@ func (b *S3Backend) GetWithETag(ctx context.Context, key string) ([]byte, string
 // that can lead to lost updates in concurrent scenarios.
 //
 // Race condition timeline:
-//   T1: Thread A calls HeadObject, gets ETag "abc"  ✓
-//   T2: Thread B calls PutObject, writes new data (ETag becomes "xyz")
-//   T3: Thread A calls PutObject with expectedETag="abc"  ✓ SUCCEEDS (should fail!)
-//   Result: Thread B's update is lost!
+//
+//	T1: Thread A calls HeadObject, gets ETag "abc"  ✓
+//	T2: Thread B calls PutObject, writes new data (ETag becomes "xyz")
+//	T3: Thread A calls PutObject with expectedETag="abc"  ✓ SUCCEEDS (should fail!)
+//	Result: Thread B's update is lost!
 //
 // Root cause: S3 PutObject doesn't support If-Match headers (only GetObject does)
 //

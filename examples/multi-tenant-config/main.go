@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -44,8 +45,8 @@ func NewConfigManager(store *smarterbase.Store, redisClient *redis.Client) *Conf
 
 	// Register indexes
 	redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
-		Name:       "tenants-by-plan",
-		EntityType: "tenants",
+		Name:        "tenants-by-plan",
+		EntityType:  "tenants",
 		ExtractFunc: smarterbase.ExtractJSONField("plan"),
 	})
 
@@ -140,12 +141,6 @@ func (m *ConfigManager) UpdateTenantSettings(ctx context.Context, tenantID strin
 func (m *ConfigManager) UpgradeTenantPlan(ctx context.Context, tenantID, newPlan string) error {
 	key := fmt.Sprintf("tenants/%s/config.json", tenantID)
 
-	// Get old data for index updates
-	oldData, err := m.store.Backend().Get(ctx, key)
-	if err != nil {
-		return fmt.Errorf("failed to get tenant: %w", err)
-	}
-
 	// Use atomic update for consistency
 	return smarterbase.WithAtomicUpdate(ctx, m.store, m.lock, key, 10*time.Second,
 		func(ctx context.Context) error {
@@ -166,7 +161,7 @@ func (m *ConfigManager) UpgradeTenantPlan(ctx context.Context, tenantID, newPlan
 			config.UpdatedAt = time.Now()
 
 			// Update with index coordination
-			return m.indexManager.Update(ctx, key, &config, oldData)
+			return m.indexManager.Update(ctx, key, &config)
 		})
 }
 
@@ -182,15 +177,18 @@ func (m *ConfigManager) ListTenantsByPlan(ctx context.Context, plan string) ([]*
 	}
 
 	tenants := make([]*TenantConfig, 0, len(keys))
-	results := m.store.BatchGetJSON(ctx, keys)
+	results, err := m.store.BatchGetJSON(ctx, keys, TenantConfig{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch get tenants: %w", err)
+	}
 
-	for _, result := range results {
-		if result.Error != nil {
+	for key, value := range results {
+		data, _ := json.Marshal(value)
+		var config TenantConfig
+		if err := json.Unmarshal(data, &config); err != nil {
+			log.Printf("Warning: failed to unmarshal tenant %s: %v", key, err)
 			continue
 		}
-
-		var config TenantConfig
-		result.Unmarshal(&config)
 		tenants = append(tenants, &config)
 	}
 
@@ -209,18 +207,18 @@ func (m *ConfigManager) getPlanLimits(plan string) ResourceLimits {
 	limits := map[string]ResourceLimits{
 		"free": {
 			MaxUsers:      5,
-			MaxStorage:    1024,    // 1GB
+			MaxStorage:    1024, // 1GB
 			MaxAPIRequest: 1000,
 		},
 		"pro": {
 			MaxUsers:      50,
-			MaxStorage:    10240,   // 10GB
+			MaxStorage:    10240, // 10GB
 			MaxAPIRequest: 10000,
 		},
 		"enterprise": {
-			MaxUsers:      -1,      // unlimited
-			MaxStorage:    -1,      // unlimited
-			MaxAPIRequest: -1,      // unlimited
+			MaxUsers:      -1, // unlimited
+			MaxStorage:    -1, // unlimited
+			MaxAPIRequest: -1, // unlimited
 		},
 	}
 
@@ -298,7 +296,7 @@ func main() {
 	// Create config manager
 	configManager := NewConfigManager(store, redisClient)
 
-	fmt.Println("\n=== Multi-Tenant Configuration Example ===\n")
+	fmt.Println("\n=== Multi-Tenant Configuration Example ===")
 
 	// 1. Create tenants
 	fmt.Println("1. Creating tenants...")

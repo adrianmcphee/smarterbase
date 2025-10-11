@@ -14,7 +14,7 @@ type MinIOConfig struct {
 	Endpoint        string // e.g., "localhost:9000" or "minio.example.com"
 	AccessKeyID     string
 	SecretAccessKey string
-	UseSSL          bool   // Whether to use HTTPS (default: false for localhost)
+	UseSSL          bool // Whether to use HTTPS (default: false for localhost)
 	Bucket          string
 }
 

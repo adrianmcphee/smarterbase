@@ -23,9 +23,9 @@ type IndexHealthMonitor struct {
 	metrics      Metrics
 
 	// Configuration
-	checkInterval   time.Duration
-	sampleSize      int
-	driftThreshold  float64 // Alert if drift > this percentage
+	checkInterval  time.Duration
+	sampleSize     int
+	driftThreshold float64 // Alert if drift > this percentage
 
 	// State
 	running  bool
@@ -35,14 +35,14 @@ type IndexHealthMonitor struct {
 
 // IndexHealthReport contains the results of a health check
 type IndexHealthReport struct {
-	Timestamp        time.Time
-	EntityType       string
-	TotalSampled     int
-	MissingInRedis   int
-	ExtraInRedis     int
-	DriftPercentage  float64
-	MissingKeys      []string
-	ExtraKeys        []string
+	Timestamp       time.Time
+	EntityType      string
+	TotalSampled    int
+	MissingInRedis  int
+	ExtraInRedis    int
+	DriftPercentage float64
+	MissingKeys     []string
+	ExtraKeys       []string
 }
 
 // NewIndexHealthMonitor creates a new health monitor
@@ -147,10 +147,10 @@ func (ihm *IndexHealthMonitor) Check(ctx context.Context, entityType string) (*I
 
 	// Sample random objects from storage
 	report := &IndexHealthReport{
-		Timestamp:      time.Now(),
-		EntityType:     entityType,
-		MissingKeys:    make([]string, 0),
-		ExtraKeys:      make([]string, 0),
+		Timestamp:   time.Now(),
+		EntityType:  entityType,
+		MissingKeys: make([]string, 0),
+		ExtraKeys:   make([]string, 0),
 	}
 
 	// Get all keys for the entity type

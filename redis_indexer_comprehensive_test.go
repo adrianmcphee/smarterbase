@@ -24,8 +24,8 @@ func TestRedisIndexer_BasicOperations(t *testing.T) {
 
 	// Register a simple index
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -74,8 +74,8 @@ func TestRedisIndexer_MultiValueIndex(t *testing.T) {
 
 	// Register index for user_id
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "sessions-by-user",
-		EntityType: "sessions",
+		Name:        "sessions-by-user",
+		EntityType:  "sessions",
 		ExtractFunc: ExtractJSONField("user_id"),
 	})
 
@@ -118,8 +118,8 @@ func TestRedisIndexer_RemoveFromIndexes(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -165,8 +165,8 @@ func TestRedisIndexer_ReplaceIndexes(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -219,8 +219,8 @@ func TestRedisIndexer_QueryMultiple(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "orders-by-status",
-		EntityType: "orders",
+		Name:        "orders-by-status",
+		EntityType:  "orders",
 		ExtractFunc: ExtractJSONField("status"),
 	})
 
@@ -261,8 +261,8 @@ func TestRedisIndexer_Count(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "orders-by-status",
-		EntityType: "orders",
+		Name:        "orders-by-status",
+		EntityType:  "orders",
 		ExtractFunc: ExtractJSONField("status"),
 	})
 
@@ -302,8 +302,8 @@ func TestRedisIndexer_GetIndexStats(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "orders-by-status",
-		EntityType: "orders",
+		Name:        "orders-by-status",
+		EntityType:  "orders",
 		ExtractFunc: ExtractJSONField("status"),
 	})
 
@@ -356,8 +356,8 @@ func TestRedisIndexer_ExtractNestedJSONField(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "photos-by-postcode",
-		EntityType: "photos",
+		Name:        "photos-by-postcode",
+		EntityType:  "photos",
 		ExtractFunc: ExtractNestedJSONField("gallery", "postcode"),
 	})
 
@@ -402,8 +402,8 @@ func TestRedisIndexer_RebuildIndex(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	spec := &MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	}
 	indexer.RegisterMultiIndex(spec)
@@ -445,8 +445,8 @@ func TestRedisIndexer_GracefulDegradation(t *testing.T) {
 	indexer := NewRedisIndexer(nil)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -490,8 +490,8 @@ func TestRedisIndexer_EmptyIndexValue(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -532,8 +532,8 @@ func TestRedisIndexer_MissingField(t *testing.T) {
 	indexer := NewRedisIndexer(redisClient)
 
 	indexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 

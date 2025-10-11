@@ -53,8 +53,8 @@ func TestIndexHealthMonitor_Check(t *testing.T) {
 
 	// Register index
 	redisIndexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -105,8 +105,8 @@ func TestIndexHealthMonitor_DetectDrift(t *testing.T) {
 	redisIndexer := NewRedisIndexer(redisClient)
 
 	redisIndexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -159,8 +159,8 @@ func TestIndexHealthMonitor_RepairDrift(t *testing.T) {
 	redisIndexer := NewRedisIndexer(redisClient)
 
 	redisIndexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
@@ -261,14 +261,14 @@ func TestIndexHealthMonitor_MultipleEntityTypes(t *testing.T) {
 
 	// Register multiple indexes
 	redisIndexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
 	redisIndexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "orders-by-status",
-		EntityType: "orders",
+		Name:        "orders-by-status",
+		EntityType:  "orders",
 		ExtractFunc: ExtractJSONField("status"),
 	})
 
@@ -345,8 +345,8 @@ func TestIndexHealthMonitor_EmptyData(t *testing.T) {
 	redisIndexer := NewRedisIndexer(redisClient)
 
 	redisIndexer.RegisterMultiIndex(&MultiIndexSpec{
-		Name:       "users-by-email",
-		EntityType: "users",
+		Name:        "users-by-email",
+		EntityType:  "users",
 		ExtractFunc: ExtractJSONField("email"),
 	})
 
