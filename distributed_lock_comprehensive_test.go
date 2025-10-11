@@ -31,7 +31,7 @@ func TestDistributedLock_BasicLockRelease(t *testing.T) {
 	}
 
 	// Lock should exist in Redis
-	exists := mr.Exists(fmt.Sprintf("test:lock:test-key"))
+	exists := mr.Exists("test:lock:test-key")
 	if !exists {
 		t.Error("lock key should exist in Redis")
 	}
@@ -40,7 +40,7 @@ func TestDistributedLock_BasicLockRelease(t *testing.T) {
 	release()
 
 	// Lock should be removed
-	exists = mr.Exists(fmt.Sprintf("test:lock:test-key"))
+	exists = mr.Exists("test:lock:test-key")
 	if exists {
 		t.Error("lock key should be removed after release")
 	}

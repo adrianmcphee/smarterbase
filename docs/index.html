@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en" class="group/html" data-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+<title>SmarterBase - Skip the Database. Use Redis + S3 Instead.</title>
+<meta content="Turn Redis + S3 into a queryable, transactional document store. 85% cost savings. Zero database complexity." name="description" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<link rel="shortcut icon" href="./images/favicon.ico" />
+
+<script src="https://cdn.jsdelivr.net/npm/card3d@2.6.5/dist/card3d.min.js"></script>
+
+      <link rel="stylesheet" href="./assets/index.css">
+    </head>
+
+    <body>
+        <div class="bg-base-200 border-base-300 border-b px-1 py-1.5 text-center text-[11px] sm:text-sm">
+    <span>
+        <span class="text-primary font-medium">New:</span>
+        Production-Ready v2.0 with Redis Distributed Locks
+    </span>
+</div>
+
+<div
+    id="layout-topbar"
+    class="bg-base-100 lg:bg-base-100/90 border-base-300 sticky top-0 z-10 border-b data-[at-top=true]:border-transparent lg:backdrop-blur-sm">
+    <div class="container">
+        <nav class="flex items-center justify-between py-2">
+            <div class="flex items-center gap-2">
+                <label
+                    for="menu-drawer"
+                    id="menu-drawer-trigger"
+                    aria-label="open sidebar"
+                    class="btn btn-square btn-ghost btn-sm lg:hidden">
+                    <span class="iconify lucide--menu size-5"></span>
+                </label>
+
+                <!-- Navbar Brand logo -->
+                <a href="#" class="text-xl font-semibold">SmarterBase</a>
+            </div>
+
+            <div class="max-lg:hidden">
+                <ul class="menu menu-horizontal gap-2 px-1">
+                    <li class="font-medium"><a href="#home">Home</a></li>
+                    <li class="font-medium"><a href="#features">Features</a></li>
+                    <li class="font-medium"><a href="#use-cases">Use Cases</a></li>
+                    <li class="font-medium"><a href="#comparison">vs Databases</a></li>
+                    <li class="font-medium"><a href="#docs">Documentation</a></li>
+                </ul>
+            </div>
+
+            <div class="space-x-2">
+                <a class="btn btn-ghost btn-sm" href="https://github.com/adrianmcphee/smarterbase" target="_blank">
+                    <span class="iconify lucide--github size-4"></span>
+                    GitHub
+                </a>
+                <a class="btn btn-primary btn-sm" href="#quickstart">Get Started</a>
+            </div>
+        </nav>
+
+        <!-- sm screen menu (drawer) -->
+        <div class="drawer">
+            <input id="menu-drawer" type="checkbox" class="drawer-toggle" />
+            <div class="drawer-side">
+                <label for="menu-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+                <div class="bg-base-100 min-h-full w-60 p-5">
+                    <a href="#" class="text-xl font-semibold">SmarterBase</a>
+                    <ul class="menu w-full gap-2 p-0 pt-4">
+                        <li class="font-medium"><a href="#home">Home</a></li>
+                        <li class="font-medium"><a href="#features">Features</a></li>
+                        <li class="font-medium"><a href="#use-cases">Use Cases</a></li>
+                        <li class="font-medium"><a href="#comparison">vs Databases</a></li>
+                        <li class="font-medium"><a href="#docs">Documentation</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <section class="py-8 lg:py-20" id="home">
+            <div class="container">
+                <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
+                    <div class="max-lg:order-2">
+                        <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
+                            Skip the Database.
+                            <span class="text-primary">Use Redis + S3 Instead.</span>
+                        </h1>
+                        <p class="text-base-content/80 mt-8 sm:text-lg">
+                            Turn Redis (indexes) + S3 (storage) into a queryable, transactional document store.
+                            <strong>85% cost savings.</strong> Zero database complexity.
+                        </p>
+                        <div class="mt-8 inline-flex gap-3 sm:mt-16">
+                            <a href="https://github.com/adrianmcphee/smarterbase" target="_blank">
+                                <button class="btn btn-primary">
+                                    <span class="iconify lucide--github size-4"></span>
+                                    View on GitHub
+                                </button>
+                            </a>
+                            <a href="#quickstart">
+                                <button class="btn btn-ghost">Get Started</button>
+                            </a>
+                        </div>
+                        <div class="mt-8 flex items-center gap-3">
+                            <div class="badge badge-outline">Go 1.18+</div>
+                            <div class="badge badge-outline">MIT License</div>
+                            <div class="badge badge-outline">Production Ready</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-base-200 rounded-box p-6 max-lg:order-1">
+                        <pre class="text-sm overflow-x-auto"><code>// You already have Redis and S3.
+// Use them as your database.
+
+backend := smarterbase.NewS3BackendWithRedisLock(
+    s3Client, "my-bucket", redisClient,
+)
+store := smarterbase.NewStore(backend)
+
+// Create with automatic indexing
+user := &User{
+    ID:    smarterbase.NewID(),
+    Email: "alice@example.com",
+}
+store.PutJSON(ctx, "users/"+user.ID, user)
+
+// Query by index - O(1) lookup
+users, _ := store.Query("users/").
+    FilterJSON(func(obj map[string]interface{}) bool {
+        return obj["active"].(bool)
+    }).
+    All(ctx, &users)</code></pre>
+                    </div>
+                </div>
+
+                <div class="mt-12 lg:mt-32">
+                    <h2 class="text-base-content/60 text-center text-xl font-medium">
+                        Instead of This → Do This
+                    </h2>
+                    <div class="mt-8 grid gap-6 lg:grid-cols-2">
+                        <div class="card border-error/30 border-2 bg-base-200">
+                            <div class="card-body">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-error text-2xl">❌</span>
+                                    <h3 class="text-lg font-semibold">Traditional Database</h3>
+                                </div>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div>RDS PostgreSQL: <strong>$271/month</strong></div>
+                                    <div>❌ Schema migrations to plan</div>
+                                    <div>❌ Database servers to patch</div>
+                                    <div>❌ Backup strategies to test</div>
+                                    <div>❌ Connection pools to tune</div>
+                                    <div>❌ DBA expertise required</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card border-primary/30 border-2 bg-primary/5">
+                            <div class="card-body">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-primary text-2xl">✅</span>
+                                    <h3 class="text-lg font-semibold">SmarterBase</h3>
+                                </div>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div>Redis + S3: <strong>$36/month</strong></div>
+                                    <div>✅ Zero migrations (JSON schema-less)</div>
+                                    <div>✅ Zero servers (S3 is serverless)</div>
+                                    <div>✅ Zero backups (11 9s durability)</div>
+                                    <div>✅ Simple key-value (no tuning)</div>
+                                    <div>✅ Junior devs can deploy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="relative py-8 lg:py-20" id="features">
+            <div class="absolute start-[10%]">
+                <div
+                    class="from-primary/10 to-secondary/10 pointer-events-none aspect-square w-60 rounded-full bg-gradient-to-r blur-3xl lg:w-[600px]"></div>
+            </div>
+
+            <div class="container">
+                <div class="flex flex-col items-center">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Database Features Without the Database</h2>
+                    <p class="text-base-content/80 mt-4 sm:text-lg">
+                        Everything you need for document storage, built on infrastructure you already have
+                    </p>
+                </div>
+
+                <div class="mt-8 space-y-8 lg:mt-20 xl:space-y-20">
+                    <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
+                        <div class="bg-base-200 rounded-box p-6">
+                            <pre class="text-sm overflow-x-auto"><code>// Secondary indexes via Redis Sets
+redisIndexer.RegisterMultiValueIndex(
+    "orders", "user_id",
+    func(data []byte) (string, string, error) {
+        var order Order
+        json.Unmarshal(data, &order)
+        return order.ID, order.UserID, nil
+    },
+)
+
+// Query - O(1) lookup
+orderIDs, _ := redisIndexer.QueryMultiValueIndex(
+    ctx, "orders", "user_id", "user-123",
+)</code></pre>
+                        </div>
+
+                        <div class="lg:mt-8">
+                            <div class="badge badge-soft badge-primary">Secondary Indexes</div>
+                            <h3 class="mt-3 text-xl font-medium sm:text-2xl">
+                                Fast O(1) Lookups via Redis
+                            </h3>
+                            <p class="text-base-content/80 mt-1">
+                                Multi-value indexes stored in Redis Sets. Query by any field with constant-time lookups.
+                            </p>
+                            <ul class="mt-4 list-inside list-disc">
+                                <li>O(1) index queries</li>
+                                <li>1:N relationships (user → orders)</li>
+                                <li>Automatic index updates</li>
+                                <li>Health monitoring & auto-repair</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
+                        <div>
+                            <div class="badge badge-soft badge-secondary">Distributed Locks</div>
+                            <h3 class="mt-3 text-xl font-medium sm:text-2xl">Race-Free Updates</h3>
+                            <p class="text-base-content/80 mt-1">
+                                Redis distributed locks eliminate S3 race conditions. True atomic operations across multiple servers.
+                            </p>
+
+                            <ul class="mt-4 list-inside list-disc">
+                                <li>Prevents lost updates</li>
+                                <li>Automatic retry with backoff</li>
+                                <li>TTL protection against deadlocks</li>
+                                <li>Production-tested at scale</li>
+                            </ul>
+                        </div>
+
+                        <div class="order-first lg:order-last">
+                            <div class="bg-base-200 rounded-box p-6">
+                                <pre class="text-sm overflow-x-auto"><code>// Atomic updates with distributed lock
+lock := smarterbase.NewDistributedLock(
+    redisClient, "smarterbase",
+)
+
+smarterbase.WithAtomicUpdate(
+    ctx, store, lock,
+    "accounts/123", 10*time.Second,
+    func(ctx context.Context) error {
+        var account Account
+        store.GetJSON(ctx, "accounts/123", &account)
+        account.Balance += 100
+        store.PutJSON(ctx, "accounts/123", &account)
+        return nil
+    },
+)</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
+                        <div class="bg-base-200 rounded-box p-6">
+                            <pre class="text-sm overflow-x-auto"><code>// Full observability built-in
+metrics := smarterbase.NewPrometheusMetrics(
+    prometheus.DefaultRegisterer,
+)
+logger, _ := smarterbase.NewProductionZapLogger()
+store := smarterbase.NewStoreWithObservability(
+    backend, logger, metrics,
+)
+
+// Automatic tracking:
+// - Operation latency (histogram)
+// - Success/error rates
+// - Index health & drift
+// - Query performance</code></pre>
+                        </div>
+
+                        <div class="lg:mt-8">
+                            <div class="badge badge-soft badge-error">Observability</div>
+                            <h3 class="mt-3 text-xl font-medium sm:text-2xl">
+                                Production-Grade Monitoring
+                            </h3>
+                            <p class="text-base-content/80 mt-1">
+                                Prometheus metrics and structured logging out of the box. Know exactly what's happening in production.
+                            </p>
+                            <ul class="mt-4 list-inside list-disc">
+                                <li>15+ Prometheus metrics</li>
+                                <li>Zap structured logging</li>
+                                <li>Index health monitoring</li>
+                                <li>Query profiling</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-8 lg:py-20" id="use-cases">
+            <div class="container">
+                <div class="text-center">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Perfect for "No Database" Applications</h2>
+                    <p class="text-base-content/80 mt-4 sm:text-lg">
+                        If you don't need JOINs or complex aggregations, you probably don't need a database
+                    </p>
+                </div>
+
+                <div class="mt-8 grid gap-6 lg:grid-cols-3">
+                    <div class="card card-border">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--user-circle size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium">User Management</h3>
+                            </div>
+                            <p class="mt-2">
+                                Store user profiles, preferences, sessions. No schema migrations when adding new fields.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card card-border">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--shopping-bag size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium">E-commerce</h3>
+                            </div>
+                            <p class="mt-2">
+                                Orders, invoices, product catalogs. Index by user, status, date without complex queries.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card card-border">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--sliders size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium">Configuration</h3>
+                            </div>
+                            <p class="mt-2">
+                                App configs, feature flags, tenant settings. Update instantly without migrations.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card card-border">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--newspaper size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium">Content Management</h3>
+                            </div>
+                            <p class="mt-2">
+                                Blog posts, articles, documentation. Store rich JSON without rigid schemas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card card-border">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--scroll size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium">Event Logging</h3>
+                            </div>
+                            <p class="mt-2">
+                                Audit trails, activity logs. Append-only JSONL format for efficient writes.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card card-border">
+                        <div class="card-body">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--layers size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium">Multi-tenant SaaS</h3>
+                            </div>
+                            <p class="mt-2">
+                                Per-tenant configuration and data. Scale without database partitioning complexity.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-8 lg:py-20" id="comparison">
+            <div class="container">
+                <div class="text-center">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Cost Comparison</h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        85% cheaper than managed databases (1TB data, 1M requests/day)
+                    </p>
+                </div>
+
+                <div class="mt-8 grid gap-8 lg:grid-cols-4">
+                    <div class="card border-primary/30 border-2 bg-primary/5">
+                        <div class="card-body">
+                            <div class="flex items-center gap-2">
+                                <span class="text-primary text-2xl">✅</span>
+                                <h3 class="text-lg font-semibold">SmarterBase</h3>
+                            </div>
+                            <p class="mt-4 flex items-baseline">
+                                <span class="text-5xl font-semibold tracking-tight text-primary">$41</span>
+                                <span class="ml-1 text-xl font-medium">/month</span>
+                            </p>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <div>S3: $23</div>
+                                <div>Requests: $5</div>
+                                <div>Redis: $13</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-base-300 border">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold">RDS PostgreSQL</h3>
+                            <p class="mt-4 flex items-baseline">
+                                <span class="text-5xl font-semibold tracking-tight">$271</span>
+                                <span class="ml-1 text-xl font-medium">/month</span>
+                            </p>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <div>Instance: $41</div>
+                                <div>Storage: $115</div>
+                                <div>Backups: $115</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-base-300 border">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold">DynamoDB</h3>
+                            <p class="mt-4 flex items-baseline">
+                                <span class="text-5xl font-semibold tracking-tight">$300</span>
+                                <span class="ml-1 text-xl font-medium">/month</span>
+                            </p>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <div>Storage: $250</div>
+                                <div>Read/Write: $50+</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-base-300 border">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold">MongoDB Atlas</h3>
+                            <p class="mt-4 flex items-baseline">
+                                <span class="text-5xl font-semibold tracking-tight">$100</span>
+                                <span class="ml-1 text-xl font-medium">/month</span>
+                            </p>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <div>M10 cluster: $57</div>
+                                <div>Storage: $43+</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-8 lg:py-20 bg-base-200" id="quickstart">
+            <div class="container">
+                <div class="text-center">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Quick Start</h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        Get started in minutes with Go 1.18+
+                    </p>
+                </div>
+
+                <div class="mt-12 max-w-4xl mx-auto space-y-8">
+                    <div class="card bg-base-100">
+                        <div class="card-body">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="badge badge-primary">1</div>
+                                <h3 class="text-xl font-medium">Installation</h3>
+                            </div>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>go get github.com/adrianmcphee/smarterbase</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100">
+                        <div class="card-body">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="badge badge-primary">2</div>
+                                <h3 class="text-xl font-medium">Basic Setup</h3>
+                            </div>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>package main
+
+import (
+    "context"
+    "github.com/adrianmcphee/smarterbase"
+)
+
+func main() {
+    // Development: Filesystem backend
+    backend := smarterbase.NewFilesystemBackend("./data")
+    defer backend.Close()
+
+    // Production: S3 with Redis locks
+    // backend := smarterbase.NewS3BackendWithRedisLock(
+    //     s3Client, "my-bucket", redisClient,
+    // )
+
+    store := smarterbase.NewStore(backend)
+    ctx := context.Background()
+
+    // Create
+    user := &User{
+        ID:    smarterbase.NewID(),
+        Email: "alice@example.com",
+        Name:  "Alice",
+    }
+    store.PutJSON(ctx, "users/"+user.ID, user)
+
+    // Read
+    var retrieved User
+    store.GetJSON(ctx, "users/"+user.ID, &retrieved)
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100">
+                        <div class="card-body">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="badge badge-primary">3</div>
+                                <h3 class="text-xl font-medium">Add Indexing</h3>
+                            </div>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// Setup Redis indexer
+redisClient := redis.NewClient(&redis.Options{
+    Addr: "localhost:6379",
+})
+redisIndexer := smarterbase.NewRedisIndexer(redisClient)
+
+// Register index
+redisIndexer.RegisterMultiValueIndex(
+    "users", "email",
+    func(data []byte) (string, string, error) {
+        var user User
+        json.Unmarshal(data, &user)
+        return user.ID, user.Email, nil
+    },
+)
+
+// Create with automatic indexing
+indexManager := smarterbase.NewIndexManager(store).
+    WithRedisIndexer(redisIndexer)
+
+indexManager.Create(ctx, "users/"+user.ID, user)
+
+// Query by index - O(1) lookup
+userIDs, _ := redisIndexer.QueryMultiValueIndex(
+    ctx, "users", "email", "alice@example.com",
+)</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 text-center">
+                    <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="btn btn-primary btn-lg">
+                        <span class="iconify lucide--github size-5"></span>
+                        View Full Documentation on GitHub
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-8 lg:py-20" id="docs">
+            <div class="container">
+                <div class="text-center">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Documentation</h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        Comprehensive guides and technical documentation
+                    </p>
+                </div>
+
+                <div class="mt-12 grid gap-6 lg:grid-cols-2">
+                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/README.md" target="_blank"
+                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--book-open size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium flex-1">README</h3>
+                                <span class="iconify lucide--arrow-right size-4"></span>
+                            </div>
+                            <p class="mt-2">
+                                Complete user guide with examples, quick start, and best practices.
+                            </p>
+                        </div>
+                    </a>
+
+                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/DATASHEET.md" target="_blank"
+                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--file-text size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium flex-1">Technical Datasheet</h3>
+                                <span class="iconify lucide--arrow-right size-4"></span>
+                            </div>
+                            <p class="mt-2">
+                                Architecture, performance characteristics, and detailed specifications.
+                            </p>
+                        </div>
+                    </a>
+
+                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/CONTRIBUTING.md" target="_blank"
+                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--git-pull-request size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium flex-1">Contributing Guide</h3>
+                                <span class="iconify lucide--arrow-right size-4"></span>
+                            </div>
+                            <p class="mt-2">
+                                Development setup, testing guidelines, and contribution workflow.
+                            </p>
+                        </div>
+                    </a>
+
+                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples" target="_blank"
+                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <span class="iconify lucide--code size-6 text-primary"></span>
+                                </div>
+                                <h3 class="text-lg font-medium flex-1">Examples</h3>
+                                <span class="iconify lucide--arrow-right size-4"></span>
+                            </div>
+                            <p class="mt-2">
+                                Working examples for user management, e-commerce, event logging, and more.
+                            </p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-base-300 border-t">
+            <div class="container">
+                <div class="py-8 sm:py-10 md:px-16 xl:px-40 xl:py-16">
+                    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                            <p class="text-xl font-medium">SmarterBase</p>
+                            <p class="mt-4 text-sm text-base-content/70">
+                                Skip the database. Use Redis + S3 instead.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-medium">Resources</h2>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="block hover:text-primary transition-all">GitHub</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/README.md" target="_blank" class="block hover:text-primary transition-all">Documentation</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples" target="_blank" class="block hover:text-primary transition-all">Examples</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/DATASHEET.md" target="_blank" class="block hover:text-primary transition-all">Datasheet</a>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-medium">Community</h2>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <a href="https://github.com/adrianmcphee/smarterbase/issues" target="_blank" class="block hover:text-primary transition-all">Issues</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/pulls" target="_blank" class="block hover:text-primary transition-all">Pull Requests</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/CONTRIBUTING.md" target="_blank" class="block hover:text-primary transition-all">Contributing</a>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-medium">License</h2>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/LICENSE" target="_blank" class="block hover:text-primary transition-all">MIT License</a>
+                                <p class="text-base-content/70">Free for personal and commercial use</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-base-300 border-t px-8 py-4 text-center text-sm text-base-content/70">
+                    Built with Go. Production-tested at scale.
+                </div>
+            </div>
+        </footer>
+
+
+        <script src="./app.js"></script>
+    </body>
+</html>
