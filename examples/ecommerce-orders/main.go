@@ -299,6 +299,21 @@ func (m *OrderManager) CalculateRevenue(ctx context.Context, userID string) (flo
 func main() {
 	ctx := context.Background()
 
+	fmt.Println("\n=== E-Commerce Orders with SmarterBase ===")
+	fmt.Println("\n📋 THE CHALLENGE:")
+	fmt.Println("E-commerce platforms struggle with:")
+	fmt.Println("  • Order data growing to millions/billions of records")
+	fmt.Println("  • Complex sharding strategies for horizontal scaling")
+	fmt.Println("  • Expensive database licenses at scale")
+	fmt.Println("  • Race conditions in status updates without proper locking")
+	fmt.Println("\n✨ THE SMARTERBASE SOLUTION:")
+	fmt.Println("  ✅ Infinite scale - Handle billions of orders on S3")
+	fmt.Println("  ✅ Schema-less - Add fields (notes, shipping_carrier) without migrations")
+	fmt.Println("  ✅ Atomic updates - Distributed locks prevent order corruption")
+	fmt.Println("  ✅ Fast queries - Redis indexes by user_id and status")
+	fmt.Println("  ✅ Zero backups - 11 9s durability built-in")
+	fmt.Println()
+
 	// Development setup
 	backend := smarterbase.NewFilesystemBackend("./data")
 	defer backend.Close()
@@ -317,7 +332,7 @@ func main() {
 	// Create order manager
 	orderManager := NewOrderManager(store, redisClient)
 
-	fmt.Println("\n=== E-Commerce Order Management Example ===")
+	fmt.Println("=== Running Example Operations ===")
 
 	// 1. Create orders
 	fmt.Println("1. Creating orders...")

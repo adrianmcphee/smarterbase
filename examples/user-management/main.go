@@ -223,6 +223,21 @@ func (m *UserManager) CountUsersByRole(ctx context.Context) (map[string]int64, e
 func main() {
 	ctx := context.Background()
 
+	fmt.Println("\n=== User Management with SmarterBase ===")
+	fmt.Println("\n📋 THE CHALLENGE:")
+	fmt.Println("Traditional user management systems require:")
+	fmt.Println("  • Complex database schemas with migrations")
+	fmt.Println("  • Expensive horizontal scaling for millions of users")
+	fmt.Println("  • Backup/restore infrastructure")
+	fmt.Println("  • Slow lookups by email or role without proper indexes")
+	fmt.Println("\n✨ THE SMARTERBASE SOLUTION:")
+	fmt.Println("  ✅ 11 9s durability - AWS multi-AZ replication, no backup needed")
+	fmt.Println("  ✅ Infinite scale - S3 scales automatically, no capacity planning")
+	fmt.Println("  ✅ Zero backups - S3 handles durability automatically")
+	fmt.Println("  ✅ Schema-less - JSON structure, add fields without migrations")
+	fmt.Println("  ✅ O(1) lookups - Redis indexes for instant email/role queries")
+	fmt.Println()
+
 	// Development setup: Filesystem backend
 	backend := smarterbase.NewFilesystemBackend("./data")
 	defer backend.Close()
@@ -253,7 +268,7 @@ func main() {
 	userManager := NewUserManager(store, redisClient)
 
 	// Example operations
-	fmt.Println("\n=== User Management Example ===")
+	fmt.Println("=== Running Example Operations ===")
 
 	// 1. Create users
 	fmt.Println("1. Creating users...")

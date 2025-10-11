@@ -270,7 +270,22 @@ func main() {
 	eventLogger := NewEventLogger(store)
 	auditLogger := NewAuditLogger(eventLogger)
 
-	fmt.Println("\n=== Event Logging with JSONL Example ===")
+	fmt.Println("\n=== Event Logging with SmarterBase JSONL ===")
+	fmt.Println("\n📋 THE CHALLENGE:")
+	fmt.Println("Traditional logging systems face:")
+	fmt.Println("  • Database write amplification for billions of events")
+	fmt.Println("  • Expensive log aggregation tools (Splunk, Datadog)")
+	fmt.Println("  • Complex retention policies and storage management")
+	fmt.Println("  • Read-modify-write bottlenecks for append operations")
+	fmt.Println("\n✨ THE SMARTERBASE SOLUTION:")
+	fmt.Println("  ✅ JSONL support - Pure append-only, no read-modify-write")
+	fmt.Println("  ✅ Infinite scale - Billions of events, pennies per month")
+	fmt.Println("  ✅ Zero backups - S3's 11 9s durability automatic")
+	fmt.Println("  ✅ S3 lifecycle - Auto-delete old logs, no code needed")
+	fmt.Println("  ✅ Streaming - Process huge logs without loading to memory")
+	fmt.Println()
+
+	fmt.Println("=== Running Example Operations ===")
 
 	// 1. Log various events
 	fmt.Println("1. Logging events...")

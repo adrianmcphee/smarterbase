@@ -296,7 +296,22 @@ func main() {
 	// Create config manager
 	configManager := NewConfigManager(store, redisClient)
 
-	fmt.Println("\n=== Multi-Tenant Configuration Example ===")
+	fmt.Println("\n=== Multi-Tenant SaaS with SmarterBase ===")
+	fmt.Println("\n📋 THE CHALLENGE:")
+	fmt.Println("Multi-tenant SaaS platforms need:")
+	fmt.Println("  • Isolated config per tenant (millions of tenants)")
+	fmt.Println("  • Fast plan upgrades without downtime")
+	fmt.Println("  • Feature flags that change without migrations")
+	fmt.Println("  • Cost-effective storage that scales with growth")
+	fmt.Println("\n✨ THE SMARTERBASE SOLUTION:")
+	fmt.Println("  ✅ Schema-less - Add features without migrations")
+	fmt.Println("  ✅ Infinite scale - Millions of tenants on S3")
+	fmt.Println("  ✅ Atomic upgrades - Distributed locks prevent corruption")
+	fmt.Println("  ✅ Fast queries - Redis indexes by plan type")
+	fmt.Println("  ✅ 85% cost savings - vs. traditional databases")
+	fmt.Println()
+
+	fmt.Println("=== Running Example Operations ===")
 
 	// 1. Create tenants
 	fmt.Println("1. Creating tenants...")
