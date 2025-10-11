@@ -1,3 +1,13 @@
+## [1.2.9](https://github.com/adrianmcphee/smarterbase/compare/v1.2.8...v1.2.9) (2025-10-11)
+
+### Bug Fixes
+
+* update Codecov action to use 'files' instead of deprecated 'file' parameter ([053528a](https://github.com/adrianmcphee/smarterbase/commit/053528a902d586d0665548a135a2cfc9cf91a800))
+
+### Documentation
+
+* remove redundant documentation files ([4f82205](https://github.com/adrianmcphee/smarterbase/commit/4f822051cac419d965b097242eda0d0457409bdb))
+
 ## [1.2.8](https://github.com/adrianmcphee/smarterbase/compare/v1.2.7...v1.2.8) (2025-10-11)
 
 ### Bug Fixes
