@@ -71,8 +71,10 @@ Redis + S3 via SmarterBase: $36/month
 **Database features:**
 - ✅ Secondary indexes via Redis Sets
 - ✅ Query interface (filter, sort, paginate)
-- ✅ Transactions (optimistic locking)
+- ✅ Transactions (optimistic locking with error tracking)
 - ✅ Distributed locking (Redis coordination)
+- ✅ Circuit breaker protection (automatic failover)
+- ✅ Self-healing indexes (auto-repair enabled by default)
 - ✅ Full observability (Prometheus + Zap)
 
 **Operational benefits:**
@@ -127,22 +129,20 @@ indexManager.Create(ctx, key, user)
 
 ---
 
-### 3. Index Drift → Automated Health Monitoring ✅
+### 3. Index Drift → Self-Healing Index Monitoring ✅
 
 **Problem:** Redis indexes become stale due to failed updates, network partitions, or application bugs, causing incorrect query results.
 
-**Solution:** `IndexHealthMonitor` continuously samples objects, detects drift, and triggers automated repair workflows.
+**Solution:** `IndexHealthMonitor` continuously samples objects, detects drift, and automatically repairs indexes. Self-healing is enabled by default.
 
 ```go
-monitor := NewIndexHealthMonitor(store, redisIndexer).
-    WithInterval(5 * time.Minute).
-    WithSampleSize(100).
-    WithDriftThreshold(5.0) // Alert if >5% drift
-
+monitor := NewIndexHealthMonitor(store, redisIndexer)
 monitor.Start(ctx)
-// Continuous health checks
-// Automatic alerts on drift
-// Repair workflows on demand
+// ✅ Auto-repair enabled by default (5% drift threshold)
+// ✅ Checks every 5 minutes
+// ✅ Samples 100 objects per check
+// ✅ Automatic repair when drift detected
+// Optional: Customize with .WithInterval() / .WithDriftThreshold() / .WithAutoRepair(false)
 ```
 
 ---
@@ -159,6 +159,8 @@ monitor.Start(ctx)
 - `smarterbase_query_results` (histogram)
 - `smarterbase_index_drift` (gauge)
 - `smarterbase_lock_timeout` (counter)
+- `smarterbase_circuit_breaker_state` (gauge)
+- `smarterbase_transaction_rollback_failures` (counter)
 - 15+ metrics total
 
 ---
@@ -274,7 +276,7 @@ err := store.WithTransaction(ctx, func(tx *OptimisticTransaction) error {
 
 **Limitations (documented):**
 - NOT true ACID transactions
-- Best-effort rollback (may fail)
+- Best-effort rollback with detailed error reporting (surfaces partial failures)
 - No isolation guarantees
 - Use for low-contention scenarios only
 
@@ -336,6 +338,9 @@ analysis := AnalyzeBatchResults(results)
 - Query results: `smarterbase_query_results{prefix}`
 - Index hits/misses: `smarterbase_index_hits_total{entity,index}`
 - Index drift: `smarterbase_index_drift{entity_type}`
+- Index repair: `smarterbase_index_repair_auto_success{entity_type}`
+- Circuit breaker state: `smarterbase_circuit_breaker_state{operation}`
+- Transaction rollback: `smarterbase_transaction_rollback_failures{key}`
 - Cache performance: `smarterbase_cache_hits_total{key_prefix}`
 - Transaction size: `smarterbase_transaction_size`
 
@@ -527,8 +532,10 @@ id := smarterbase.NewID() // "01932d5f-8f9a-7000-8000-123456789abc"
 
 ### ✅ Reliability Features
 - Distributed locking eliminates race conditions
+- Circuit breaker protection on all Redis operations (opens after 5 failures, 30s retry)
+- Self-healing index monitoring with automatic repair (enabled by default)
 - Automatic index coordination prevents drift
-- Best-effort rollback for transaction failures
+- Transaction rollback with detailed error reporting (surfaces partial failures)
 - Comprehensive error handling with context
 - Context cancellation support throughout
 - Exponential backoff with jitter for retries
@@ -730,7 +737,9 @@ indexManager.Create(ctx, key, user)
 - All storage backends (S3, GCS, Minio, Filesystem)
 - Distributed locking (Redis)
 - Multi-value Redis indexes
-- Index health monitoring
+- Self-healing index monitoring with auto-repair (enabled by default)
+- Circuit breaker protection on all Redis operations
+- Transaction error tracking and rollback reporting
 - Prometheus metrics integration
 - Zap logger integration
 - Load testing framework
