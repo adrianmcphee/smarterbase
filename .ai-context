@@ -305,6 +305,9 @@ go tool cover -html=coverage.out
 
 ## Quick Reference for LLMs
 
+**Before starting any work**:
+⚠️ **ALWAYS run `git pull --rebase` first** to get latest changes from remote (CI may have pushed release commits)
+
 **When making changes**:
 1. Always run tests: `go test -v -race`
 2. Check lint: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest && golangci-lint run`
@@ -312,6 +315,7 @@ go tool cover -html=coverage.out
 4. Update tests for new features
 5. Update documentation if adding public APIs
 6. Never reference AI assistance in commits
+7. Before pushing: `git pull --rebase` again to catch any new CI commits
 
 **Common tasks**:
 - Adding backend: Implement `Backend` interface (backend.go)
