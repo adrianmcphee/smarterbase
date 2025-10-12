@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/adrianmcphee/smarterbase/compare/v1.2.9...v1.3.0) (2025-10-12)
+
+### Features
+
+* simple, opt-in versioning of stored objects and migrations on read ([6d5fe08](https://github.com/adrianmcphee/smarterbase/commit/6d5fe08f0566d99ced1ed387a14a596fe027ae41))
+
 ## [1.2.9](https://github.com/adrianmcphee/smarterbase/compare/v1.2.8...v1.2.9) (2025-10-11)
 
 ### Bug Fixes
