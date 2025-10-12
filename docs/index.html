@@ -211,7 +211,7 @@ users, _ := store.Query("users/").
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
                                     <div>RDS PostgreSQL: <strong>$271/month</strong></div>
-                                    <div>❌ Schema migrations to plan</div>
+                                    <div>❌ ALTER TABLE downtime</div>
                                     <div>❌ Database servers to patch</div>
                                     <div>❌ Backup strategies to test</div>
                                     <div>❌ Connection pools to tune</div>
@@ -227,7 +227,7 @@ users, _ := store.Query("users/").
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
                                     <div>Redis + S3: <strong>$36/month</strong></div>
-                                    <div>✅ Zero migrations (JSON schema-less)</div>
+                                    <div>✅ No ALTER TABLE statements</div>
                                     <div>✅ Zero servers (S3 is serverless)</div>
                                     <div>✅ Zero backups (11 9s durability)</div>
                                     <div>✅ Simple key-value (no tuning)</div>
@@ -281,8 +281,8 @@ users, _ := store.Query("users/").
                             <div class="flex justify-center mb-3">
                                 <i class="fa-solid fa-file-code text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">Schema-less</h3>
-                            <p class="text-sm text-base-content/70">JSON documents, no migrations ever, change structure anytime</p>
+                            <h3 class="text-xl font-bold text-primary">Schema Evolution</h3>
+                            <p class="text-sm text-base-content/70">JSON documents with built-in versioning, migrations happen on read</p>
                         </div>
                     </div>
 
@@ -423,6 +423,59 @@ store := smarterbase.NewStoreWithObservability(
                                 <li>Transaction error tracking</li>
                                 <li>Query profiling</li>
                             </ul>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
+                        <div>
+                            <div class="badge badge-soft badge-accent">Schema Versioning</div>
+                            <h3 class="mt-3 text-xl font-medium sm:text-2xl">Evolve Schemas Without Downtime</h3>
+                            <p class="text-base-content/80 mt-1">
+                                Add a version field, register migrations, and your data transforms automatically on read. No ALTER TABLE statements, no downtime.
+                            </p>
+
+                            <ul class="mt-4 list-inside list-disc">
+                                <li>Opt-in with _v field</li>
+                                <li>Lazy migration on read</li>
+                                <li>Automatic version chaining</li>
+                                <li>Zero overhead when not used</li>
+                                <li>Gradual write-back policy</li>
+                            </ul>
+                        </div>
+
+                        <div class="order-first lg:order-last">
+                            <div class="bg-base-200 rounded-box p-6">
+                                <pre class="text-sm overflow-x-auto"><code>// Define version evolution
+type UserV0 struct {
+    Name  string
+    Email string
+}
+
+type UserV2 struct {
+    V         int    `json:"_v"`
+    FirstName string `json:"first_name"`
+    LastName  string `json:"last_name"`
+    Email     string
+}
+
+// Register migration at startup
+smarterbase.Migrate("UserV2").
+    From(0).To(2).
+    Do(func(data map[string]interface{})
+        (map[string]interface{}, error) {
+        // Split name into first/last
+        parts := strings.Split(data["name"], " ")
+        data["first_name"] = parts[0]
+        data["last_name"] = parts[1]
+        data["_v"] = 2
+        return data, nil
+    })
+
+// Old data migrates automatically
+var user UserV2
+user.V = 2  // Set expected version
+store.GetJSON(ctx, "users/123", &user)</code></pre>
+                            </div>
                         </div>
                     </div>
                 </div>

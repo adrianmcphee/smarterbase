@@ -4,9 +4,9 @@
 
 **You already have Redis and S3. Use them as your database.**
 
-SmarterBase turns **Redis** (fast indexes) + **S3** (durable storage) into a queryable, transactional document store. No PostgreSQL, no MySQL, no MongoDB. No migrations, no backups, no database operations.
+SmarterBase turns **Redis** (fast indexes) + **S3** (durable storage) into a queryable, transactional document store. No PostgreSQL, no MySQL, no MongoDB. No ALTER TABLE statements, no backup strategies, no database operations.
 
-**85% cost savings. Zero database complexity.**
+**85% cost savings. Schema evolution built-in.**
 
 [![Go Version](https://img.shields.io/badge/Go-1.18+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![Tests](https://github.com/adrianmcphee/smarterbase/workflows/Tests/badge.svg)](https://github.com/adrianmcphee/smarterbase/actions/workflows/test.yml)
@@ -559,6 +559,147 @@ redisIndexer.RegisterMultiValueIndex("orders", "user_id", func(data []byte) (str
 orderIDs, _ := redisIndexer.QueryMultiValueIndex(ctx, "orders", "user_id", "user-123")
 ```
 
+## Schema Versioning & Evolution
+
+SmarterBase supports schema evolution without downtime through built-in migration capabilities. Unlike traditional databases that require ALTER TABLE statements and careful planning, SmarterBase migrations happen automatically and transparently when data is accessed.
+
+### How It Works
+
+1. **Add a version field** to your structs
+2. **Register migration functions** at app startup
+3. **Old data migrates automatically** when read
+4. **No downtime** required
+
+### Quick Example
+
+```go
+// Original schema (v0)
+type User struct {
+    ID    string `json:"id"`
+    Email string `json:"email"`
+    Name  string `json:"name"`
+}
+
+// Evolved schema (v2)
+type User struct {
+    V         int    `json:"_v"`          // Version field
+    ID        string `json:"id"`
+    Email     string `json:"email"`
+    FirstName string `json:"first_name"`  // Split from name
+    LastName  string `json:"last_name"`   // Split from name
+    Phone     string `json:"phone"`       // New field
+}
+
+// Register migration at app startup
+func init() {
+    smarterbase.Migrate("User").From(0).To(2).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
+        // Split name into first_name and last_name
+        if name, ok := data["name"].(string); ok {
+            parts := strings.SplitN(name, " ", 2)
+            data["first_name"] = parts[0]
+            if len(parts) > 1 {
+                data["last_name"] = parts[1]
+            }
+            delete(data, "name")
+        }
+        data["phone"] = ""  // Add new field
+        data["_v"] = 2
+        return data, nil
+    })
+}
+
+// Read old data - automatically migrates to v2
+var user User
+user.V = 2  // Set expected version
+store.GetJSON(ctx, "users/123.json", &user)  // Migration happens here
+```
+
+### Migration Helpers
+
+Common migration patterns have built-in helpers:
+
+```go
+// Split a field
+smarterbase.Migrate("User").From(0).To(1).
+    Split("name", " ", "first_name", "last_name")
+
+// Add a new field with default value
+smarterbase.Migrate("Product").From(1).To(2).
+    AddField("stock", 0)
+
+// Rename a field
+smarterbase.Migrate("Order").From(2).To(3).
+    RenameField("price", "total_amount")
+
+// Remove a field
+smarterbase.Migrate("Config").From(3).To(4).
+    RemoveField("deprecated_flag")
+```
+
+### Migration Chaining
+
+Migrations automatically chain together:
+
+```go
+// Register each migration step
+smarterbase.Migrate("Product").From(0).To(1).AddField("sku", "")
+smarterbase.Migrate("Product").From(1).To(2).Split("name", " ", "brand", "product_name")
+smarterbase.Migrate("Product").From(2).To(3).Do(customTransform)
+
+// Reading v0 data with v3 struct → automatically runs 0→1→2→3
+```
+
+### Migration Policies
+
+Control when migrations are written back to storage:
+
+```go
+// Default: Migrate in memory only
+store := smarterbase.NewStore(backend)
+
+// Write back migrated data (gradual upgrade)
+store.WithMigrationPolicy(smarterbase.MigrateAndWrite)
+
+// Now when old data is read, it's migrated AND written back to S3
+```
+
+### Performance
+
+- **No migration**: Zero overhead (fast path)
+- **Version match**: ~50ns overhead (single field check)
+- **Migration needed**: ~2-5ms per version step
+
+**Recommendation**: Use `MigrateAndWrite` policy during low-traffic hours to gradually upgrade stored data.
+
+### Best Practices
+
+1. **Always increment versions** when changing schema
+2. **Keep migrations idempotent** (safe to run multiple times)
+3. **Test with production data samples** before deploying
+4. **Document breaking changes** in migration comments
+5. **Use semantic versioning** for major changes
+
+### Example: Product Catalog Evolution
+
+See [examples/schema-migrations](./examples/schema-migrations) for a complete example showing:
+- Version 0 → 1: Add inventory tracking
+- Version 1 → 2: Split name into brand and product name
+- Version 2 → 3: Convert single price to pricing tiers
+
+### Why This Beats Traditional Migrations
+
+**Traditional databases:**
+- ❌ Require downtime for ALTER TABLE
+- ❌ Need backfill scripts for existing data
+- ❌ Risk of migration failures mid-process
+- ❌ Coordinated deployment complexity
+
+**SmarterBase:**
+- ✅ Zero downtime - migrations happen on read
+- ✅ No backfill - data transforms lazily
+- ✅ Gradual rollout - old and new code coexist
+- ✅ JSON flexibility - storage adapts naturally
+
 ## Reliability Features
 
 ### Circuit Breaker
@@ -1086,8 +1227,10 @@ func processEventLog(ctx context.Context, store *smarterbase.Store, date string)
 
 See [examples/](./examples/) directory for complete examples:
 
-- **metrics-dashboard** - Prometheus metrics integration
-- More examples coming soon
+- **[schema-migrations](./examples/schema-migrations)** - Schema evolution and versioning
+- **[user-management](./examples/user-management)** - User CRUD with Redis indexing
+- **[ecommerce-orders](./examples/ecommerce-orders)** - Order management with atomic updates
+- **[metrics-dashboard](./examples/metrics-dashboard)** - Prometheus metrics integration
 
 ## Testing
 

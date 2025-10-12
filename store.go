@@ -10,35 +10,43 @@ import (
 // Store provides high-level operations on top of a Backend
 // Completely domain-agnostic - works with any JSON-serializable types
 type Store struct {
-	backend Backend
-	logger  Logger
-	metrics Metrics
+	backend         Backend
+	logger          Logger
+	metrics         Metrics
+	migrationPolicy MigrationPolicy
+	registry        *MigrationRegistry
 }
 
 // NewStore creates a new SmarterBase store with no-op logger and metrics
 func NewStore(backend Backend) *Store {
 	return &Store{
-		backend: backend,
-		logger:  &NoOpLogger{},
-		metrics: &NoOpMetrics{},
+		backend:         backend,
+		logger:          &NoOpLogger{},
+		metrics:         &NoOpMetrics{},
+		migrationPolicy: MigrateOnRead,
+		registry:        globalRegistry,
 	}
 }
 
 // NewStoreWithLogger creates a new store with a custom logger
 func NewStoreWithLogger(backend Backend, logger Logger) *Store {
 	return &Store{
-		backend: backend,
-		logger:  logger,
-		metrics: &NoOpMetrics{},
+		backend:         backend,
+		logger:          logger,
+		metrics:         &NoOpMetrics{},
+		migrationPolicy: MigrateOnRead,
+		registry:        globalRegistry,
 	}
 }
 
 // NewStoreWithObservability creates a new store with logging and metrics
 func NewStoreWithObservability(backend Backend, logger Logger, metrics Metrics) *Store {
 	return &Store{
-		backend: backend,
-		logger:  logger,
-		metrics: metrics,
+		backend:         backend,
+		logger:          logger,
+		metrics:         metrics,
+		migrationPolicy: MigrateOnRead,
+		registry:        globalRegistry,
 	}
 }
 
@@ -52,7 +60,13 @@ func (s *Store) SetMetrics(metrics Metrics) {
 	s.metrics = metrics
 }
 
-// GetJSON fetches and unmarshals a JSON object
+// WithMigrationPolicy sets the migration policy for this store
+func (s *Store) WithMigrationPolicy(policy MigrationPolicy) *Store {
+	s.migrationPolicy = policy
+	return s
+}
+
+// GetJSON fetches and unmarshals a JSON object, applying migrations if needed
 func (s *Store) GetJSON(ctx context.Context, key string, dest interface{}) error {
 	start := time.Now()
 	data, err := s.backend.Get(ctx, key)
@@ -64,7 +78,36 @@ func (s *Store) GetJSON(ctx context.Context, key string, dest interface{}) error
 	}
 
 	s.metrics.Increment(MetricGetSuccess)
-	return json.Unmarshal(data, dest)
+
+	// Fast path: no migrations registered
+	if !s.registry.HasMigrations() {
+		return json.Unmarshal(data, dest)
+	}
+
+	// Check versions
+	dataVersion := extractVersion(data)
+	expectedVersion := extractExpectedVersion(dest)
+
+	// No migration needed
+	if dataVersion == expectedVersion {
+		return json.Unmarshal(data, dest)
+	}
+
+	// Run migrations
+	typeName := getTypeName(dest)
+	migratedData, err := s.registry.Run(typeName, dataVersion, expectedVersion, data)
+	if err != nil {
+		return fmt.Errorf("migration failed: %w", err)
+	}
+
+	// If policy is MigrateAndWrite, write back the migrated data
+	if s.migrationPolicy == MigrateAndWrite {
+		if putErr := s.backend.Put(ctx, key, migratedData); putErr != nil {
+			s.logger.Error("failed to write back migrated data", "key", key, "error", putErr)
+		}
+	}
+
+	return json.Unmarshal(migratedData, dest)
 }
 
 // PutJSON marshals and stores a JSON object
@@ -96,15 +139,53 @@ func (s *Store) PutJSONWithETag(ctx context.Context, key string, value interface
 	return s.backend.PutIfMatch(ctx, key, data, expectedETag)
 }
 
-// GetJSONWithETag fetches JSON and returns its ETag
+// GetJSONWithETag fetches JSON and returns its ETag, applying migrations if needed
 func (s *Store) GetJSONWithETag(ctx context.Context, key string, dest interface{}) (string, error) {
 	data, etag, err := s.backend.GetWithETag(ctx, key)
 	if err != nil {
 		return "", err
 	}
-	if err := json.Unmarshal(data, dest); err != nil {
+
+	// Fast path: no migrations registered
+	if !s.registry.HasMigrations() {
+		if err := json.Unmarshal(data, dest); err != nil {
+			return "", err
+		}
+		return etag, nil
+	}
+
+	// Check versions
+	dataVersion := extractVersion(data)
+	expectedVersion := extractExpectedVersion(dest)
+
+	// No migration needed
+	if dataVersion == expectedVersion {
+		if err := json.Unmarshal(data, dest); err != nil {
+			return "", err
+		}
+		return etag, nil
+	}
+
+	// Run migrations
+	typeName := getTypeName(dest)
+	migratedData, err := s.registry.Run(typeName, dataVersion, expectedVersion, data)
+	if err != nil {
+		return "", fmt.Errorf("migration failed: %w", err)
+	}
+
+	// If policy is MigrateAndWrite, write back the migrated data
+	if s.migrationPolicy == MigrateAndWrite {
+		if putErr := s.backend.Put(ctx, key, migratedData); putErr != nil {
+			s.logger.Error("failed to write back migrated data", "key", key, "error", putErr)
+		}
+		// Note: After writing back, ETag is now stale. Caller should refetch if needed.
+	}
+
+	if err := json.Unmarshal(migratedData, dest); err != nil {
 		return "", err
 	}
+
+	// Note: ETag is from original data - if MigrateAndWrite was used, ETag is now stale
 	return etag, nil
 }
 
