@@ -1312,6 +1312,7 @@ All tests use filesystem backend - no external dependencies required.
 
 - [DATASHEET.md](./DATASHEET.md) - Technical specifications and architecture
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing guidelines
+- [Architecture Decision Records](./docs/adr/) - Design decisions and rationale
 
 ## Development Setup
 
