@@ -1,3 +1,13 @@
+## [1.4.0](https://github.com/adrianmcphee/smarterbase/compare/v1.3.0...v1.4.0) (2025-10-13)
+
+### Features
+
+* add RedisOptions helper for environment-based configuration ([6e8834e](https://github.com/adrianmcphee/smarterbase/commit/6e8834e85b5d98ed3ae70941e3726f3d69a1fa53))
+
+### Documentation
+
+* add git pull workflow instructions for AI agents in .ai-context ([1462b42](https://github.com/adrianmcphee/smarterbase/commit/1462b42cbc5914eaa039298a567246ed58fd0446))
+
 ## [1.3.0](https://github.com/adrianmcphee/smarterbase/compare/v1.2.9...v1.3.0) (2025-10-12)
 
 ### Features
