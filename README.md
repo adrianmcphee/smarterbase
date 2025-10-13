@@ -313,7 +313,8 @@ func main() {
 
 ```go
 // Setup Redis client for both locking and indexing
-redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+// Reads from REDIS_ADDR env var, defaults to localhost:6379
+redisClient := redis.NewClient(smarterbase.RedisOptions())
 
 // ✅ Production-safe: S3 backend with distributed locking
 backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
@@ -463,7 +464,8 @@ cfg, _ := config.LoadDefaultConfig(ctx)
 s3Client := s3.NewFromConfig(cfg)
 
 // Initialize Redis for distributed locking
-redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+// Reads from REDIS_ADDR env var, defaults to localhost:6379
+redisClient := redis.NewClient(smarterbase.RedisOptions())
 
 // ✅ RECOMMENDED: S3 with Redis distributed locks (prevents race conditions)
 backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
@@ -776,9 +778,8 @@ func main() {
     s3Client := s3.NewFromConfig(cfg)
 
     // 2. Initialize Redis for locking and indexing
-    redisClient := redis.NewClient(&redis.Options{
-        Addr: "localhost:6379",
-    })
+    // Reads from REDIS_ADDR env var, defaults to localhost:6379
+    redisClient := redis.NewClient(smarterbase.RedisOptions())
 
     // 3. Create S3 backend with Redis distributed locking (production-safe)
     s3Backend := smarterbase.NewS3BackendWithRedisLock(
@@ -1300,6 +1301,46 @@ All tests use filesystem backend - no external dependencies required.
 - ✅ Load testing completed (20+ concurrent, failover scenarios validated)
 
 **Performance targets:** P95 < 200ms (reads), P99 < 500ms (writes), drift < 1%
+
+### Redis Configuration
+
+SmarterBase provides a `RedisOptions()` helper for production-ready Redis configuration:
+
+```go
+// Reads from environment variables (REDIS_ADDR, REDIS_PASSWORD, REDIS_DB)
+// Defaults to localhost:6379 for local development
+redisClient := redis.NewClient(smarterbase.RedisOptions())
+```
+
+**Environment variables:**
+- `REDIS_ADDR` - Redis server address (default: `localhost:6379`)
+- `REDIS_PASSWORD` - Redis password (default: empty)
+- `REDIS_DB` - Redis database number (default: `0`)
+
+**Local development:**
+```bash
+# No environment variables needed - uses localhost:6379
+go run main.go
+```
+
+**Production deployment:**
+```bash
+export REDIS_ADDR=redis.prod.example.com:6379
+export REDIS_PASSWORD=your-redis-password
+export REDIS_DB=0
+go run main.go
+```
+
+**Advanced scenarios** (Redis Cluster, Sentinel, custom TLS):
+```go
+// For complex setups, use redis.Options directly
+redisClient := redis.NewClient(&redis.Options{
+    Addr:      "redis-cluster.example.com:6379",
+    Password:  os.Getenv("REDIS_PASSWORD"),
+    TLSConfig: &tls.Config{...},
+    PoolSize:  100,
+})
+```
 
 ## Known Limitations
 

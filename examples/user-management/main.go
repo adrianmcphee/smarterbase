@@ -247,16 +247,15 @@ func main() {
 	// Production would use:
 	// cfg, _ := config.LoadDefaultConfig(ctx)
 	// s3Client := s3.NewFromConfig(cfg)
-	// redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+	// redisClient := redis.NewClient(smarterbase.RedisOptions())
 	// backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
 	// logger, _ := smarterbase.NewProductionZapLogger()
 	// metrics := smarterbase.NewPrometheusMetrics(prometheus.DefaultRegisterer)
 	// store := smarterbase.NewStoreWithObservability(backend, logger, metrics)
 
-	// For this example, use in-memory Redis (or connect to local Redis)
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
+	// Redis configuration from environment (REDIS_ADDR, REDIS_PASSWORD, REDIS_DB)
+	// Defaults to localhost:6379 for local development
+	redisClient := redis.NewClient(smarterbase.RedisOptions())
 	defer redisClient.Close()
 
 	// Test Redis connection

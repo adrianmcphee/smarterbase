@@ -23,6 +23,7 @@ Each ADR follows this structure:
 | ADR | Title | Status | Date |
 |-----|-------|--------|------|
 | [0001](0001-schema-versioning-and-migrations.md) | Schema Versioning and Migrations | Accepted | 2025-10-12 |
+| [0002](0002-redis-configuration-ergonomics.md) | Redis Configuration Ergonomics | Accepted | 2025-10-13 |
 
 ## References
 

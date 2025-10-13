@@ -320,9 +320,9 @@ func main() {
 
 	store := smarterbase.NewStore(backend)
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
+	// Redis configuration from environment (REDIS_ADDR, REDIS_PASSWORD, REDIS_DB)
+	// Defaults to localhost:6379 for local development
+	redisClient := redis.NewClient(smarterbase.RedisOptions())
 	defer redisClient.Close()
 
 	if err := redisClient.Ping(ctx).Err(); err != nil {

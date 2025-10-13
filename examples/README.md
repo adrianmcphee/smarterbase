@@ -116,7 +116,7 @@ go run main.go
 
 All examples require:
 - Go 1.18+
-- Redis (running on localhost:6379)
+- Redis (default: localhost:6379, or set REDIS_ADDR env var)
 
 ### Start Redis Locally
 
@@ -157,7 +157,7 @@ backend := smarterbase.NewFilesystemBackend("./data")
 // Production
 cfg, _ := config.LoadDefaultConfig(ctx)
 s3Client := s3.NewFromConfig(cfg)
-redisClient := redis.NewClient(&redis.Options{Addr: "redis:6379"})
+redisClient := redis.NewClient(smarterbase.RedisOptions())
 backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "bucket", redisClient)
 ```
 
