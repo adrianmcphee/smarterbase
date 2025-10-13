@@ -721,9 +721,8 @@ func main() {
                                 <h3 class="text-xl font-medium">Add Indexing</h3>
                             </div>
                             <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// Setup Redis indexer
-redisClient := redis.NewClient(&redis.Options{
-    Addr: "localhost:6379",
-})
+// Reads from REDIS_ADDR env var, defaults to localhost:6379
+redisClient := redis.NewClient(smarterbase.RedisOptions())
 redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 
 // Register index
