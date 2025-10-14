@@ -1,8 +1,24 @@
-## [1.7.0](https://github.com/adrianmcphee/smarterbase/compare/v1.6.0...v1.7.0) (2025-10-14)
+## [1.7.0](https://github.com/adrianmcphee/smarterbase/compare/v1.6.0...v1.7.0) (2025-10-15)
 
 ### Features
 
-* add production patterns example with Redis fallback and profiling ([de792f9](https://github.com/adrianmcphee/smarterbase/commit/de792f93136fcaa68d0c2c937ac055f59a614b2d))
+* **examples**: add production-patterns example demonstrating Redis fallback and query profiling ([de792f9](https://github.com/adrianmcphee/smarterbase/commit/de792f9))
+  - Redis-first pattern with automatic fallback to full scans
+  - Query profiling and complexity tracking (O(1) vs O(n))
+  - Graceful degradation during Redis outages
+  - Demonstrates simple key generation per ADR-0005
+
+### Documentation
+
+* **examples**: document two usage patterns - Simple (hectic) and Advanced (tuinplan) ([de792f9](https://github.com/adrianmcphee/smarterbase/commit/de792f9))
+* **examples**: update learning paths for simple and advanced patterns ([de792f9](https://github.com/adrianmcphee/smarterbase/commit/de792f9))
+
+### Bug Fixes
+
+* **simple**: fix linting errors in Collection and DB ([de792f9](https://github.com/adrianmcphee/smarterbase/commit/de792f9))
+  - Remove unused 'initialized' field
+  - Add proper error handling for json operations
+  - Fix unchecked Close() errors
 
 ## [1.6.0](https://github.com/adrianmcphee/smarterbase/compare/v1.5.0...v1.6.0) (2025-10-14)
 
