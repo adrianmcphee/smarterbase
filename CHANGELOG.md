@@ -1,3 +1,9 @@
+## [1.7.0](https://github.com/adrianmcphee/smarterbase/compare/v1.6.0...v1.7.0) (2025-10-14)
+
+### Features
+
+* add production patterns example with Redis fallback and profiling ([de792f9](https://github.com/adrianmcphee/smarterbase/commit/de792f93136fcaa68d0c2c937ac055f59a614b2d))
+
 ## [1.6.0](https://github.com/adrianmcphee/smarterbase/compare/v1.5.0...v1.6.0) (2025-10-14)
 
 ### Features
