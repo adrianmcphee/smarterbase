@@ -43,8 +43,8 @@ func TestMetricsExporterStartStop(t *testing.T) {
 	profile.Complexity = ComplexityO1
 	profiler.Record(profile)
 
-	// Start exporter
-	exporter.Start(ctx)
+	// Start exporter in background (Start() is blocking)
+	go exporter.Start(ctx)
 
 	// Let it run briefly
 	time.Sleep(150 * time.Millisecond)
