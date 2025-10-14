@@ -1,3 +1,9 @@
+## [1.7.1](https://github.com/adrianmcphee/smarterbase/compare/v1.7.0...v1.7.1) (2025-10-14)
+
+### Bug Fixes
+
+* properly handle errors for errcheck linter ([257f291](https://github.com/adrianmcphee/smarterbase/commit/257f2914b786e287f085f56ff046fe94f300793e))
+
 ## [1.7.0](https://github.com/adrianmcphee/smarterbase/compare/v1.6.0...v1.7.0) (2025-10-15)
 
 ### Features
