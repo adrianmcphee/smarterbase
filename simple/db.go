@@ -59,8 +59,10 @@ func Connect(opts ...Option) (*DB, error) {
 	db.store = smarterbase.NewStore(backend)
 
 	// Setup Redis if available
-	// Redis is optional - log but continue without Redis features
-	_ = db.setupRedis() // Ignore errors - Redis features are optional
+	// Redis is optional - continue without Redis features if setup fails
+	if err := db.setupRedis(); err != nil {
+		// Redis features will be disabled - this is expected behavior
+	}
 
 	// Create index manager
 	db.indexManager = smarterbase.NewIndexManager(db.store)
@@ -71,7 +73,9 @@ func Connect(opts ...Option) (*DB, error) {
 	// Apply options
 	for _, opt := range opts {
 		if err := opt(db); err != nil {
-			_ = db.Close() // Best-effort cleanup
+			if closeErr := db.Close(); closeErr != nil {
+				// Best-effort cleanup failed - ignore
+			}
 			return nil, err
 		}
 	}
@@ -191,7 +195,9 @@ func detectBackend() (smarterbase.Backend, error) {
 func WithBackend(backend smarterbase.Backend) Option {
 	return func(db *DB) error {
 		if db.backend != nil {
-			_ = db.backend.Close() // Best-effort cleanup
+			if err := db.backend.Close(); err != nil {
+				// Best-effort cleanup failed - ignore
+			}
 		}
 		db.backend = backend
 		db.store = smarterbase.NewStore(backend)
