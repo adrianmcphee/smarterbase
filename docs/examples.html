@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en" class="group/html" data-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+<title>Examples - SmarterBase | Production-Ready Code You Can Copy</title>
+<meta content="Working examples for user management, e-commerce, multi-tenant SaaS, event logging, and more. Copy, paste, run." name="description" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<link rel="shortcut icon" href="./images/favicon.ico" />
+
+<script src="https://cdn.jsdelivr.net/npm/card3d@2.6.5/dist/card3d.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+      <link rel="stylesheet" href="./assets/index.css">
+      <style>
+        /* Prevent horizontal scroll on the entire page */
+        html, body {
+          overflow-x: hidden !important;
+          max-width: 100vw !important;
+          width: 100% !important;
+        }
+
+        /* Force all elements to respect viewport width */
+        * {
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        /* Add horizontal padding to containers on all screens - force override */
+        .container {
+          padding-left: 1rem !important;
+          padding-right: 1rem !important;
+          max-width: 100vw !important;
+          width: 100% !important;
+        }
+
+        /* Increase padding on larger screens */
+        @media (min-width: 640px) {
+          .container {
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .container {
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+          }
+        }
+
+        /* Ensure pre/code blocks don't overflow on mobile */
+        pre, code {
+          max-width: 100% !important;
+          overflow-x: auto !important;
+          word-wrap: break-word !important;
+          white-space: pre-wrap !important;
+        }
+
+        /* Make sure grids don't cause horizontal overflow on small screens */
+        .grid {
+          max-width: 100% !important;
+          width: 100% !important;
+        }
+
+        /* Constrain sections */
+        section {
+          max-width: 100vw !important;
+          overflow-x: hidden !important;
+        }
+
+        /* Ensure headings wrap properly */
+        h1, h2, h3, h4, h5, h6 {
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+        }
+
+        /* Tab styling */
+        .tabs-bordered .tab-active {
+          border-bottom-color: oklch(var(--p));
+          color: oklch(var(--p));
+        }
+      </style>
+    </head>
+
+    <body>
+        <div class="bg-base-200 border-base-300 border-b px-1 py-1.5 text-center text-[11px] sm:text-sm">
+    <span>
+        <span class="text-primary font-medium">New in v1.6:</span>
+        Core API Helpers Guidance + BatchGet[T] Best Practices
+    </span>
+</div>
+
+<div
+    id="layout-topbar"
+    class="bg-base-100 lg:bg-base-100/90 border-base-300 sticky top-0 z-10 border-b data-[at-top=true]:border-transparent lg:backdrop-blur-sm">
+    <div class="container">
+        <nav class="flex items-center justify-between py-2 px-4">
+            <div class="flex items-center gap-2">
+                <label
+                    for="menu-drawer"
+                    id="menu-drawer-trigger"
+                    aria-label="open sidebar"
+                    class="btn btn-square btn-ghost btn-sm lg:hidden">
+                    <i class="fa-solid fa-bars"></i>
+                </label>
+
+                <!-- Navbar Brand logo -->
+                <a href="index.html" class="text-xl font-semibold">SmarterBase</a>
+            </div>
+
+            <div class="max-lg:hidden">
+                <ul class="menu menu-horizontal gap-2 px-1">
+                    <li class="font-medium"><a href="index.html#home">Home</a></li>
+                    <li class="font-medium"><a href="index.html#features">Features</a></li>
+                    <li class="font-medium"><a href="index.html#use-cases">Use Cases</a></li>
+                    <li class="font-medium"><a href="examples.html" class="text-primary">Examples</a></li>
+                    <li class="font-medium"><a href="index.html#docs">Documentation</a></li>
+                </ul>
+            </div>
+
+            <div class="space-x-2">
+                <a class="btn btn-ghost btn-sm" href="https://github.com/adrianmcphee/smarterbase" target="_blank">
+                    <i class="fa-brands fa-github"></i>
+                    GitHub
+                </a>
+                <a class="btn btn-primary btn-sm" href="index.html#quickstart">Get Started</a>
+            </div>
+        </nav>
+
+        <!-- sm screen menu (drawer) -->
+        <div class="drawer">
+            <input id="menu-drawer" type="checkbox" class="drawer-toggle" />
+            <div class="drawer-side">
+                <label for="menu-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+                <div class="bg-base-100 min-h-full w-60 p-5">
+                    <a href="index.html" class="text-xl font-semibold">SmarterBase</a>
+                    <ul class="menu w-full gap-2 p-0 pt-4">
+                        <li class="font-medium"><a href="index.html#home">Home</a></li>
+                        <li class="font-medium"><a href="index.html#features">Features</a></li>
+                        <li class="font-medium"><a href="index.html#use-cases">Use Cases</a></li>
+                        <li class="font-medium"><a href="examples.html" class="text-primary">Examples</a></li>
+                        <li class="font-medium"><a href="index.html#docs">Documentation</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <!-- Hero Section -->
+        <section class="py-8 lg:py-16 bg-gradient-to-b from-base-300/30 to-base-100">
+            <div class="container">
+                <div class="text-center max-w-4xl mx-auto">
+                    <div class="badge badge-primary badge-lg mb-4">Production-Ready Examples</div>
+                    <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
+                        Copy, Paste, <span class="text-primary">Run</span>
+                    </h1>
+                    <p class="text-base-content/80 mt-6 text-lg sm:text-xl">
+                        Working examples for user management, e-commerce, multi-tenant SaaS, event logging, and more.
+                        <strong>All under 300 lines of code.</strong>
+                    </p>
+                    <div class="mt-8 flex justify-center gap-4">
+                        <div class="stat bg-base-200 rounded-box border border-base-300">
+                            <div class="stat-value text-primary text-3xl">7</div>
+                            <div class="stat-desc">Complete Examples</div>
+                        </div>
+                        <div class="stat bg-base-200 rounded-box border border-base-300">
+                            <div class="stat-value text-primary text-3xl">~1min</div>
+                            <div class="stat-desc">To Run Locally</div>
+                        </div>
+                        <div class="stat bg-base-200 rounded-box border border-base-300">
+                            <div class="stat-value text-primary text-3xl">100%</div>
+                            <div class="stat-desc">Production-Ready</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Examples -->
+        <section class="py-8 lg:py-20">
+            <div class="container">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Featured Examples</h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        Start with these to understand core concepts
+                    </p>
+                </div>
+
+                <div class="grid gap-8 lg:grid-cols-2">
+                    <!-- User Management Example -->
+                    <div class="card bg-base-100 border-2 border-primary/30 shadow-lg">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="badge badge-primary">Featured</div>
+                                <div class="badge badge-success">Beginner</div>
+                            </div>
+
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <i class="fa-solid fa-circle-user text-3xl text-primary"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold">User Management</h3>
+                                    <p class="text-sm text-base-content/60">~200 lines • Simple API</p>
+                                </div>
+                            </div>
+
+                            <p class="text-base-content/80 mb-4">
+                                Complete authentication system with email lookups, role-based queries, and automatic Redis indexing.
+                                Perfect starting point for learning SmarterBase.
+                            </p>
+
+                            <!-- Tabbed Code Examples -->
+                            <div class="bg-base-200 rounded-box p-4 mb-4">
+                                <div role="tablist" class="tabs tabs-bordered tabs-sm">
+                                    <input type="radio" name="user_tabs" role="tab" class="tab" aria-label="Create" checked />
+                                    <div role="tabpanel" class="tab-content pt-4">
+                                        <pre class="text-xs overflow-x-auto"><code>// Create user with auto-indexing
+user, _ := userManager.CreateUser(ctx,
+    "alice@example.com",
+    "Alice Smith",
+    "admin",
+)
+
+// Indexes updated automatically:
+// ✅ email → user_id (O(1) lookup)
+// ✅ role → [user_ids] (multi-value)</code></pre>
+                                    </div>
+
+                                    <input type="radio" name="user_tabs" role="tab" class="tab" aria-label="Query" />
+                                    <div role="tabpanel" class="tab-content pt-4">
+                                        <pre class="text-xs overflow-x-auto"><code>// O(1) email lookup via Redis
+user, _ := userManager.GetUserByEmail(ctx,
+    "alice@example.com",
+)
+
+// O(1) role-based query
+admins, _ := userManager.ListUsersByRole(ctx,
+    "admin",
+)
+// Returns all admin users instantly</code></pre>
+                                    </div>
+
+                                    <input type="radio" name="user_tabs" role="tab" class="tab" aria-label="Batch" />
+                                    <div role="tabpanel" class="tab-content pt-4">
+                                        <pre class="text-xs overflow-x-auto"><code>// Type-safe batch loading (v1.6)
+users, _ := smarterbase.BatchGet[User](
+    ctx, store, userKeys,
+)
+
+// 🚀 10-100x faster than loops
+// 🎯 Replaces 15 lines of boilerplate
+// ✅ Compile-time type safety</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <div class="badge badge-outline">Authentication</div>
+                                <div class="badge badge-outline">Redis Indexes</div>
+                                <div class="badge badge-outline">BatchGet[T]</div>
+                                <div class="badge badge-outline">CRUD Operations</div>
+                            </div>
+
+                            <div class="card-actions justify-between items-center">
+                                <div class="text-sm text-base-content/60">
+                                    <i class="fa-solid fa-clock"></i> ~5 minutes to understand
+                                </div>
+                                <div class="flex gap-2">
+                                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/user-management"
+                                       target="_blank" class="btn btn-sm btn-primary">
+                                        <i class="fa-solid fa-code"></i>
+                                        View Code
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="divider my-2"></div>
+
+                            <div class="text-sm">
+                                <div class="font-semibold mb-2">What You'll Learn:</div>
+                                <ul class="list-disc list-inside space-y-1 text-base-content/70">
+                                    <li>Creating entities with automatic ID generation</li>
+                                    <li>Setting up Redis indexes for fast lookups</li>
+                                    <li>Using BatchGet[T] for efficient bulk operations</li>
+                                    <li>Coordinating index updates with IndexManager</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- E-Commerce Orders Example -->
+                    <div class="card bg-base-100 border border-base-300 shadow-lg">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="badge badge-warning">Intermediate</div>
+                            </div>
+
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <i class="fa-solid fa-bag-shopping text-3xl text-primary"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold">E-Commerce Orders</h3>
+                                    <p class="text-sm text-base-content/60">~250 lines • Core API</p>
+                                </div>
+                            </div>
+
+                            <p class="text-base-content/80 mb-4">
+                                Order management with atomic status transitions, distributed locks, and revenue calculations.
+                                Learn how to handle critical operations safely.
+                            </p>
+
+                            <div class="bg-base-200 rounded-box p-4 mb-4">
+                                <pre class="text-xs overflow-x-auto"><code>// Atomic status update with distributed lock
+err := smarterbase.WithAtomicUpdate(
+    ctx, store, lock,
+    "orders/"+orderID, 10*time.Second,
+    func(ctx context.Context) error {
+        var order Order
+        store.GetJSON(ctx, key, &order)
+
+        // Validate transition
+        if !isValid(order.Status, "shipped") {
+            return errors.New("invalid transition")
+        }
+
+        order.Status = "shipped"
+        return store.PutJSON(ctx, key, &order)
+    },
+)
+
+// ✅ No race conditions
+// ✅ Automatic retry on conflict
+// ✅ TTL prevents deadlocks</code></pre>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <div class="badge badge-outline">Distributed Locks</div>
+                                <div class="badge badge-outline">Atomic Updates</div>
+                                <div class="badge badge-outline">State Machines</div>
+                                <div class="badge badge-outline">Transactions</div>
+                            </div>
+
+                            <div class="card-actions justify-between items-center">
+                                <div class="text-sm text-base-content/60">
+                                    <i class="fa-solid fa-clock"></i> ~10 minutes to understand
+                                </div>
+                                <div class="flex gap-2">
+                                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/ecommerce-orders"
+                                       target="_blank" class="btn btn-sm btn-ghost">
+                                        <i class="fa-solid fa-code"></i>
+                                        View Code
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="divider my-2"></div>
+
+                            <div class="text-sm">
+                                <div class="font-semibold mb-2">What You'll Learn:</div>
+                                <ul class="list-disc list-inside space-y-1 text-base-content/70">
+                                    <li>Using distributed locks for critical operations</li>
+                                    <li>Implementing state machine transitions safely</li>
+                                    <li>Querying by multiple indexes (user, status)</li>
+                                    <li>Calculating aggregates (revenue, totals)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Examples Grid -->
+        <section class="py-8 lg:py-20 bg-base-300/30">
+            <div class="container">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">All Examples</h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        Choose based on your use case or learning goals
+                    </p>
+                </div>
+
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- Multi-Tenant Config -->
+                    <div class="card bg-base-100 border border-base-300 hover:border-primary/30 transition-all">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fa-solid fa-layer-group text-2xl text-primary"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold">Multi-Tenant Config</h3>
+                                    <div class="badge badge-error badge-xs">Advanced</div>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-base-content/70 mb-4">
+                                SaaS configuration management with per-tenant isolation, plan upgrades, and feature flags.
+                            </p>
+
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                <div class="badge badge-xs">SaaS Patterns</div>
+                                <div class="badge badge-xs">Tenant Isolation</div>
+                                <div class="badge badge-xs">Plan Management</div>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mb-4">
+                                <div>~300 lines • Core API</div>
+                                <div>Use cases: SaaS platforms, feature flags</div>
+                            </div>
+
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/multi-tenant-config"
+                               target="_blank" class="btn btn-sm btn-ghost w-full">
+                                <i class="fa-solid fa-code"></i>
+                                View Example
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Event Logging -->
+                    <div class="card bg-base-100 border border-base-300 hover:border-primary/30 transition-all">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fa-solid fa-scroll text-2xl text-primary"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold">Event Logging</h3>
+                                    <div class="badge badge-success badge-xs">Beginner</div>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Append-only event logs with JSONL format. Perfect for audit trails and activity tracking.
+                            </p>
+
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                <div class="badge badge-xs">JSONL Format</div>
+                                <div class="badge badge-xs">Streaming</div>
+                                <div class="badge badge-xs">Append-Only</div>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mb-4">
+                                <div>~150 lines • Core API</div>
+                                <div>Use cases: Audit trails, activity logs</div>
+                            </div>
+
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/event-logging"
+                               target="_blank" class="btn btn-sm btn-ghost w-full">
+                                <i class="fa-solid fa-code"></i>
+                                View Example
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Schema Migrations -->
+                    <div class="card bg-base-100 border border-base-300 hover:border-primary/30 transition-all">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fa-solid fa-file-code text-2xl text-primary"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold">Schema Migrations</h3>
+                                    <div class="badge badge-warning badge-xs">Intermediate</div>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Evolve schemas without downtime using versioning and lazy migrations on read.
+                            </p>
+
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                <div class="badge badge-xs">Versioning</div>
+                                <div class="badge badge-xs">Lazy Migration</div>
+                                <div class="badge badge-xs">Schema Evolution</div>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mb-4">
+                                <div>~180 lines • Core API</div>
+                                <div>Use cases: Schema changes, field refactoring</div>
+                            </div>
+
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/schema-migrations"
+                               target="_blank" class="btn btn-sm btn-ghost w-full">
+                                <i class="fa-solid fa-code"></i>
+                                View Example
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Dashboard -->
+                    <div class="card bg-base-100 border border-base-300 hover:border-primary/30 transition-all">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fa-solid fa-chart-line text-2xl text-primary"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold">Metrics Dashboard</h3>
+                                    <div class="badge badge-success badge-xs">Beginner</div>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Prometheus metrics integration with operation counters, latency histograms, and error tracking.
+                            </p>
+
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                <div class="badge badge-xs">Prometheus</div>
+                                <div class="badge badge-xs">Observability</div>
+                                <div class="badge badge-xs">Metrics</div>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mb-4">
+                                <div>~120 lines • Core API</div>
+                                <div>Use cases: Production monitoring, alerting</div>
+                            </div>
+
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/metrics-dashboard"
+                               target="_blank" class="btn btn-sm btn-ghost w-full">
+                                <i class="fa-solid fa-code"></i>
+                                View Example
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Simple API Examples (Combined) -->
+                    <div class="card bg-base-100 border border-base-300 hover:border-primary/30 transition-all">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fa-solid fa-rocket text-2xl text-primary"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold">Simple API Series</h3>
+                                    <div class="badge badge-success badge-xs">Beginner</div>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-base-content/70 mb-4">
+                                4 progressive examples: Quickstart, CRUD, Indexing, and Versioning. Perfect for rapid development.
+                            </p>
+
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                <div class="badge badge-xs">Simple API</div>
+                                <div class="badge badge-xs">Auto-Indexing</div>
+                                <div class="badge badge-xs">Struct Tags</div>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mb-4">
+                                <div>50-100 lines each • Simple API</div>
+                                <div>Use cases: Prototypes, MVPs, demos</div>
+                            </div>
+
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/simple"
+                               target="_blank" class="btn btn-sm btn-ghost w-full">
+                                <i class="fa-solid fa-code"></i>
+                                View Examples (4)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Table -->
+        <section class="py-8 lg:py-20">
+            <div class="container">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Compare Examples</h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        Choose the right example for your needs
+                    </p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Example</th>
+                                <th>Lines</th>
+                                <th>API</th>
+                                <th>Complexity</th>
+                                <th>Key Features</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="font-medium">User Management</div>
+                                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/user-management"
+                                       target="_blank" class="text-xs text-primary hover:underline">View →</a>
+                                </td>
+                                <td class="text-center">~200</td>
+                                <td class="text-center"><div class="badge badge-sm">Simple</div></td>
+                                <td class="text-center"><div class="badge badge-success badge-sm">Beginner</div></td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <div class="badge badge-xs">Indexes</div>
+                                        <div class="badge badge-xs">BatchGet</div>
+                                        <div class="badge badge-xs">CRUD</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm">Auth systems, User profiles</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-medium">E-Commerce Orders</div>
+                                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/ecommerce-orders"
+                                       target="_blank" class="text-xs text-primary hover:underline">View →</a>
+                                </td>
+                                <td class="text-center">~250</td>
+                                <td class="text-center"><div class="badge badge-sm">Core</div></td>
+                                <td class="text-center"><div class="badge badge-warning badge-sm">Intermediate</div></td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <div class="badge badge-xs">Locks</div>
+                                        <div class="badge badge-xs">Atomic</div>
+                                        <div class="badge badge-xs">Indexes</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm">Orders, Invoices, Fulfillment</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-medium">Multi-Tenant Config</div>
+                                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/multi-tenant-config"
+                                       target="_blank" class="text-xs text-primary hover:underline">View →</a>
+                                </td>
+                                <td class="text-center">~300</td>
+                                <td class="text-center"><div class="badge badge-sm">Core</div></td>
+                                <td class="text-center"><div class="badge badge-error badge-sm">Advanced</div></td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <div class="badge badge-xs">SaaS</div>
+                                        <div class="badge badge-xs">Isolation</div>
+                                        <div class="badge badge-xs">Plans</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm">SaaS Config, Feature Flags</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-medium">Event Logging</div>
+                                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/event-logging"
+                                       target="_blank" class="text-xs text-primary hover:underline">View →</a>
+                                </td>
+                                <td class="text-center">~150</td>
+                                <td class="text-center"><div class="badge badge-sm">Core</div></td>
+                                <td class="text-center"><div class="badge badge-success badge-sm">Beginner</div></td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <div class="badge badge-xs">JSONL</div>
+                                        <div class="badge badge-xs">Streaming</div>
+                                        <div class="badge badge-xs">Append</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm">Audit Trails, Activity Logs</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-medium">Schema Migrations</div>
+                                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/schema-migrations"
+                                       target="_blank" class="text-xs text-primary hover:underline">View →</a>
+                                </td>
+                                <td class="text-center">~180</td>
+                                <td class="text-center"><div class="badge badge-sm">Core</div></td>
+                                <td class="text-center"><div class="badge badge-warning badge-sm">Intermediate</div></td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <div class="badge badge-xs">Versioning</div>
+                                        <div class="badge badge-xs">Migration</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm">Schema Evolution</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="font-medium">Metrics Dashboard</div>
+                                    <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/metrics-dashboard"
+                                       target="_blank" class="text-xs text-primary hover:underline">View →</a>
+                                </td>
+                                <td class="text-center">~120</td>
+                                <td class="text-center"><div class="badge badge-sm">Core</div></td>
+                                <td class="text-center"><div class="badge badge-success badge-sm">Beginner</div></td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <div class="badge badge-xs">Prometheus</div>
+                                        <div class="badge badge-xs">Metrics</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm">Production Monitoring</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Learning Path -->
+        <section class="py-8 lg:py-20 bg-base-300/30">
+            <div class="container">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">
+                        <i class="fa-solid fa-graduation-cap text-primary"></i>
+                        Recommended Learning Path
+                    </h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        Progress from basics to advanced patterns
+                    </p>
+                </div>
+
+                <div class="grid gap-6 md:grid-cols-4">
+                    <div class="card bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30">
+                        <div class="card-body text-center">
+                            <div class="badge badge-primary badge-lg mb-3">Step 1</div>
+                            <h3 class="text-xl font-bold mb-2">User Management</h3>
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Start here to learn CRUD operations, indexes, and BatchGet[T]
+                            </p>
+                            <div class="text-xs text-base-content/60">
+                                ⏱️ 30 minutes
+                            </div>
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/user-management"
+                               target="_blank" class="btn btn-sm btn-primary mt-4">
+                                Start Learning
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 border border-base-300">
+                        <div class="card-body text-center">
+                            <div class="badge badge-neutral badge-lg mb-3">Step 2</div>
+                            <h3 class="text-xl font-bold mb-2">Event Logging</h3>
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Learn JSONL format, streaming, and append-only patterns
+                            </p>
+                            <div class="text-xs text-base-content/60">
+                                ⏱️ 20 minutes
+                            </div>
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/event-logging"
+                               target="_blank" class="btn btn-sm btn-ghost mt-4">
+                                Continue
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 border border-base-300">
+                        <div class="card-body text-center">
+                            <div class="badge badge-neutral badge-lg mb-3">Step 3</div>
+                            <h3 class="text-xl font-bold mb-2">E-Commerce Orders</h3>
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Master distributed locks, atomic updates, and transactions
+                            </p>
+                            <div class="text-xs text-base-content/60">
+                                ⏱️ 45 minutes
+                            </div>
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/ecommerce-orders"
+                               target="_blank" class="btn btn-sm btn-ghost mt-4">
+                                Continue
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 border border-base-300">
+                        <div class="card-body text-center">
+                            <div class="badge badge-neutral badge-lg mb-3">Step 4</div>
+                            <h3 class="text-xl font-bold mb-2">Multi-Tenant Config</h3>
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Advanced SaaS patterns with tenant isolation and plan management
+                            </p>
+                            <div class="text-xs text-base-content/60">
+                                ⏱️ 60 minutes
+                            </div>
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/multi-tenant-config"
+                               target="_blank" class="btn btn-sm btn-ghost mt-4">
+                                Continue
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 text-center">
+                    <div class="card bg-base-100 border border-primary/30 max-w-2xl mx-auto">
+                        <div class="card-body">
+                            <h3 class="text-xl font-bold mb-2">
+                                <i class="fa-solid fa-rocket text-primary"></i>
+                                Ready to Build?
+                            </h3>
+                            <p class="text-base-content/70 mb-4">
+                                After completing these examples, you'll understand 90% of SmarterBase patterns.
+                                Check out the full documentation for production deployment.
+                            </p>
+                            <a href="index.html#quickstart" class="btn btn-primary">
+                                <i class="fa-solid fa-book-open"></i>
+                                View Full Documentation
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Start Section -->
+        <section class="py-8 lg:py-20">
+            <div class="container">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Run Examples Locally</h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        Get started in under 1 minute
+                    </p>
+                </div>
+
+                <div class="max-w-3xl mx-auto">
+                    <div class="card bg-base-100 border border-base-300">
+                        <div class="card-body">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="badge badge-primary">1</div>
+                                <h3 class="text-lg font-medium">Install SmarterBase</h3>
+                            </div>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto mb-6"><code>go get github.com/adrianmcphee/smarterbase</code></pre>
+
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="badge badge-primary">2</div>
+                                <h3 class="text-lg font-medium">Start Redis (Optional for some examples)</h3>
+                            </div>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto mb-6"><code>docker run -d -p 6379:6379 redis:7-alpine</code></pre>
+
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="badge badge-primary">3</div>
+                                <h3 class="text-lg font-medium">Clone and Run Example</h3>
+                            </div>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>git clone https://github.com/adrianmcphee/smarterbase.git
+cd smarterbase/examples/user-management
+go run main.go</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-6">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>
+                            <div class="font-semibold">All examples run standalone</div>
+                            <div class="text-sm">No database setup required. Examples use filesystem backend by default.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-base-300 border-t">
+            <div class="container">
+                <div class="py-8 sm:py-10 md:px-16 xl:px-40 xl:py-16">
+                    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                            <p class="text-xl font-medium">SmarterBase</p>
+                            <p class="mt-4 text-sm text-base-content/70">
+                                Skip the database. Use Redis + S3 instead.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-medium">Resources</h2>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="block hover:text-primary transition-all">GitHub</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/README.md" target="_blank" class="block hover:text-primary transition-all">Documentation</a>
+                                <a href="examples.html" class="block hover:text-primary transition-all">Examples</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/DATASHEET.md" target="_blank" class="block hover:text-primary transition-all">Datasheet</a>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-medium">Community</h2>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <a href="https://github.com/adrianmcphee/smarterbase/issues" target="_blank" class="block hover:text-primary transition-all">Issues</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/pulls" target="_blank" class="block hover:text-primary transition-all">Pull Requests</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/CONTRIBUTING.md" target="_blank" class="block hover:text-primary transition-all">Contributing</a>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-medium">License</h2>
+                            <div class="mt-4 space-y-2 text-sm">
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/LICENSE" target="_blank" class="block hover:text-primary transition-all">MIT License</a>
+                                <p class="text-base-content/70">Free for personal and commercial use</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-base-300 border-t px-8 py-4 text-center text-sm text-base-content/70">
+                    Built with Go. Production-tested at scale.
+                </div>
+            </div>
+        </footer>
+
+
+        <script src="./app.js"></script>
+    </body>
+</html>

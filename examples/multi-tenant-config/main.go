@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -176,23 +175,8 @@ func (m *ConfigManager) ListTenantsByPlan(ctx context.Context, plan string) ([]*
 		return []*TenantConfig{}, nil
 	}
 
-	tenants := make([]*TenantConfig, 0, len(keys))
-	results, err := m.store.BatchGetJSON(ctx, keys, TenantConfig{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to batch get tenants: %w", err)
-	}
-
-	for key, value := range results {
-		data, _ := json.Marshal(value)
-		var config TenantConfig
-		if err := json.Unmarshal(data, &config); err != nil {
-			log.Printf("Warning: failed to unmarshal tenant %s: %v", key, err)
-			continue
-		}
-		tenants = append(tenants, &config)
-	}
-
-	return tenants, nil
+	// Use BatchGet[T] for type-safe, efficient bulk loading
+	return smarterbase.BatchGet[TenantConfig](ctx, m.store, keys)
 }
 
 // GetPlanStats returns statistics about tenant plans

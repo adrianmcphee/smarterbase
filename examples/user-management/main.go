@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -128,22 +127,11 @@ func (m *UserManager) ListUsersByRole(ctx context.Context, role string) ([]*User
 		return nil, fmt.Errorf("failed to query index: %w", err)
 	}
 
-	// Batch fetch all users
-	users := make([]*User, 0, len(keys))
-	results, err := m.store.BatchGetJSON(ctx, keys, User{})
+	// ✅ Use BatchGet[T] for type-safe, efficient bulk loading
+	// This replaces 15 lines of manual iteration with 1 line
+	users, err := smarterbase.BatchGet[User](ctx, m.store, keys)
 	if err != nil {
 		return nil, fmt.Errorf("failed to batch get users: %w", err)
-	}
-
-	for key, value := range results {
-		// Convert map to User struct
-		data, _ := json.Marshal(value)
-		var user User
-		if err := json.Unmarshal(data, &user); err != nil {
-			log.Printf("Warning: failed to unmarshal user %s: %v", key, err)
-			continue
-		}
-		users = append(users, &user)
 	}
 
 	return users, nil

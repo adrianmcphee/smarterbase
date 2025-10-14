@@ -161,6 +161,78 @@ store.PutJSON(ctx, "users/"+user.ID, user)
 
 ---
 
+## 🛠️ Core API Helpers - Best Practices
+
+The Core API provides three main helpers. Here's when to use each:
+
+### BatchGet[T] - Use Always ✅
+
+**Always use** `BatchGet[T]` when loading multiple entities:
+
+```go
+// ✅ GOOD: Type-safe, 1 line, clear intent
+users, err := smarterbase.BatchGet[User](ctx, store, userIDs)
+
+// ❌ BAD: 7 lines of boilerplate, error-prone
+users := make([]*User, 0, len(userIDs))
+for _, id := range userIDs {
+    var user User
+    if err := store.GetJSON(ctx, id, &user); err == nil {
+        users = append(users, &user)
+    }
+}
+```
+
+### KeyBuilder - Use Selectively 🤔
+
+**Use KeyBuilder** only for complex keys:
+
+```go
+// ✅ GOOD: Complex nested keys benefit from KeyBuilder
+type TenantKeys struct {
+    tenantID string
+}
+func (k *TenantKeys) UserKey(uid string) string {
+    return fmt.Sprintf("tenants/%s/users/%s.json", k.tenantID, uid)
+}
+
+// ❌ UNNECESSARY: Simple keys are clearer with fmt.Sprintf
+userKB := KeyBuilder{Prefix: "users", Suffix: ".json"}
+key := userKB.Key(userID)  // Indirection adds no value
+
+// ✅ BETTER: Direct and obvious
+key := fmt.Sprintf("users/%s.json", userID)
+```
+
+**Rule of thumb:** If your key is `"prefix/%s.suffix"`, use `fmt.Sprintf()`. If it has multiple variables or environment logic, consider `KeyBuilder`.
+
+### RedisOptions() - Use Correctly ⚠️
+
+**Choose the right function** for your config pattern:
+
+```go
+// ✅ GOOD: Pure environment-based config
+redisClient := redis.NewClient(smarterbase.RedisOptions())
+
+// ✅ GOOD: Mixed config (app values with env fallback)
+opts := smarterbase.RedisOptionsWithOverrides(
+    cfg.RedisAddr,     // Use app config if present, else REDIS_ADDR env
+    cfg.RedisPassword, // Use app config if present, else REDIS_PASSWORD env
+    10,                // App-specific pool size
+    5,                 // App-specific min idle
+)
+redisClient := redis.NewClient(opts)
+
+// ❌ BAD: Call helper then override everything (pointless)
+opts := smarterbase.RedisOptions()
+opts.Addr = myAddr      // Why call helper if you override?
+opts.Password = myPass  // Just construct redis.Options directly!
+```
+
+**See [ADR-0005](./docs/adr/0005-core-api-helpers-guidance.md) for detailed guidance and examples.**
+
+---
+
 ## ⚠️ Critical Gotchas (Read This First!)
 
 Before using SmarterBase in production, understand these important limitations:

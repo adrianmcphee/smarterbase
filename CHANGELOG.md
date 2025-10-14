@@ -1,3 +1,19 @@
+## [1.6.0](https://github.com/adrianmcphee/smarterbase/compare/v1.5.0...v1.6.0) (2025-10-14)
+
+### Features
+
+* **helpers**: add RedisOptionsWithOverrides() for mixed explicit/environment config ([#TBD](https://github.com/adrianmcphee/smarterbase/pull/TBD))
+
+### Documentation
+
+* **adr**: add ADR-0005 Core API Helpers Guidance - when and how to use BatchGet[T], KeyBuilder, and RedisOptions ([#TBD](https://github.com/adrianmcphee/smarterbase/pull/TBD))
+* **readme**: add Core API Helpers - Best Practices section with usage guidance ([#TBD](https://github.com/adrianmcphee/smarterbase/pull/TBD))
+* **examples**: update user-management, ecommerce-orders, and multi-tenant-config to use BatchGet[T] pattern ([#TBD](https://github.com/adrianmcphee/smarterbase/pull/TBD))
+
+### Migration Notes
+
+See [CHANGELOG_DRAFT.md](./CHANGELOG_DRAFT.md) for detailed migration guide from v1.5.0.
+
 ## [1.5.0](https://github.com/adrianmcphee/smarterbase/compare/v1.4.0...v1.5.0) (2025-10-14)
 
 ### Features

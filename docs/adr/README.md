@@ -26,6 +26,7 @@ Each ADR follows this structure:
 | [0002](0002-redis-configuration-ergonomics.md) | Redis Configuration Ergonomics | Accepted | 2025-10-13 |
 | [0003](0003-simple-api-layer.md) | Simple API Layer for Improved Developer Experience | Accepted | 2025-10-14 |
 | [0004](0004-simple-api-versioning.md) | Simple API Versioning Discoverability | Accepted | 2025-10-14 |
+| [0005](0005-core-api-helpers-guidance.md) | Core API Helpers - When and How to Use | Accepted | 2025-10-14 |
 
 ## References
 

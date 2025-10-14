@@ -57,6 +57,53 @@ func RedisOptions() *redis.Options {
 	}
 }
 
+// RedisOptionsWithOverrides returns redis.Options with explicit overrides for common parameters.
+//
+// This helper is designed for applications that have explicit configuration but want
+// environment variable fallback. Pass empty strings to use environment variables.
+//
+// Parameters:
+//   - addr: Redis server address (empty = use REDIS_ADDR env var or "localhost:6379")
+//   - password: Redis password (empty = use REDIS_PASSWORD env var)
+//   - poolSize: Connection pool size (0 = use Redis default of 10)
+//   - minIdleConns: Minimum idle connections (0 = use Redis default of 0)
+//
+// Example - Application config with environment fallback:
+//
+//	opts := smarterbase.RedisOptionsWithOverrides(
+//	    cfg.RedisHost,     // Use config if present, else env var
+//	    cfg.RedisPassword, // Use config if present, else env var
+//	    10,                // App-specific pool size
+//	    5,                 // App-specific min idle
+//	)
+//	redisClient := redis.NewClient(opts)
+//
+// Example - Pure environment config:
+//
+//	opts := smarterbase.RedisOptionsWithOverrides("", "", 10, 5)
+//	// Reads REDIS_ADDR and REDIS_PASSWORD from environment
+//	redisClient := redis.NewClient(opts)
+func RedisOptionsWithOverrides(addr, password string, poolSize, minIdleConns int) *redis.Options {
+	// Start with environment-based config
+	opts := RedisOptions()
+
+	// Override with explicit values if provided
+	if addr != "" {
+		opts.Addr = addr
+	}
+	if password != "" {
+		opts.Password = password
+	}
+	if poolSize > 0 {
+		opts.PoolSize = poolSize
+	}
+	if minIdleConns > 0 {
+		opts.MinIdleConns = minIdleConns
+	}
+
+	return opts
+}
+
 // getEnvAsInt reads an integer environment variable with a default fallback.
 func getEnvAsInt(key string, defaultVal int) int {
 	valueStr := os.Getenv(key)

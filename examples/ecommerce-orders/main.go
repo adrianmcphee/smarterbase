@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -130,24 +129,8 @@ func (m *OrderManager) ListOrdersByUser(ctx context.Context, userID string) ([]*
 		return []*Order{}, nil
 	}
 
-	// Batch fetch all orders
-	orders := make([]*Order, 0, len(keys))
-	results, err := m.store.BatchGetJSON(ctx, keys, Order{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to batch get orders: %w", err)
-	}
-
-	for key, value := range results {
-		data, _ := json.Marshal(value)
-		var order Order
-		if err := json.Unmarshal(data, &order); err != nil {
-			log.Printf("Warning: failed to unmarshal order %s: %v", key, err)
-			continue
-		}
-		orders = append(orders, &order)
-	}
-
-	return orders, nil
+	// Use BatchGet[T] for type-safe, efficient bulk loading
+	return smarterbase.BatchGet[Order](ctx, m.store, keys)
 }
 
 // ListOrdersByStatus returns all orders with a specific status
@@ -161,23 +144,8 @@ func (m *OrderManager) ListOrdersByStatus(ctx context.Context, status string) ([
 		return []*Order{}, nil
 	}
 
-	orders := make([]*Order, 0, len(keys))
-	results, err := m.store.BatchGetJSON(ctx, keys, Order{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to batch get orders: %w", err)
-	}
-
-	for key, value := range results {
-		data, _ := json.Marshal(value)
-		var order Order
-		if err := json.Unmarshal(data, &order); err != nil {
-			log.Printf("Warning: failed to unmarshal order %s: %v", key, err)
-			continue
-		}
-		orders = append(orders, &order)
-	}
-
-	return orders, nil
+	// Use BatchGet[T] for type-safe, efficient bulk loading
+	return smarterbase.BatchGet[Order](ctx, m.store, keys)
 }
 
 // UpdateOrderStatus updates the status of an order atomically
