@@ -2,7 +2,65 @@
 
 This directory contains complete, production-ready examples showing common use cases for SmarterBase.
 
+## Getting Started: Two Approaches
+
+SmarterBase supports two usage patterns - choose based on your needs:
+
+### 🚀 Simple Pattern (Recommended for Most Use Cases)
+**Example:** `user-management/`, `simple/`
+
+The simple pattern uses core abstractions without advanced features:
+- ✅ Direct `Backend` access for storage
+- ✅ Helper functions (`GetJSON`, `PutJSON`, `BatchGet[T]`)
+- ✅ Simple ID and time utilities
+- ✅ Custom Redis integration as needed
+- ✅ **80% of value with 20% of features**
+
+This is the pattern used in the "hectic" codebase - pragmatic, focused, and easy to understand.
+
+### 🏗️ Advanced Pattern (For High-Scale Systems)
+**Example:** `production-patterns/`, `ecommerce-orders/`
+
+The advanced pattern adds Redis indexing and resilience:
+- ✅ `IndexManager` for automatic index coordination
+- ✅ `RedisIndexer` for O(1) lookups
+- ✅ Redis fallback paths (graceful degradation)
+- ✅ Query profiling and complexity tracking
+- ✅ **Production-ready resilience patterns**
+
+This is the pattern used in the "tuinplan" codebase - advanced indexing with observability.
+
+---
+
 ## Available Examples
+
+### 0. Production Patterns (NEW!)
+**Directory:** `production-patterns/`
+
+**⭐ Best practices for production systems:**
+- Redis-first with automatic fallback to full scans
+- Query profiling and complexity tracking (O(1) vs O(n))
+- Graceful degradation during Redis outages
+- Observability for index usage and performance
+- Simple key generation (ADR-0005 pattern)
+
+```bash
+cd production-patterns
+go run main.go
+```
+
+**Use cases:**
+- High-traffic production systems
+- Systems requiring resilience
+- Performance-critical applications
+- Query optimization and monitoring
+
+**Key Learnings:**
+- When to use Redis fallback pattern
+- How to profile query performance
+- Why simple `fmt.Sprintf()` is better than `KeyBuilder` for simple keys
+
+---
 
 ### 1. User Management System
 **Directory:** `user-management/`
@@ -178,12 +236,19 @@ See the main [README.md](../README.md) for complete production setup guide.
 
 ## Learning Path
 
-Recommended order for learning:
+### For Most Applications (Simple Pattern)
 
-1. **Start with:** `user-management/` - Basic CRUD operations
-2. **Then:** `event-logging/` - Understand JSONL and streaming
-3. **Next:** `ecommerce-orders/` - Learn atomic updates and locks
-4. **Finally:** `multi-tenant-config/` - Advanced patterns
+1. **Start with:** `simple/01-quickstart/` - Absolute basics
+2. **Then:** `user-management/` - Basic CRUD operations
+3. **Next:** `event-logging/` - Understand JSONL and streaming
+4. **Finally:** `ecommerce-orders/` - Learn atomic updates and locks
+
+### For High-Scale Production Systems (Advanced Pattern)
+
+1. **Start with:** `production-patterns/` - Redis fallback and profiling ⭐
+2. **Then:** `ecommerce-orders/` - IndexManager coordination
+3. **Next:** `multi-tenant-config/` - Multi-value indexes
+4. **Study:** [ADR-0005](../docs/adr/0005-core-api-helpers-guidance.md) - Core API guidance
 
 ## Key Concepts Demonstrated
 

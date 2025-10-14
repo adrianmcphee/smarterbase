@@ -25,13 +25,12 @@ import (
 //	users := simple.NewCollection[User](db)
 //	user, err := users.Create(ctx, &User{Email: "alice@example.com", Name: "Alice"})
 type Collection[T any] struct {
-	db          *DB
-	name        string
-	kb          smarterbase.KeyBuilder
-	idField     string
-	indexes     map[string]IndexSpec
-	modelInfo   *ModelInfo
-	initialized bool
+	db        *DB
+	name      string
+	kb        smarterbase.KeyBuilder
+	idField   string
+	indexes   map[string]IndexSpec
+	modelInfo *ModelInfo
 }
 
 // IndexSpec describes an index on a field.
@@ -368,10 +367,9 @@ func (c *Collection[T]) registerIndexes() {
 	for fieldName, spec := range c.indexes {
 		indexName := fmt.Sprintf("%s-by-%s", c.name, fieldName)
 
-		if spec.Unique {
-			// For unique indexes, could use a different index type
-			// For now, treating same as multi-value
-		}
+		// Note: Both unique and multi-value indexes use MultiIndexSpec
+		// Uniqueness constraints are enforced at application level
+		_ = spec.Unique // Planned for future use
 
 		c.db.redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
 			Name:        indexName,
@@ -400,9 +398,18 @@ func (c *Collection[T]) setID(item *T, id string) {
 
 func (c *Collection[T]) copyItem(item *T) *T {
 	// Marshal and unmarshal to create a deep copy
-	data, _ := json.Marshal(item)
+	data, err := json.Marshal(item)
+	if err != nil {
+		// Should never happen for valid structs
+		panic(fmt.Sprintf("failed to marshal item: %v", err))
+	}
+
 	var copy T
-	json.Unmarshal(data, &copy)
+	if err := json.Unmarshal(data, &copy); err != nil {
+		// Should never happen if marshal succeeded
+		panic(fmt.Sprintf("failed to unmarshal item: %v", err))
+	}
+
 	return &copy
 }
 
