@@ -24,6 +24,8 @@ Each ADR follows this structure:
 |-----|-------|--------|------|
 | [0001](0001-schema-versioning-and-migrations.md) | Schema Versioning and Migrations | Accepted | 2025-10-12 |
 | [0002](0002-redis-configuration-ergonomics.md) | Redis Configuration Ergonomics | Accepted | 2025-10-13 |
+| [0003](0003-simple-api-layer.md) | Simple API Layer for Improved Developer Experience | Accepted | 2025-10-14 |
+| [0004](0004-simple-api-versioning.md) | Simple API Versioning Discoverability | Accepted | 2025-10-14 |
 
 ## References
 

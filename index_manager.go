@@ -228,3 +228,7 @@ func (im *IndexManager) Exists(ctx context.Context, key string) (bool, error) {
 //	    return s.indexManager.Create(ctx, key, user)
 //	    // All indexes updated automatically!
 //	}
+//
+//	// Query with type safety (package-level functions):
+//	users, err := smarterbase.QueryIndexTyped[User](ctx, indexManager, "users", "role", "admin")
+//	user, err := smarterbase.GetByIndex[User](ctx, indexManager, "users", "email", "alice@example.com")

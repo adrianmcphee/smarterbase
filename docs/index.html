@@ -174,27 +174,32 @@
                     </div>
 
                     <div class="bg-base-200 rounded-box p-6">
-                        <pre class="text-sm overflow-x-auto max-w-full"><code>// You already have Redis and S3.
-// Use them as your database.
+                        <pre class="text-sm overflow-x-auto max-w-full"><code>// Simple API - struct tags = instant queries
+import "github.com/adrianmcphee/smarterbase/simple"
 
-backend := smarterbase.NewS3BackendWithRedisLock(
-    s3Client, "my-bucket", redisClient,
-)
-store := smarterbase.NewStore(backend)
-
-// Create with automatic indexing
-user := &User{
-    ID:    smarterbase.NewID(),
-    Email: "alice@example.com",
+type User struct {
+    ID    string `json:"id" sb:"id"`
+    Email string `json:"email" sb:"index,unique"`
+    Role  string `json:"role" sb:"index"`
+    Name  string `json:"name"`
 }
-store.PutJSON(ctx, "users/"+user.ID, user)
 
-// Query by index - O(1) lookup
-users, _ := store.Query("users/").
-    FilterJSON(func(obj map[string]interface{}) bool {
-        return obj["active"].(bool)
-    }).
-    All(ctx, &users)</code></pre>
+// Zero config - auto-detects from env
+db := simple.MustConnect()
+defer db.Close()
+
+users := simple.NewCollection[User](db)
+
+// Create with auto-ID
+user, _ := users.Create(ctx, &User{
+    Email: "alice@example.com",
+    Name:  "Alice",
+    Role:  "admin",
+})
+
+// Query by any indexed field - O(1)
+admins, _ := users.Find(ctx, "role", "admin")
+alice, _ := users.FindOne(ctx, "email", "alice@example.com")</code></pre>
                     </div>
                 </div>
 
@@ -677,39 +682,38 @@ store.GetJSON(ctx, "users/123", &user)</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">2</div>
-                                <h3 class="text-xl font-medium">Basic Setup</h3>
+                                <h3 class="text-xl font-medium">Simple API - Quick Start</h3>
                             </div>
                             <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>package main
 
 import (
     "context"
-    "github.com/adrianmcphee/smarterbase"
+    "github.com/adrianmcphee/smarterbase/simple"
 )
 
+type User struct {
+    ID    string `json:"id" sb:"id"`
+    Email string `json:"email" sb:"index,unique"`
+    Name  string `json:"name"`
+}
+
 func main() {
-    // Development: Filesystem backend
-    backend := smarterbase.NewFilesystemBackend("./data")
-    defer backend.Close()
-
-    // Production: S3 with Redis locks
-    // backend := smarterbase.NewS3BackendWithRedisLock(
-    //     s3Client, "my-bucket", redisClient,
-    // )
-
-    store := smarterbase.NewStore(backend)
     ctx := context.Background()
 
-    // Create
-    user := &User{
-        ID:    smarterbase.NewID(),
+    // Auto-detects backend (DATA_PATH env or ./data)
+    db := simple.MustConnect()
+    defer db.Close()
+
+    users := simple.NewCollection[User](db)
+
+    // Create - ID auto-generated, indexes auto-updated
+    user, _ := users.Create(ctx, &User{
         Email: "alice@example.com",
         Name:  "Alice",
-    }
-    store.PutJSON(ctx, "users/"+user.ID, user)
+    })
 
-    // Read
-    var retrieved User
-    store.GetJSON(ctx, "users/"+user.ID, &retrieved)
+    // Query by indexed field
+    found, _ := users.FindOne(ctx, "email", "alice@example.com")
 }</code></pre>
                         </div>
                     </div>
@@ -718,32 +722,38 @@ func main() {
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">3</div>
-                                <h3 class="text-xl font-medium">Add Indexing</h3>
+                                <h3 class="text-xl font-medium">Indexing (Core API)</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// Setup Redis indexer
-// Reads from REDIS_ADDR env var, defaults to localhost:6379
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// Simple API: Indexes auto-created from struct tags
+// Just add `sb:"index"` and you're done!
+
+// Core API: Manual index registration for fine control
+import "github.com/adrianmcphee/smarterbase"
+
+backend := smarterbase.NewFilesystemBackend("./data")
+store := smarterbase.NewStore(backend)
+
+// Setup Redis indexer
 redisClient := redis.NewClient(smarterbase.RedisOptions())
 redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 
-// Register index
-redisIndexer.RegisterMultiValueIndex(
-    "users", "email",
-    func(data []byte) (string, string, error) {
-        var user User
-        json.Unmarshal(data, &user)
-        return user.ID, user.Email, nil
-    },
-)
+// Register index with custom logic
+redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
+    Name:        "users-by-email",
+    EntityType:  "users",
+    ExtractFunc: smarterbase.ExtractJSONField("email"),
+})
 
-// Create with automatic indexing
+// Use IndexManager for coordinated updates
 indexManager := smarterbase.NewIndexManager(store).
     WithRedisIndexer(redisIndexer)
 
+user := &User{ID: smarterbase.NewID(), Email: "alice@example.com"}
 indexManager.Create(ctx, "users/"+user.ID, user)
 
-// Query by index - O(1) lookup
-userIDs, _ := redisIndexer.QueryMultiValueIndex(
-    ctx, "users", "email", "alice@example.com",
+// Query with type safety
+users, _ := smarterbase.QueryIndexTyped[User](
+    ctx, indexManager, "users", "email", "alice@example.com",
 )</code></pre>
                         </div>
                     </div>

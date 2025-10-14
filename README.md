@@ -102,6 +102,65 @@ go get github.com/adrianmcphee/smarterbase
 
 ---
 
+## Two APIs: Choose Your Style
+
+SmarterBase provides two APIs for different use cases:
+
+### Simple API - For Rapid Development
+
+```go
+import "github.com/adrianmcphee/smarterbase/simple"
+
+type User struct {
+    ID    string `json:"id" sb:"id"`
+    Email string `json:"email" sb:"index,unique"`
+    Role  string `json:"role" sb:"index"`
+}
+
+// Zero config - auto-detects from environment
+db := simple.MustConnect()
+users := simple.NewCollection[User](db)
+
+// Create with auto-ID
+user, _ := users.Create(ctx, &User{Email: "alice@example.com", Role: "admin"})
+
+// Query by any indexed field - O(1)
+admins, _ := users.Find(ctx, "role", "admin")
+```
+
+**Use Simple API when:**
+- Building prototypes or demos
+- You want automatic index management from struct tags
+- Convention over configuration suits your needs
+- See [examples/simple/](./examples/simple/) for complete examples
+
+### Core API - For Full Control
+
+```go
+import "github.com/adrianmcphee/smarterbase"
+
+// Explicit configuration
+backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "bucket", redisClient)
+store := smarterbase.NewStore(backend)
+
+// Manual index registration
+redisIndexer.RegisterMultiValueIndex("users", "role", extractFunc)
+
+// Explicit operations
+user := &User{ID: smarterbase.NewID(), Email: "alice@example.com"}
+store.PutJSON(ctx, "users/"+user.ID, user)
+```
+
+**Use Core API when:**
+- You need fine-grained control
+- Building a library on top of SmarterBase
+- Explicit configuration is preferred
+- See examples below and [DATASHEET.md](./DATASHEET.md)
+
+**Both APIs work together** - Simple API is built on Core API and provides escape hatches when you need more control.
+
+---
+
 ## ⚠️ Critical Gotchas (Read This First!)
 
 Before using SmarterBase in production, understand these important limitations:
