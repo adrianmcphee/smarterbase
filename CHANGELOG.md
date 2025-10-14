@@ -1,3 +1,9 @@
+## [1.7.2](https://github.com/adrianmcphee/smarterbase/compare/v1.7.1...v1.7.2) (2025-10-14)
+
+### Bug Fixes
+
+* run MetricsExporter.Start() in goroutine for test ([46345af](https://github.com/adrianmcphee/smarterbase/commit/46345af0797ce341da64180e382abbc1cb06be72))
+
 ## [1.7.1](https://github.com/adrianmcphee/smarterbase/compare/v1.7.0...v1.7.1) (2025-10-14)
 
 ### Bug Fixes
