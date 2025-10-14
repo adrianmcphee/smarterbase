@@ -1,3 +1,13 @@
+## [1.5.0](https://github.com/adrianmcphee/smarterbase/compare/v1.4.0...v1.5.0) (2025-10-14)
+
+### Features
+
+* add Simple API with automatic indexing and versioning support ([307b3da](https://github.com/adrianmcphee/smarterbase/commit/307b3da60686e007b368da15736856446298602c))
+
+### Documentation
+
+* update website quickstart to use RedisOptions helper ([2567cf3](https://github.com/adrianmcphee/smarterbase/commit/2567cf3a4fc56772d333e638f584fbe95332802d))
+
 ## [1.4.0](https://github.com/adrianmcphee/smarterbase/compare/v1.3.0...v1.4.0) (2025-10-13)
 
 ### Features
