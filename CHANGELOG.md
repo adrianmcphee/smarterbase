@@ -1,3 +1,9 @@
+## [1.8.0](https://github.com/adrianmcphee/smarterbase/compare/v1.7.2...v1.8.0) (2025-10-18)
+
+### Features
+
+* add pragmatic helper functions to reduce boilerplate (ADR-0006) ([46a7379](https://github.com/adrianmcphee/smarterbase/commit/46a73790575513b4413a6fc858fea511a7f730ff))
+
 ## [1.7.2](https://github.com/adrianmcphee/smarterbase/compare/v1.7.1...v1.7.2) (2025-10-14)
 
 ### Bug Fixes
