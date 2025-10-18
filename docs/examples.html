@@ -386,6 +386,41 @@ err := smarterbase.WithAtomicUpdate(
                 </div>
 
                 <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- Production Patterns (NEW - ADR-0006 Showcase) -->
+                    <div class="card bg-base-100 border-2 border-primary hover:border-primary/60 transition-all">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fa-solid fa-rocket text-2xl text-primary"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold">Production Patterns</h3>
+                                    <div class="badge badge-primary badge-xs">NEW - ADR-0006</div>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Redis fallback patterns with QueryWithFallback. Automatic profiling, graceful degradation, and resilience best practices.
+                            </p>
+
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                <div class="badge badge-xs badge-primary">QueryWithFallback</div>
+                                <div class="badge badge-xs">Redis Fallback</div>
+                                <div class="badge badge-xs">Auto Profiling</div>
+                                <div class="badge badge-xs">85% Less Code</div>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mb-4">
+                                <div>~300 lines • Core API</div>
+                                <div>Use cases: High-scale production, resilience</div>
+                            </div>
+
+                            <a href="https://github.com/adrianmcphee/smarterbase/tree/main/examples/production-patterns"
+                               target="_blank" class="btn btn-sm btn-primary w-full">
+                                <i class="fa-solid fa-code"></i>
+                                View Example
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- Multi-Tenant Config -->
                     <div class="card bg-base-100 border border-base-300 hover:border-primary/30 transition-all">
                         <div class="card-body">
