@@ -134,6 +134,233 @@ Infrastructure (S3, GCS, Filesystem, MinIO)
 - commit-msg hook validates conventional commit format
 - pre-commit hook runs build and tests
 
+### Godoc Documentation Standards
+
+**CRITICAL**: SmarterBase's documentation is primarily accessed via `go doc`, not just README files.
+This makes documentation **locally available** and **discoverable** for developers and AI assistants.
+
+#### Documentation Files
+
+1. **doc.go** (package-level documentation)
+   - Comprehensive overview of the package
+   - Quick start examples for common scenarios
+   - Core concepts explanations
+   - Links to README.md, DATASHEET.md, ADRs, examples, CHANGELOG.md
+   - Critical gotchas and performance characteristics
+   - When to use vs when NOT to use the package
+
+2. **Inline godoc comments** (all exported types, functions, methods)
+   - Every exported symbol MUST have a godoc comment
+   - Comments should explain WHAT, WHY, and WHEN, not just HOW
+   - Include examples for complex APIs
+   - Link to relevant ADRs for architectural decisions
+
+#### Godoc Comment Requirements
+
+**For Functions and Methods:**
+```go
+// FunctionName does X and returns Y.
+//
+// Use this when you need to Z. Avoid using this for W because of limitation Q.
+//
+// Basic usage:
+//
+//	result, err := FunctionName(ctx, param)
+//	if err != nil {
+//	    // Handle error
+//	}
+//
+// With advanced options:
+//
+//	result, err := FunctionName(ctx, param, WithOption(value))
+//
+// Performance: ~5ms typical latency. Scales to 10,000 ops/sec.
+//
+// See docs/adr/0001-feature-name.md for design rationale.
+func FunctionName(ctx context.Context, param string) (Result, error) {
+```
+
+**For Types:**
+```go
+// TypeName represents X and is used for Y.
+//
+// Key fields:
+//   - Field1: Description and constraints
+//   - Field2: Description and default values
+//
+// Example:
+//
+//	obj := &TypeName{
+//	    Field1: "value",
+//	    Field2: 42,
+//	}
+type TypeName struct {
+```
+
+**For Constants:**
+```go
+// ConstName represents X and should be used when Y.
+//
+// Example:
+//
+//	config := Config{Mode: ConstName}
+//
+// See also: RelatedConst for Z scenarios.
+const ConstName = "value"
+```
+
+#### When to Include Examples
+
+**ALWAYS include examples for:**
+- Public APIs that are commonly used (GetJSON, PutJSON, Migrate, etc.)
+- Complex patterns (migrations, atomic updates, batch operations)
+- APIs with non-obvious usage (ETag handling, migration policies)
+- Helper functions (BatchGet, RedisOptions, etc.)
+
+**Examples should show:**
+- Basic usage (90% use case)
+- Common variations (error handling, options)
+- Edge cases or gotchas
+- Before/after states where applicable
+
+#### Linking to Documentation
+
+**Reference documentation files explicitly:**
+- ADRs: `See docs/adr/0001-schema-versioning-and-migrations.md for design rationale`
+- README sections: `See README.md "Critical Gotchas" section`
+- DATASHEET: `See DATASHEET.md for complete API reference`
+- Examples: `See examples/schema-migrations/ for complete working example`
+
+#### Testing Godoc Output
+
+**Before committing documentation changes:**
+
+```bash
+# Test package-level docs
+go doc github.com/adrianmcphee/smarterbase
+
+# Test specific function
+go doc github.com/adrianmcphee/smarterbase.Migrate
+
+# Test type documentation
+go doc github.com/adrianmcphee/smarterbase.Store
+
+# Test method documentation
+go doc github.com/adrianmcphee/smarterbase.Store.GetJSON
+
+# Verify examples render correctly
+go doc -all github.com/adrianmcphee/smarterbase | less
+```
+
+**Check that:**
+- Examples use proper indentation (4 spaces or 1 tab after //)
+- Code blocks are properly formatted
+- Links to ADRs and docs are accurate
+- Performance notes and gotchas are highlighted
+
+#### Maintenance Checklist
+
+**When adding a new public API:**
+- [ ] Add comprehensive godoc comment with example
+- [ ] Link to relevant ADR if it's a significant feature
+- [ ] Include performance characteristics if relevant
+- [ ] Add to doc.go if it's a core concept
+- [ ] Test with `go doc` to verify rendering
+
+**When modifying existing API:**
+- [ ] Update godoc comment to reflect changes
+- [ ] Update examples if behavior changed
+- [ ] Update doc.go if it affects core concepts
+- [ ] Note breaking changes in CHANGELOG.md
+- [ ] Test with `go doc` to verify accuracy
+
+**When creating a new feature:**
+- [ ] Add section to doc.go if it's a core concept
+- [ ] Document all exported APIs with examples
+- [ ] Create ADR in docs/adr/ for architectural decisions
+- [ ] Add working example to examples/ directory
+- [ ] Update README.md with feature overview
+- [ ] Test discoverability: `go doc | grep "feature-name"`
+
+#### Common Patterns
+
+**Migration documentation:**
+```go
+// Always include:
+// - Before/after examples
+// - Link to ADR-0001
+// - Migration policy behavior
+// - Performance impact
+```
+
+**Error handling documentation:**
+```go
+// Always include:
+// - Which errors to check for (IsNotFound, IsConflict, etc.)
+// - Retry strategies
+// - Error context
+```
+
+**Performance documentation:**
+```go
+// Always include:
+// - Typical latency
+// - Scaling characteristics
+// - Resource usage (memory, connections)
+```
+
+**Gotchas documentation:**
+```go
+// Always highlight:
+// - Race conditions
+// - Memory implications
+// - Production considerations
+```
+
+#### Quality Standards
+
+**Good godoc example:**
+```go
+// GetJSON fetches and unmarshals a JSON object from storage, applying migrations if needed.
+//
+// This is the primary method for reading data from smarterbase. It automatically handles
+// schema migrations when the stored data version doesn't match the expected version.
+//
+// Basic usage:
+//
+//	var user User
+//	err := store.GetJSON(ctx, "users/123.json", &user)
+//	if smarterbase.IsNotFound(err) {
+//	    // User doesn't exist
+//	}
+//
+// Performance: ~50ns overhead when no migrations are registered. Migration adds 2-5ms per version step.
+```
+
+**Poor godoc example:**
+```go
+// GetJSON gets JSON
+func (s *Store) GetJSON(ctx context.Context, key string, dest interface{}) error {
+```
+
+#### Documentation as Code
+
+**Remember:**
+- Godoc IS the primary API documentation
+- README.md is for project overview and getting started
+- DATASHEET.md is for technical specifications
+- ADRs document architectural decisions
+- Examples show complete working code
+- Godoc ties everything together with links
+
+**For AI assistants:**
+When working with smarterbase code:
+1. Start with `go doc github.com/adrianmcphee/smarterbase` for package overview
+2. Use `go doc <symbol>` to look up specific APIs
+3. Follow ADR links for design context
+4. Check examples/ for complete patterns
+5. All this is LOCAL in the Go module cache - no internet needed!
+
 ## Key Files to Understand
 
 ### Core Implementation
@@ -206,6 +433,55 @@ err := smarterbase.WithAtomicUpdate(ctx, store, lock, "accounts/123", 10*time.Se
         return nil
     })
 ```
+
+### Boilerplate Reduction Helpers (ADR-0006)
+
+**NEW**: Three focused helpers that eliminate 85-90% of repetitive patterns:
+
+#### 1. QueryWithFallback[T] - Redis → Scan Fallback Pattern
+```go
+// ✅ PREFERRED: One line replaces 50+ lines of manual fallback logic
+users, err := smarterbase.QueryWithFallback[User](
+    ctx, store, redisIndexer,
+    "users", "role", "admin",              // Redis index lookup
+    "users/",                               // Fallback scan prefix
+    func(u *User) bool { return u.Role == "admin" },  // Fallback filter
+)
+
+// Automatically handles:
+// - Try Redis index first (O(1))
+// - Fall back to full scan if Redis unavailable (O(n))
+// - Query profiling and complexity tracking
+// - Index usage metrics
+```
+
+#### 2. UpdateWithIndexes - Coordinated Index Updates
+```go
+// ✅ PREFERRED: Prevents the common bug of forgetting to update indexes
+err := smarterbase.UpdateWithIndexes(
+    ctx, store, redisIndexer,
+    "users/user-123.json", user,
+    []smarterbase.IndexUpdate{
+        {EntityType: "users", IndexField: "email", OldValue: oldEmail, NewValue: newEmail},
+    },
+)
+```
+
+#### 3. BatchGetWithFilter[T] - Filtered Batch Loading
+```go
+// ✅ PREFERRED: Load and filter in one call
+activeUsers, err := smarterbase.BatchGetWithFilter[User](
+    ctx, store, keys,
+    func(u *User) bool { return u.Active },
+)
+```
+
+**When to use these helpers:**
+- Use QueryWithFallback for ALL Redis-indexed queries (production-patterns, user-management, ecommerce-orders examples)
+- Use UpdateWithIndexes when updating indexed fields to prevent stale indexes
+- Use BatchGetWithFilter when you need post-load filtering
+
+**See:** [ADR-0006](docs/adr/0006-collection-api.md) for complete rationale and examples/production-patterns/ for reference implementation.
 
 ## Observability
 
@@ -283,6 +559,10 @@ go tool cover -html=coverage.out
 - Load testing framework
 - Batch operations
 - UUIDv7 IDs
+- Schema versioning and migrations
+- Comprehensive godoc documentation (doc.go, inline examples, ADR links)
+- Local-first documentation accessible via `go doc`
+- **ADR-0006: Boilerplate reduction helpers** (QueryWithFallback, UpdateWithIndexes, BatchGetWithFilter)
 
 ### Future ✨
 - DynamoDB backend
@@ -313,16 +593,19 @@ go tool cover -html=coverage.out
 2. Check lint: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest && golangci-lint run`
 3. Verify commit message format (semantic versioning)
 4. Update tests for new features
-5. Update documentation if adding public APIs
-6. Never reference AI assistance in commits
-7. Before pushing: `git pull --rebase` again to catch any new CI commits
+5. **Update godoc comments** for any changed/added public APIs (see Godoc Documentation Standards above)
+6. Test godoc rendering: `go doc <symbol>` to verify examples display correctly
+7. Never reference AI assistance in commits
+8. Before pushing: `git pull --rebase` again to catch any new CI commits
 
 **Common tasks**:
-- Adding backend: Implement `Backend` interface (backend.go)
-- Adding metrics: Update `metrics.go` and `prometheus_metrics.go`
-- Adding index type: Extend `redis_indexer.go` or create new indexer
-- Performance improvement: Profile first, add benchmarks, then optimize
-- Bug fix: Add failing test first, then fix, ensure test passes
+- Adding backend: Implement `Backend` interface (backend.go) + godoc with examples
+- Adding metrics: Update `metrics.go` and `prometheus_metrics.go` + godoc
+- Adding index type: Extend `redis_indexer.go` or create new indexer + godoc with examples
+- Performance improvement: Profile first, add benchmarks, then optimize + document in godoc
+- Bug fix: Add failing test first, then fix, ensure test passes + update godoc if behavior changed
+- New public API: Write godoc first (TDD for docs), then implement, then add examples
+- Modifying API: Update godoc comments, test with `go doc`, ensure examples still work
 
 **Architecture decisions to maintain**:
 - Keep Backend interface simple and focused
@@ -331,3 +614,5 @@ go tool cover -html=coverage.out
 - Security by default (encryption, locking available)
 - Graceful degradation (circuit breakers, fallbacks)
 - Clear error types with helpful context
+- **Documentation-first**: Every public API has godoc with examples before merging
+- **Local-first docs**: godoc is the source of truth, accessible via `go doc`
