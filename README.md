@@ -231,6 +231,73 @@ opts.Password = myPass  // Just construct redis.Options directly!
 
 **See [ADR-0005](./docs/adr/0005-core-api-helpers-guidance.md) for detailed guidance and examples.**
 
+### New: Boilerplate Reduction Helpers ✨
+
+**ADR-0006** introduces three focused helper functions that eliminate repetitive patterns:
+
+#### QueryWithFallback[T] - Redis → Scan Fallback
+
+Eliminates 40 lines of boilerplate for the common "try Redis index, fall back to scan" pattern:
+
+```go
+// ✅ NEW: One line handles Redis → fallback → profiling
+admins, err := smarterbase.QueryWithFallback[User](
+    ctx, store, redisIndexer,
+    "users", "role", "admin",          // Redis index lookup
+    "users/",                           // Fallback scan prefix
+    func(u *User) bool { return u.Role == "admin" },  // Fallback filter
+)
+
+// ❌ OLD: 40 lines of manual Redis query + fallback + profiling
+// (see examples/before-after/query-fallback.go for comparison)
+```
+
+**Automatically profiles** the query and records whether Redis or fallback was used.
+
+#### UpdateWithIndexes - Coordinated Index Updates
+
+Prevents the common bug where developers forget to update indexes:
+
+```go
+// ✅ NEW: Atomic update with index coordination
+err := smarterbase.UpdateWithIndexes(
+    ctx, store, redisIndexer,
+    "users/user-123.json", user,
+    []smarterbase.IndexUpdate{
+        {EntityType: "users", IndexField: "email", OldValue: oldEmail, NewValue: newEmail},
+    },
+)
+
+// ❌ OLD: Easy to forget index updates
+store.PutJSON(ctx, key, user)
+// Oops, forgot to update Redis index! → Stale index bugs
+```
+
+#### BatchGetWithFilter[T] - Filtered Batch Loading
+
+Simplifies loading and filtering multiple items:
+
+```go
+// ✅ NEW: Load and filter in one call
+primaryProps, err := smarterbase.BatchGetWithFilter[Property](
+    ctx, store, keys,
+    func(p *Property) bool { return p.IsPrimary },
+)
+
+// ❌ OLD: Manual loop with filtering
+results := make([]*Property, 0)
+for _, key := range keys {
+    var prop Property
+    if err := store.GetJSON(ctx, key, &prop); err == nil {
+        if prop.IsPrimary {
+            results = append(results, &prop)
+        }
+    }
+}
+```
+
+**See [ADR-0006](./docs/adr/0006-collection-api.md) for full rationale and usage examples.**
+
 ---
 
 ## ⚠️ Critical Gotchas (Read This First!)
