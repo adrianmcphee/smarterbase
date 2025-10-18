@@ -28,6 +28,7 @@ var (
 	ErrLockHeld       = errors.New("lock already held by another process")
 	ErrLockTimeout    = errors.New("failed to acquire lock within timeout")
 	ErrLockReleased   = errors.New("lock was already released")
+	ErrLockNotFound   = errors.New("lock not found")
 	ErrInvalidLockKey = errors.New("invalid lock key")
 
 	// Transaction errors

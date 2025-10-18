@@ -84,29 +84,41 @@ func (m *InMemoryMetrics) Timing(name string, duration time.Duration, tags ...st
 
 // Common metric names
 const (
-	MetricGetSuccess          = "smarterbase.get.success"
-	MetricGetError            = "smarterbase.get.error"
-	MetricGetDuration         = "smarterbase.get.duration"
-	MetricPutSuccess          = "smarterbase.put.success"
-	MetricPutError            = "smarterbase.put.error"
-	MetricPutDuration         = "smarterbase.put.duration"
-	MetricDeleteSuccess       = "smarterbase.delete.success"
-	MetricDeleteError         = "smarterbase.delete.error"
-	MetricDeleteDuration      = "smarterbase.delete.duration"
-	MetricQueryDuration       = "smarterbase.query.duration"
-	MetricQueryResults        = "smarterbase.query.results"
-	MetricIndexUpdate         = "smarterbase.index.update"
-	MetricIndexRetries        = "smarterbase.index.retries"
-	MetricIndexErrors         = "smarterbase.index.errors"
-	MetricTransactionSuccess  = "smarterbase.transaction.success"
-	MetricTransactionConflict = "smarterbase.transaction.conflict"
-	MetricTransactionRollback = "smarterbase.transaction.rollback"
-	MetricLockAcquired        = "smarterbase.lock.acquired"
-	MetricLockFailed          = "smarterbase.lock.failed"
-	MetricLockDuration        = "smarterbase.lock.duration"
-	MetricLockContention      = "smarterbase.lock.contention"    // Number of retries needed
-	MetricLockTimeout         = "smarterbase.lock.timeout"       // Locks that timed out
-	MetricLockWaitTime        = "smarterbase.lock.wait_duration" // Time spent waiting for locks
+	MetricGetSuccess           = "smarterbase.get.success"
+	MetricGetError             = "smarterbase.get.error"
+	MetricGetDuration          = "smarterbase.get.duration"
+	MetricPutSuccess           = "smarterbase.put.success"
+	MetricPutError             = "smarterbase.put.error"
+	MetricPutDuration          = "smarterbase.put.duration"
+	MetricDeleteSuccess        = "smarterbase.delete.success"
+	MetricDeleteError          = "smarterbase.delete.error"
+	MetricDeleteDuration       = "smarterbase.delete.duration"
+	MetricQueryDuration        = "smarterbase.query.duration"
+	MetricQueryResults         = "smarterbase.query.results"
+	MetricIndexUpdate          = "smarterbase.index.update"
+	MetricIndexRetries         = "smarterbase.index.retries"
+	MetricIndexErrors          = "smarterbase.index.errors"
+	MetricTransactionSuccess   = "smarterbase.transaction.success"
+	MetricTransactionConflict  = "smarterbase.transaction.conflict"
+	MetricTransactionRollback  = "smarterbase.transaction.rollback"
+	MetricLockAcquired         = "smarterbase.lock.acquired"
+	MetricLockFailed           = "smarterbase.lock.failed"
+	MetricLockDuration         = "smarterbase.lock.duration"
+	MetricLockContention       = "smarterbase.lock.contention"        // Number of retries needed
+	MetricLockTimeout          = "smarterbase.lock.timeout"           // Locks that timed out
+	MetricLockWaitTime         = "smarterbase.lock.wait_duration"     // Time spent waiting for locks
+	MetricLockActive           = "smarterbase.lock.active"            // Number of active locks
+	MetricLockOrphaned         = "smarterbase.lock.orphaned"          // Orphaned locks detected
+	MetricLockCleanup          = "smarterbase.lock.cleanup"           // Lock cleanup operations
+	MetricLockForceRelease     = "smarterbase.lock.force_release"     // Forced lock releases
+	MetricCounterIncrement     = "smarterbase.counter.increment"      // Counter increments
+	MetricCounterSet           = "smarterbase.counter.set"            // Counter value sets
+	MetricCounterDelete        = "smarterbase.counter.delete"         // Counter deletions
+	MetricCounterError         = "smarterbase.counter.error"          // Counter operation errors
+	MetricCounterAuditTotal    = "smarterbase.counter.audit.total"    // Total counters audited
+	MetricCounterAuditInvalid  = "smarterbase.counter.audit.invalid"  // Invalid counters found
+	MetricCounterAuditNegative = "smarterbase.counter.audit.negative" // Negative counters found
+	MetricCounterRepair        = "smarterbase.counter.repair"         // Counter repairs
 
 	// Additional metrics for Prometheus integration
 	MetricBackendOps      = "smarterbase.backend.ops"
