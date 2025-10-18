@@ -119,33 +119,24 @@ func (m *OrderManager) GetOrder(ctx context.Context, orderID string) (*Order, er
 
 // ListOrdersByUser returns all orders for a specific user
 func (m *OrderManager) ListOrdersByUser(ctx context.Context, userID string) ([]*Order, error) {
-	// Query index - O(1) lookup
-	keys, err := m.redisIndexer.Query(ctx, "orders", "user_id", userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query index: %w", err)
-	}
-
-	if len(keys) == 0 {
-		return []*Order{}, nil
-	}
-
-	// Use BatchGet[T] for type-safe, efficient bulk loading
-	return smarterbase.BatchGet[Order](ctx, m.store, keys)
+	// ✅ NEW (ADR-0006): QueryWithFallback handles Redis → fallback + profiling
+	return smarterbase.QueryWithFallback[Order](
+		ctx, m.store, m.redisIndexer,
+		"orders", "user_id", userID,
+		"orders/",
+		func(o *Order) bool { return o.UserID == userID },
+	)
 }
 
 // ListOrdersByStatus returns all orders with a specific status
 func (m *OrderManager) ListOrdersByStatus(ctx context.Context, status string) ([]*Order, error) {
-	keys, err := m.redisIndexer.Query(ctx, "orders", "status", status)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query index: %w", err)
-	}
-
-	if len(keys) == 0 {
-		return []*Order{}, nil
-	}
-
-	// Use BatchGet[T] for type-safe, efficient bulk loading
-	return smarterbase.BatchGet[Order](ctx, m.store, keys)
+	// ✅ NEW (ADR-0006): QueryWithFallback handles Redis → fallback + profiling
+	return smarterbase.QueryWithFallback[Order](
+		ctx, m.store, m.redisIndexer,
+		"orders", "status", status,
+		"orders/",
+		func(o *Order) bool { return o.Status == status },
+	)
 }
 
 // UpdateOrderStatus updates the status of an order atomically

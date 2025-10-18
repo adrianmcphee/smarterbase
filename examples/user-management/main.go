@@ -121,20 +121,14 @@ func (m *UserManager) GetUserByEmail(ctx context.Context, email string) (*User, 
 
 // ListUsersByRole returns all users with a specific role
 func (m *UserManager) ListUsersByRole(ctx context.Context, role string) ([]*User, error) {
-	// Query index for all users with this role
-	keys, err := m.redisIndexer.Query(ctx, "users", "role", role)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query index: %w", err)
-	}
-
-	// ✅ Use BatchGet[T] for type-safe, efficient bulk loading
-	// This replaces 15 lines of manual iteration with 1 line
-	users, err := smarterbase.BatchGet[User](ctx, m.store, keys)
-	if err != nil {
-		return nil, fmt.Errorf("failed to batch get users: %w", err)
-	}
-
-	return users, nil
+	// ✅ NEW (ADR-0006): QueryWithFallback handles Redis → fallback + profiling
+	// Automatically profiles and tracks whether Redis or fallback was used
+	return smarterbase.QueryWithFallback[User](
+		ctx, m.store, m.redisIndexer,
+		"users", "role", role,
+		"users/",
+		func(u *User) bool { return u.Role == role },
+	)
 }
 
 // UpdateUser updates an existing user

@@ -166,17 +166,13 @@ func (m *ConfigManager) UpgradeTenantPlan(ctx context.Context, tenantID, newPlan
 
 // ListTenantsByPlan returns all tenants on a specific plan
 func (m *ConfigManager) ListTenantsByPlan(ctx context.Context, plan string) ([]*TenantConfig, error) {
-	keys, err := m.redisIndexer.Query(ctx, "tenants", "plan", plan)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query index: %w", err)
-	}
-
-	if len(keys) == 0 {
-		return []*TenantConfig{}, nil
-	}
-
-	// Use BatchGet[T] for type-safe, efficient bulk loading
-	return smarterbase.BatchGet[TenantConfig](ctx, m.store, keys)
+	// ✅ NEW (ADR-0006): QueryWithFallback handles Redis → fallback + profiling
+	return smarterbase.QueryWithFallback[TenantConfig](
+		ctx, m.store, m.redisIndexer,
+		"tenants", "plan", plan,
+		"tenants/",
+		func(t *TenantConfig) bool { return t.Plan == plan },
+	)
 }
 
 // GetPlanStats returns statistics about tenant plans
