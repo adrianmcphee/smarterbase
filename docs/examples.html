@@ -86,8 +86,8 @@
     <body>
         <div class="bg-base-200 border-base-300 border-b px-1 py-1.5 text-center text-[11px] sm:text-sm">
     <span>
-        <span class="text-primary font-medium">New in v1.6:</span>
-        Core API Helpers Guidance + BatchGet[T] Best Practices
+        <span class="text-primary font-medium">New in ADR-0006:</span>
+        QueryWithFallback + Boilerplate Reduction Helpers (85% less code!)
     </span>
 </div>
 
@@ -261,7 +261,7 @@ users, _ := smarterbase.BatchGet[User](
                             <div class="flex flex-wrap gap-2 mb-4">
                                 <div class="badge badge-outline">Authentication</div>
                                 <div class="badge badge-outline">Redis Indexes</div>
-                                <div class="badge badge-outline">BatchGet[T]</div>
+                                <div class="badge badge-outline">QueryWithFallback</div>
                                 <div class="badge badge-outline">CRUD Operations</div>
                             </div>
 
@@ -285,7 +285,7 @@ users, _ := smarterbase.BatchGet[User](
                                 <ul class="list-disc list-inside space-y-1 text-base-content/70">
                                     <li>Creating entities with automatic ID generation</li>
                                     <li>Setting up Redis indexes for fast lookups</li>
-                                    <li>Using BatchGet[T] for efficient bulk operations</li>
+                                    <li>Using QueryWithFallback for Redis → scan resilience</li>
                                     <li>Coordinating index updates with IndexManager</li>
                                 </ul>
                             </div>
@@ -340,9 +340,9 @@ err := smarterbase.WithAtomicUpdate(
 
                             <div class="flex flex-wrap gap-2 mb-4">
                                 <div class="badge badge-outline">Distributed Locks</div>
+                                <div class="badge badge-outline">QueryWithFallback</div>
                                 <div class="badge badge-outline">Atomic Updates</div>
                                 <div class="badge badge-outline">State Machines</div>
-                                <div class="badge badge-outline">Transactions</div>
                             </div>
 
                             <div class="card-actions justify-between items-center">
