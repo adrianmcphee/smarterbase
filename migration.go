@@ -8,7 +8,22 @@ import (
 	"sync"
 )
 
-// MigrationFunc transforms data from one version to another
+// MigrationFunc transforms data from one version to another.
+//
+// The function receives the JSON data as a map[string]interface{} and must return
+// the transformed data. It should set the "_v" field to the target version.
+//
+// Example custom migration:
+//
+//	smarterbase.Migrate("Product").From(1).To(2).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
+//	    // Convert price to cents
+//	    if price, ok := data["price"].(float64); ok {
+//	        data["price_cents"] = int(price * 100)
+//	        delete(data, "price")
+//	    }
+//	    data["_v"] = 2
+//	    return data, nil
+//	})
 type MigrationFunc func(data map[string]interface{}) (map[string]interface{}, error)
 
 // MigrationRegistry manages schema migrations
@@ -29,7 +44,60 @@ type MigrationBuilder struct {
 	toVersion   int
 }
 
-// Migrate starts building a migration for a type
+// Migrate starts building a migration for a type.
+//
+// Migrations enable schema evolution without downtime. When data is read from storage,
+// it is automatically migrated if its version doesn't match the expected version in the
+// destination struct.
+//
+// Basic usage with helper methods:
+//
+//	// Add a new field with default value
+//	smarterbase.Migrate("User").From(0).To(1).AddField("phone", "")
+//
+//	// Split a field into multiple fields
+//	smarterbase.Migrate("User").From(1).To(2).
+//	    Split("name", " ", "first_name", "last_name")
+//
+//	// Rename a field
+//	smarterbase.Migrate("Order").From(0).To(1).
+//	    RenameField("price", "total_amount")
+//
+//	// Remove a deprecated field
+//	smarterbase.Migrate("Config").From(1).To(2).
+//	    RemoveField("legacy_flag")
+//
+// Custom migration with Do():
+//
+//	smarterbase.Migrate("Product").From(2).To(3).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
+//	    // Custom transformation logic
+//	    if category, ok := data["category"].(string); ok {
+//	        data["category"] = strings.ToLower(category)
+//	    }
+//	    data["_v"] = 3
+//	    return data, nil
+//	})
+//
+// Migration chaining - automatically finds shortest path:
+//
+//	smarterbase.Migrate("Product").From(0).To(1).AddField("sku", "")
+//	smarterbase.Migrate("Product").From(1).To(2).Split("name", " ", "brand", "product_name")
+//	smarterbase.Migrate("Product").From(2).To(3).Do(customTransform)
+//
+//	// Reading v0 data with v3 struct → automatically runs 0→1→2→3
+//
+// Migration policies:
+//
+//	// Default: Migrate in memory only (no write-back)
+//	store := smarterbase.NewStore(backend)
+//
+//	// Write-back policy: Gradually upgrade stored data
+//	store.WithMigrationPolicy(smarterbase.MigrateAndWrite)
+//
+// The typeName parameter must match the struct's type name (not the JSON field name).
+// For example, if you have "type User struct {...}", use "User" as the typeName.
+//
+// See docs/adr/0001-schema-versioning-and-migrations.md for design rationale and patterns.
 func Migrate(typeName string) *MigrationBuilder {
 	return &MigrationBuilder{typeName: typeName}
 }
@@ -52,7 +120,21 @@ func (b *MigrationBuilder) Do(fn MigrationFunc) *MigrationBuilder {
 	return b
 }
 
-// Split is a helper that splits a field by delimiter into multiple fields
+// Split is a helper that splits a field by delimiter into multiple fields.
+//
+// Common use case: splitting a full name into first and last names.
+//
+// Example:
+//
+//	// Split "name" field by space into "first_name" and "last_name"
+//	smarterbase.Migrate("User").From(0).To(1).
+//	    Split("name", " ", "first_name", "last_name")
+//
+//	// Before: {"name": "Alice Smith"}
+//	// After:  {"first_name": "Alice", "last_name": "Smith", "_v": 1}
+//
+// If the source field contains fewer parts than target fields, remaining fields
+// are set to empty strings. The source field is removed after splitting.
 func (b *MigrationBuilder) Split(sourceField, delimiter string, targetFields ...string) *MigrationBuilder {
 	fn := func(data map[string]interface{}) (map[string]interface{}, error) {
 		if val, ok := data[sourceField].(string); ok {
@@ -72,7 +154,27 @@ func (b *MigrationBuilder) Split(sourceField, delimiter string, targetFields ...
 	return b.Do(fn)
 }
 
-// AddField adds a new field with a default value
+// AddField adds a new field with a default value.
+//
+// Use this when introducing new required fields to your schema. The default value
+// is only added if the field doesn't already exist in the data.
+//
+// Examples:
+//
+//	// Add a phone field with empty string default
+//	smarterbase.Migrate("User").From(0).To(1).
+//	    AddField("phone", "")
+//
+//	// Add an inventory count with zero default
+//	smarterbase.Migrate("Product").From(1).To(2).
+//	    AddField("stock_count", 0)
+//
+//	// Add a boolean flag with false default
+//	smarterbase.Migrate("Config").From(2).To(3).
+//	    AddField("enabled", false)
+//
+//	// Before: {"id": "123", "name": "Product"}
+//	// After:  {"id": "123", "name": "Product", "stock_count": 0, "_v": 2}
 func (b *MigrationBuilder) AddField(field string, defaultValue interface{}) *MigrationBuilder {
 	fn := func(data map[string]interface{}) (map[string]interface{}, error) {
 		if _, exists := data[field]; !exists {
@@ -84,7 +186,23 @@ func (b *MigrationBuilder) AddField(field string, defaultValue interface{}) *Mig
 	return b.Do(fn)
 }
 
-// RenameField renames a field
+// RenameField renames a field while preserving its value.
+//
+// Use this when you want to change a field name for clarity or consistency.
+// The old field is removed and its value is copied to the new field name.
+//
+// Examples:
+//
+//	// Rename price to total_amount
+//	smarterbase.Migrate("Order").From(0).To(1).
+//	    RenameField("price", "total_amount")
+//
+//	// Rename created to created_at for consistency
+//	smarterbase.Migrate("Document").From(1).To(2).
+//	    RenameField("created", "created_at")
+//
+//	// Before: {"id": "123", "price": 99.99}
+//	// After:  {"id": "123", "total_amount": 99.99, "_v": 1}
 func (b *MigrationBuilder) RenameField(oldName, newName string) *MigrationBuilder {
 	fn := func(data map[string]interface{}) (map[string]interface{}, error) {
 		if val, exists := data[oldName]; exists {
@@ -97,7 +215,22 @@ func (b *MigrationBuilder) RenameField(oldName, newName string) *MigrationBuilde
 	return b.Do(fn)
 }
 
-// RemoveField removes a field
+// RemoveField removes a deprecated field from the data.
+//
+// Use this to clean up old fields that are no longer needed in your schema.
+//
+// Examples:
+//
+//	// Remove a legacy flag that's no longer used
+//	smarterbase.Migrate("Config").From(1).To(2).
+//	    RemoveField("legacy_feature_flag")
+//
+//	// Remove temporary migration field
+//	smarterbase.Migrate("User").From(2).To(3).
+//	    RemoveField("migration_temp_field")
+//
+//	// Before: {"id": "123", "name": "User", "legacy_flag": true}
+//	// After:  {"id": "123", "name": "User", "_v": 2}
 func (b *MigrationBuilder) RemoveField(field string) *MigrationBuilder {
 	fn := func(data map[string]interface{}) (map[string]interface{}, error) {
 		delete(data, field)
@@ -266,12 +399,42 @@ func getTypeName(dest interface{}) string {
 	return t.Name()
 }
 
-// MigrationPolicy defines how migrations are applied
+// MigrationPolicy defines how migrations are applied when data is read from storage.
+//
+// The policy determines whether migrated data should be written back to storage
+// or kept only in memory.
 type MigrationPolicy int
 
 const (
-	// MigrateOnRead only migrates data in memory (default)
+	// MigrateOnRead only migrates data in memory without writing back to storage (default).
+	//
+	// Use this policy for:
+	//   - Production environments where you want to test migrations without modifying data
+	//   - Read-heavy workloads where write-back would add unnecessary latency
+	//   - Scenarios where you want to defer data upgrades
+	//
+	// Example:
+	//
+	//	store := smarterbase.NewStore(backend)
+	//	// Data is migrated when read but not written back
+	//	store.GetJSON(ctx, "users/123", &user)
 	MigrateOnRead MigrationPolicy = iota
-	// MigrateAndWrite migrates and writes back to storage
+
+	// MigrateAndWrite migrates data and writes it back to storage with the new version.
+	//
+	// Use this policy for:
+	//   - Gradual data upgrades during low-traffic periods
+	//   - Ensuring all data is eventually upgraded to the latest version
+	//   - When you want to measure migration success rates before forcing upgrades
+	//
+	// Example:
+	//
+	//	store := smarterbase.NewStore(backend)
+	//	store.WithMigrationPolicy(smarterbase.MigrateAndWrite)
+	//	// Data is migrated and written back to storage with updated version
+	//	store.GetJSON(ctx, "users/123", &user)
+	//
+	// Performance note: Write-back adds latency (~10-50ms depending on backend)
+	// but ensures data is upgraded over time as it's accessed.
 	MigrateAndWrite
 )
