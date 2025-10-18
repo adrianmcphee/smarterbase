@@ -104,122 +104,42 @@ func (s *ArticleStore) GetArticle(ctx context.Context, articleID string) (*Artic
 	return &article, nil
 }
 
-// ListAuthorArticles demonstrates the Redis fallback pattern:
-// 1. Try Redis index first (O(1) lookup)
-// 2. Fall back to full scan if Redis is unavailable
-// 3. Track which path was used for observability
+// ListAuthorArticles demonstrates QueryWithFallback from ADR-0006:
+// Automatically handles Redis→scan fallback + profiling in a single call
 func (s *ArticleStore) ListAuthorArticles(ctx context.Context, authorID string) ([]*Article, error) {
-	// Start profiling
-	profiler := smarterbase.GetProfilerFromContext(ctx)
-	profile := profiler.StartProfile("ListAuthorArticles")
-	if profile != nil {
-		profile.FilterFields = []string{"author_id"}
-		defer func() {
-			profiler.Record(profile)
-		}()
-	}
-
-	// Try Redis index first (O(1) lookup)
-	if s.redisIndexer != nil {
-		keys, err := s.redisIndexer.Query(ctx, "articles", "author_id", authorID)
-		if err == nil {
-			// Use BatchGet[T] for type-safe, efficient loading
-			articles, err := smarterbase.BatchGet[Article](ctx, s.base, keys)
-
-			// Record successful index path
-			if profile != nil {
-				profile.Complexity = smarterbase.ComplexityO1
-				profile.IndexUsed = "redis:articles-by-author"
-				profile.StorageOps = len(keys)
-				profile.ResultCount = len(articles)
-			}
-
-			return articles, err
-		}
-
-		// Redis failed - log but don't fail the request
-		log.Printf("Redis index failed, falling back to full scan: %v", err)
-	}
-
-	// Fallback to full scan (O(n) query)
-	var articles []*Article
-	err := s.base.Query("articles/").
-		FilterJSON(func(obj map[string]interface{}) bool {
-			aid, _ := obj["author_id"].(string)
-			return aid == authorID
-		}).
-		All(ctx, &articles)
-
-	// Record fallback path
-	if profile != nil {
-		profile.Complexity = smarterbase.ComplexityON
-		profile.IndexUsed = "none:full-scan"
-		profile.FallbackPath = true
-		profile.ResultCount = len(articles)
-		profile.Error = err
-	}
-
-	return articles, err
+	// ✅ NEW (ADR-0006): One function call replaces 50 lines of boilerplate
+	// Automatically profiles and tracks whether Redis or fallback was used
+	return smarterbase.QueryWithFallback[Article](
+		ctx, s.base, s.redisIndexer,
+		"articles", "author_id", authorID,
+		"articles/",
+		func(a *Article) bool { return a.AuthorID == authorID },
+	)
 }
 
-// ListCategoryArticles demonstrates profiling with sorting
+// ListCategoryArticles demonstrates QueryWithFallback with custom post-processing
 func (s *ArticleStore) ListCategoryArticles(ctx context.Context, categoryID string, limit int) ([]*Article, error) {
-	// Start profiling
-	profiler := smarterbase.GetProfilerFromContext(ctx)
-	profile := profiler.StartProfile("ListCategoryArticles")
-	if profile != nil {
-		profile.FilterFields = []string{"category_id"}
-		defer func() {
-			profiler.Record(profile)
-		}()
+	// ✅ NEW (ADR-0006): QueryWithFallback handles Redis→scan + profiling
+	articles, err := smarterbase.QueryWithFallback[Article](
+		ctx, s.base, s.redisIndexer,
+		"articles", "category_id", categoryID,
+		"articles/",
+		func(a *Article) bool { return a.CategoryID == categoryID },
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	// Try Redis index first
-	if s.redisIndexer != nil {
-		keys, err := s.redisIndexer.Query(ctx, "articles", "category_id", categoryID)
-		if err == nil {
-			articles, err := smarterbase.BatchGet[Article](ctx, s.base, keys)
-			if err == nil {
-				// Sort by view count (most viewed first)
-				// Note: This requires loading all articles, but the index makes that fast
-				sortByViewCount(articles)
+	// Custom post-processing: sort by view count (most viewed first)
+	// Note: This requires loading all articles, but the index makes that fast
+	sortByViewCount(articles)
 
-				// Apply limit
-				if limit > 0 && len(articles) > limit {
-					articles = articles[:limit]
-				}
-
-				if profile != nil {
-					profile.Complexity = smarterbase.ComplexityO1
-					profile.IndexUsed = "redis:articles-by-category"
-					profile.StorageOps = len(keys)
-					profile.ResultCount = len(articles)
-				}
-
-				return articles, nil
-			}
-		}
+	// Apply limit
+	if limit > 0 && len(articles) > limit {
+		articles = articles[:limit]
 	}
 
-	// Fallback to full scan with sorting
-	var articles []*Article
-	err := s.base.Query("articles/").
-		FilterJSON(func(obj map[string]interface{}) bool {
-			cid, _ := obj["category_id"].(string)
-			return cid == categoryID
-		}).
-		Limit(limit).
-		All(ctx, &articles)
-
-	if profile != nil {
-		profile.Complexity = smarterbase.ComplexityON
-		profile.IndexUsed = "none:full-scan"
-		profile.FallbackPath = true
-		profile.ResultCount = len(articles)
-		profile.Error = err
-	}
-
-	return articles, err
+	return articles, nil
 }
 
 // GetPublishedArticles demonstrates counting with fallback

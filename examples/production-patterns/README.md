@@ -4,53 +4,59 @@ This example demonstrates production-ready patterns for building resilient syste
 
 ## Key Patterns
 
-### 1. Redis Fallback Pattern
-```go
-// Try Redis index first (O(1) lookup)
-if s.redisIndexer != nil {
-    keys, err := s.redisIndexer.Query(ctx, "articles", "author_id", authorID)
-    if err == nil {
-        return smarterbase.BatchGet[Article](ctx, s.base, keys)
-    }
-}
+### 1. Redis Fallback Pattern (ADR-0006)
 
-// Fallback to full scan (O(n) query)
-var articles []*Article
-err := s.base.Query("articles/").
-    FilterJSON(func(obj map[string]interface{}) bool {
-        aid, _ := obj["author_id"].(string)
-        return aid == authorID
-    }).
-    All(ctx, &articles)
+**NEW:** Use `QueryWithFallback` to eliminate boilerplate:
+
+```go
+// ✅ NEW (ADR-0006): One function replaces 50 lines of manual fallback logic
+articles, err := smarterbase.QueryWithFallback[Article](
+    ctx, store, redisIndexer,
+    "articles", "author_id", authorID,  // Redis index lookup
+    "articles/",                         // Fallback scan prefix
+    func(a *Article) bool { return a.AuthorID == authorID },  // Fallback filter
+)
 ```
 
+**Automatically handles:**
+- ✅ Try Redis index first (O(1) lookup)
+- ✅ Fall back to full scan if Redis is unavailable (O(n))
+- ✅ Query profiling and complexity tracking
+- ✅ Index usage metrics
+
 **Why this matters:**
-- ✅ Fast queries when Redis is available (O(1))
-- ✅ System keeps working when Redis is down (O(n) fallback)
-- ✅ No user-facing errors during Redis outages
+- ✅ 50 lines → 6 lines (85% reduction in boilerplate)
+- ✅ Automatic profiling built-in
 - ✅ Graceful degradation instead of hard failures
+- ✅ Consistent error handling pattern
 
 ### 2. Query Profiling & Complexity Tracking
+
+**Automatic with QueryWithFallback (ADR-0006):**
+
+When using `QueryWithFallback`, profiling happens automatically. The helper:
+- ✅ Tracks query complexity (O(1) vs O(n))
+- ✅ Records which index was used
+- ✅ Marks fallback path usage
+- ✅ Counts storage operations
+
+**Manual profiling** (for custom queries):
+
 ```go
-// Start profiling
 profiler := smarterbase.GetProfilerFromContext(ctx)
-profile := profiler.StartProfile("ListAuthorArticles")
+profile := profiler.StartProfile("CustomOperation")
 if profile != nil {
-    profile.FilterFields = []string{"author_id"}
-    defer func() {
-        profiler.Record(profile)
-    }()
+    profile.FilterFields = []string{"custom_field"}
+    defer func() { profiler.Record(profile) }()
 }
 
 // ... execute query ...
 
-// Record metrics
 if profile != nil {
-    profile.Complexity = smarterbase.ComplexityO1  // or ComplexityON
-    profile.IndexUsed = "redis:articles-by-author"
+    profile.Complexity = smarterbase.ComplexityO1
+    profile.IndexUsed = "redis:custom-index"
     profile.StorageOps = len(keys)
-    profile.ResultCount = len(articles)
-    profile.FallbackPath = true  // if fallback was used
+    profile.ResultCount = len(results)
 }
 ```
 
@@ -170,6 +176,6 @@ Production systems need:
 
 ## Further Reading
 
-- [ADR-0005: Core API Helpers Guidance](../../docs/adr/0005-core-api-helpers-guidance.md)
-- [Architecture Documentation](../../ARCHITECTURE.md)
-- [Query Performance Guide](../../docs/PERFORMANCE.md)
+- [ADR-0006: Boilerplate Reduction Helpers](../../docs/adr/0006-collection-api.md) - QueryWithFallback, UpdateWithIndexes
+- [ADR-0005: Core API Helpers Guidance](../../docs/adr/0005-core-api-helpers-guidance.md) - BatchGet, KeyBuilder, RedisOptions
+- [Main README](../../README.md) - Complete API reference and production setup
