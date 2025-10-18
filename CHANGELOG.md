@@ -1,3 +1,18 @@
+## [1.9.0](https://github.com/adrianmcphee/smarterbase/compare/v1.8.0...v1.9.0) (2025-10-18)
+
+### Features
+
+* add distributed lock management and counter audit utilities ([c3d37ea](https://github.com/adrianmcphee/smarterbase/commit/c3d37ead2d6a25bfeafe55170afcf266429ab254))
+
+### Documentation
+
+* add production-patterns example to website showcase ([e3d88d6](https://github.com/adrianmcphee/smarterbase/commit/e3d88d6b5b4db93e62e91bf1bd4c721bc038f0fe))
+* enhance inline godoc for ADR-0006 helpers and core functions ([a1b7238](https://github.com/adrianmcphee/smarterbase/commit/a1b7238b6b86862c37a42e100971b0d4f45a0d9a))
+* update package documentation to include ADR-0006 helpers ([847ec5e](https://github.com/adrianmcphee/smarterbase/commit/847ec5e54c999d378cda1bf9daf0736ddaf09d4a))
+* update production-patterns example to use ADR-0006 helpers ([94f0a66](https://github.com/adrianmcphee/smarterbase/commit/94f0a66d2428f39608ab07d8d4eb8fd4b938f7b4))
+* update remaining examples to use ADR-0006 QueryWithFallback helper ([ffe54b1](https://github.com/adrianmcphee/smarterbase/commit/ffe54b1287f702813ef142bae7d72ea886012572))
+* update website to highlight ADR-0006 QueryWithFallback helper ([67bb8a9](https://github.com/adrianmcphee/smarterbase/commit/67bb8a9a219b9c31004762afd5b9d183a066fc2c))
+
 ## [1.8.0](https://github.com/adrianmcphee/smarterbase/compare/v1.7.2...v1.8.0) (2025-10-18)
 
 ### Features
