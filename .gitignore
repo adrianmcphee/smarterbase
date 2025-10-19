@@ -35,6 +35,7 @@ vendor/
 # Test data directories
 /data/
 examples/*/data/
+simple/data/
 
 # IDE and editor files
 .vscode/
