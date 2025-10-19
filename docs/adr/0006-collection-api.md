@@ -1,7 +1,8 @@
 # ADR-0006: Pragmatic Helper Functions to Reduce Boilerplate
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2025-01-18
+**Implemented:** 2025-01-19
 **Deciders:** Engineering Team
 **Related:** ADR-0003 (Simple API Layer), ADR-0004 (Redis Indexing)
 
