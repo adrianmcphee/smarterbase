@@ -1,3 +1,14 @@
+## [1.10.0](https://github.com/adrianmcphee/smarterbase/compare/v1.9.0...v1.10.0) (2025-10-28)
+
+### Features
+
+* add type-safe migration API with WithTypeSafe helper ([2325311](https://github.com/adrianmcphee/smarterbase/commit/232531153bfe6f4349674ed581be0e9633117fc9))
+
+### Documentation
+
+* add ADR-0006 to index table ([2f53030](https://github.com/adrianmcphee/smarterbase/commit/2f530301366ff6b9c8c7942c96880fdf2dca75b6))
+* update ADR-0006 status from Proposed to Accepted ([d9c0356](https://github.com/adrianmcphee/smarterbase/commit/d9c035652ee24dc22668b4d8620727d11554f520))
+
 ## [1.9.0](https://github.com/adrianmcphee/smarterbase/compare/v1.8.0...v1.9.0) (2025-10-18)
 
 ### Features
