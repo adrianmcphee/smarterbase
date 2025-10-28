@@ -12,11 +12,17 @@ Versioning already works with Simple API. The migration system operates via `sto
 
 **Current usage:**
 ```go
-// Register migrations with Core API
-smarterbase.Migrate("User").From(0).To(2).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
+// Define type-safe migration function
+func migrateUserV0ToV2(old UserV0) (UserV2, error) {
     // Migration logic
-    return data, nil
-})
+    return UserV2{/* ... */}, nil
+}
+
+// Register migration
+smarterbase.WithTypeSafe(
+    smarterbase.Migrate("User").From(0).To(2),
+    migrateUserV0ToV2,
+)
 
 // Use Simple API - migrations apply automatically
 db := simple.MustConnect()
@@ -106,9 +112,9 @@ Implementation:
 - Philosophy maintained
 
 **Trade-offs:**
-- Still uses `map[string]interface{}` (not type-safe)
+- Requires explicit migration registration (no "auto-magic")
   - Intentional: migrations touch production data, should be explicit
-  - Type safety doesn't prevent logic bugs anyway
+  - Developers write pure functions with concrete types for full type safety
 
 ## Implementation
 

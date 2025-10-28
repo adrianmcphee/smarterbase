@@ -37,25 +37,51 @@ type UserV2 struct {
 
 ## How It Works
 
-### 1. Register Migration Before Connecting
+### 1. Define Type-Safe Migration Function
 
 ```go
-simple.Migrate("User").From(0).To(2).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-    // Split name into first_name and last_name
-    parts := strings.SplitN(data["name"].(string), " ", 2)
-    data["first_name"] = parts[0]
-    data["last_name"] = parts[1]
-    delete(data, "name")
+// Pure, testable migration function with full type safety
+func migrateUserV0ToV2(old UserV0) (UserV2, error) {
+    if old.Email == "" || old.Name == "" {
+        return UserV2{}, errors.New("name and email required")
+    }
 
-    // Add new field
-    data["phone"] = ""
-    data["_v"] = 2
+    parts := strings.Fields(old.Name)
+    firstName := parts[0]
+    lastName := ""
+    if len(parts) > 1 {
+        lastName = strings.Join(parts[1:], " ")
+    }
 
-    return data, nil
-})
+    return UserV2{
+        V:         2,
+        ID:        old.ID,
+        FirstName: firstName,
+        LastName:  lastName,
+        Email:     old.Email,
+        Phone:     "", // New field with default
+    }, nil
+}
 ```
 
-### 2. Old Data Migrates Automatically
+### 2. Register Migration Before Connecting
+
+```go
+// Zero boilerplate - just pass your type-safe function
+simple.WithTypeSafe(
+    simple.Migrate("User").From(0).To(2),
+    migrateUserV0ToV2,
+)
+```
+
+**Benefits:**
+- ✅ No `map[string]interface{}` - full type safety
+- ✅ Compiler catches errors at build time
+- ✅ Easy to unit test in isolation
+- ✅ IDE autocomplete works
+- ✅ Self-documenting code
+
+### 3. Old Data Migrates Automatically
 
 ```go
 // Write V0 data

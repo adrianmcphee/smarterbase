@@ -28,6 +28,7 @@ Each ADR follows this structure:
 | [0004](0004-simple-api-versioning.md) | Simple API Versioning Discoverability | Accepted | 2025-10-14 |
 | [0005](0005-core-api-helpers-guidance.md) | Core API Helpers - When and How to Use | Accepted | 2025-10-14 |
 | [0006](0006-collection-api.md) | Pragmatic Helper Functions to Reduce Boilerplate | Accepted | 2025-01-18 |
+| [0007](0007-type-safe-migrations.md) | Type-Safe Schema Migrations | Accepted | 2025-10-28 |
 
 ## References
 

@@ -349,36 +349,47 @@ type Product struct {
     Pricing     map[string]float64 `json:"pricing"`
 }
 
-// Register migrations at app startup
+// Define type-safe migration functions
+func migrateProductV0ToV1(old ProductV0) (ProductV1, error) {
+    return ProductV1{
+        V:     1,
+        ID:    old.ID,
+        Name:  old.Name,
+        Price: old.Price,
+    }, nil
+}
+
+func migrateProductV1ToV2(old ProductV1) (Product, error) {
+    // Split name into brand and product name
+    parts := strings.SplitN(old.Name, " ", 2)
+    brand := parts[0]
+    productName := parts[0]
+    if len(parts) > 1 {
+        productName = parts[1]
+    }
+
+    return Product{
+        V:           2,
+        ID:          old.ID,
+        Brand:       brand,
+        ProductName: productName,
+        Pricing: map[string]float64{
+            "retail":    old.Price,
+            "wholesale": old.Price * 0.85,
+        },
+    }, nil
+}
+
+// Register with type safety
 func init() {
-    // v0 → v1: Add version field and defaults
-    smarterbase.Migrate("Product").From(0).To(1).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-        data["_v"] = 1
-        return data, nil
-    })
-
-    // v1 → v2: Split name, convert pricing
-    smarterbase.Migrate("Product").From(1).To(2).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-        // Split name into brand and product name
-        if name, ok := data["name"].(string); ok {
-            parts := strings.SplitN(name, " ", 2)
-            data["brand"] = parts[0]
-            data["product_name"] = parts[1]
-            delete(data, "name")
-        }
-
-        // Convert single price to pricing tiers
-        if price, ok := data["price"].(float64); ok {
-            data["pricing"] = map[string]interface{}{
-                "retail":    price,
-                "wholesale": price * 0.85,
-            }
-            delete(data, "price")
-        }
-
-        data["_v"] = 2
-        return data, nil
-    })
+    smarterbase.WithTypeSafe(
+        smarterbase.Migrate("Product").From(0).To(1),
+        migrateProductV0ToV1,
+    )
+    smarterbase.WithTypeSafe(
+        smarterbase.Migrate("Product").From(1).To(2),
+        migrateProductV1ToV2,
+    )
 }
 
 // Old data (v0) automatically migrates to v2 when read

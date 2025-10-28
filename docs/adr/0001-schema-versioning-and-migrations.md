@@ -101,3 +101,9 @@ Files created/modified:
 Developers should understand and control their migration logic. The library handles the mechanical work (version checking, path finding, chaining) but the developer defines the transformations.
 
 This aligns with Go's philosophy: clear is better than clever.
+
+## Enhancement: Type-Safe Migrations (2025-10-28)
+
+See [ADR-0007: Type-Safe Schema Migrations](0007-type-safe-migrations.md) for the addition of `WithTypeSafe()`, which provides compile-time type safety for migration functions while maintaining the same runtime behavior.
+
+This enhancement addresses feedback about type safety and testability without changing the core migration architecture.

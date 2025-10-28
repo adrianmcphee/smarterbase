@@ -184,63 +184,119 @@ func main() {
 	fmt.Println("  • Optional write-back for gradual data upgrade")
 }
 
-// registerMigrations sets up all schema migrations
+// ============================================================================
+// Type-Safe Migration Functions
+// ============================================================================
+//
+// These are pure, testable functions with full type safety.
+// No map[string]interface{}, no type assertions, no runtime panics.
+
+// migrateProductV0ToV1 adds inventory tracking fields
+func migrateProductV0ToV1(old ProductV0) (ProductV1, error) {
+	if old.ID == "" || old.Name == "" {
+		return ProductV1{}, fmt.Errorf("id and name required")
+	}
+
+	return ProductV1{
+		V:           1,
+		ID:          old.ID,
+		Name:        old.Name,
+		Description: old.Description,
+		Price:       old.Price,
+		Stock:       0,
+		SKU:         fmt.Sprintf("SKU-%s", old.ID),
+		CreatedAt:   time.Now().Format(time.RFC3339),
+	}, nil
+}
+
+// migrateProductV1ToV2 splits name into brand and product name
+func migrateProductV1ToV2(old ProductV1) (ProductV2, error) {
+	if old.Name == "" {
+		return ProductV2{}, fmt.Errorf("name required for migration")
+	}
+
+	// Split name into brand and product name
+	parts := strings.SplitN(old.Name, " ", 2)
+	brand := parts[0]
+	productName := old.Name
+	if len(parts) > 1 {
+		productName = parts[1]
+	}
+
+	return ProductV2{
+		V:           2,
+		ID:          old.ID,
+		Brand:       brand,
+		ProductName: productName,
+		Description: old.Description,
+		Price:       old.Price,
+		Stock:       old.Stock,
+		SKU:         old.SKU,
+		CreatedAt:   old.CreatedAt,
+		UpdatedAt:   time.Now().Format(time.RFC3339),
+	}, nil
+}
+
+// migrateProductV2ToV3 converts price to pricing tiers and adds categories
+func migrateProductV2ToV3(old ProductV2) (ProductV3, error) {
+	// Convert single price to pricing tiers
+	pricing := map[string]float64{
+		"retail":    old.Price,
+		"wholesale": old.Price * 0.85,
+		"student":   old.Price * 0.90,
+	}
+
+	// Add default categories based on price
+	categories := []string{}
+	if old.Price < 100 {
+		categories = append(categories, "budget")
+	} else if old.Price < 1000 {
+		categories = append(categories, "mid-range")
+	} else {
+		categories = append(categories, "premium")
+	}
+
+	return ProductV3{
+		V:           3,
+		ID:          old.ID,
+		Brand:       old.Brand,
+		ProductName: old.ProductName,
+		Description: old.Description,
+		Pricing:     pricing,
+		Stock:       old.Stock,
+		SKU:         old.SKU,
+		Categories:  categories,
+		CreatedAt:   old.CreatedAt,
+		UpdatedAt:   time.Now().Format(time.RFC3339),
+	}, nil
+}
+
+// ============================================================================
+// Registry Registration
+// ============================================================================
+//
+// Using WithTypeSafe() eliminates all the JSON marshaling boilerplate.
+// Notice how clean and simple this is!
+
 func registerMigrations() {
 	// Migration 0 → 1: Add inventory tracking
-	smarterbase.Migrate("ProductV3").From(0).To(1).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-		data["stock"] = 0
-		data["sku"] = fmt.Sprintf("SKU-%s", data["id"])
-		data["created_at"] = time.Now().Format(time.RFC3339)
-		data["_v"] = 1
-		return data, nil
-	})
+	smarterbase.WithTypeSafe(
+		smarterbase.Migrate("ProductV3").From(0).To(1),
+		migrateProductV0ToV1,
+	)
 
 	// Migration 1 → 2: Split name into brand and product name
-	smarterbase.Migrate("ProductV3").From(1).To(2).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-		if name, ok := data["name"].(string); ok {
-			parts := strings.SplitN(name, " ", 2)
-			data["brand"] = parts[0]
-			if len(parts) > 1 {
-				data["product_name"] = parts[1]
-			} else {
-				data["product_name"] = name
-			}
-			delete(data, "name")
-		}
-		data["updated_at"] = time.Now().Format(time.RFC3339)
-		data["_v"] = 2
-		return data, nil
-	})
+	smarterbase.WithTypeSafe(
+		smarterbase.Migrate("ProductV3").From(1).To(2),
+		migrateProductV1ToV2,
+	)
 
 	// Migration 2 → 3: Convert price to pricing tiers, add categories
-	smarterbase.Migrate("ProductV3").From(2).To(3).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-		// Convert single price to pricing tiers
-		if price, ok := data["price"].(float64); ok {
-			data["pricing"] = map[string]interface{}{
-				"retail":    price,
-				"wholesale": price * 0.85,
-				"student":   price * 0.90,
-			}
-			delete(data, "price")
-		}
-
-		// Add default categories based on price
-		pricing, _ := data["pricing"].(map[string]interface{})
-		retail, _ := pricing["retail"].(float64)
-
-		categories := []string{}
-		if retail < 100 {
-			categories = append(categories, "budget")
-		} else if retail < 1000 {
-			categories = append(categories, "mid-range")
-		} else {
-			categories = append(categories, "premium")
-		}
-
-		data["categories"] = categories
-		data["_v"] = 3
-		return data, nil
-	})
+	smarterbase.WithTypeSafe(
+		smarterbase.Migrate("ProductV3").From(2).To(3),
+		migrateProductV2ToV3,
+	)
 
 	fmt.Println("✓ Registered migration chain: V0 → V1 → V2 → V3")
+	fmt.Println("  (using type-safe migration functions)")
 }

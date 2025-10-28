@@ -50,39 +50,47 @@ type MigrationBuilder struct {
 // it is automatically migrated if its version doesn't match the expected version in the
 // destination struct.
 //
-// Basic usage with helper methods:
+// RECOMMENDED: Use WithTypeSafe() for type-safe migrations with concrete types:
 //
-//	// Add a new field with default value
-//	smarterbase.Migrate("User").From(0).To(1).AddField("phone", "")
+//	// Define a pure, type-safe migration function
+//	func migrateUserV0ToV2(old UserV0) (UserV2, error) {
+//	    parts := strings.Fields(old.Name)
+//	    return UserV2{
+//	        V:         2,
+//	        FirstName: parts[0],
+//	        LastName:  strings.Join(parts[1:], " "),
+//	        Email:     old.Email,
+//	    }, nil
+//	}
+//
+//	// Register with zero boilerplate
+//	smarterbase.WithTypeSafe(
+//	    smarterbase.Migrate("User").From(0).To(2),
+//	    migrateUserV0ToV2,
+//	)
+//
+// Helper methods for simple transformations:
 //
 //	// Split a field into multiple fields
-//	smarterbase.Migrate("User").From(1).To(2).
+//	smarterbase.Migrate("User").From(0).To(1).
 //	    Split("name", " ", "first_name", "last_name")
 //
+//	// Add a new field with default value
+//	smarterbase.Migrate("User").From(1).To(2).AddField("phone", "")
+//
 //	// Rename a field
-//	smarterbase.Migrate("Order").From(0).To(1).
+//	smarterbase.Migrate("Order").From(2).To(3).
 //	    RenameField("price", "total_amount")
 //
 //	// Remove a deprecated field
-//	smarterbase.Migrate("Config").From(1).To(2).
+//	smarterbase.Migrate("Config").From(3).To(4).
 //	    RemoveField("legacy_flag")
-//
-// Custom migration with Do():
-//
-//	smarterbase.Migrate("Product").From(2).To(3).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-//	    // Custom transformation logic
-//	    if category, ok := data["category"].(string); ok {
-//	        data["category"] = strings.ToLower(category)
-//	    }
-//	    data["_v"] = 3
-//	    return data, nil
-//	})
 //
 // Migration chaining - automatically finds shortest path:
 //
 //	smarterbase.Migrate("Product").From(0).To(1).AddField("sku", "")
 //	smarterbase.Migrate("Product").From(1).To(2).Split("name", " ", "brand", "product_name")
-//	smarterbase.Migrate("Product").From(2).To(3).Do(customTransform)
+//	smarterbase.WithTypeSafe(smarterbase.Migrate("Product").From(2).To(3), customMigrate)
 //
 //	// Reading v0 data with v3 struct → automatically runs 0→1→2→3
 //
@@ -95,9 +103,9 @@ type MigrationBuilder struct {
 //	store.WithMigrationPolicy(smarterbase.MigrateAndWrite)
 //
 // The typeName parameter must match the struct's type name (not the JSON field name).
-// For example, if you have "type User struct {...}", use "User" as the typeName.
+// For example, if you have "type UserV2 struct {...}", use "UserV2" as the typeName.
 //
-// See docs/adr/0001-schema-versioning-and-migrations.md for design rationale and patterns.
+// See docs/adr/0007-type-safe-migrations.md for implementation details and testing examples.
 func Migrate(typeName string) *MigrationBuilder {
 	return &MigrationBuilder{typeName: typeName}
 }
@@ -118,6 +126,76 @@ func (b *MigrationBuilder) To(version int) *MigrationBuilder {
 func (b *MigrationBuilder) Do(fn MigrationFunc) *MigrationBuilder {
 	globalRegistry.Register(b.typeName, b.fromVersion, b.toVersion, fn)
 	return b
+}
+
+// WithTypeSafe registers a type-safe migration function.
+//
+// This is the RECOMMENDED way to write migrations. Instead of working with
+// map[string]interface{}, you write a pure function that transforms concrete
+// types. This provides full type safety, IDE autocomplete, and compile-time
+// error checking.
+//
+// Example:
+//
+//	// Define your migration as a pure, type-safe function
+//	func migrateUserV0ToV2(old UserV0) (UserV2, error) {
+//	    parts := strings.Fields(old.Name)
+//	    return UserV2{
+//	        V:         2,
+//	        FirstName: parts[0],
+//	        LastName:  strings.Join(parts[1:], " "),
+//	        Email:     old.Email,
+//	    }, nil
+//	}
+//
+//	// Register it with zero boilerplate
+//	smarterbase.Migrate("User").From(0).To(2).
+//	    WithTypeSafe(migrateUserV0ToV2)
+//
+// Benefits over Do():
+//   - ✅ Full type safety - no map[string]interface{}
+//   - ✅ Compiler catches errors at build time
+//   - ✅ IDE autocomplete works
+//   - ✅ Easy to unit test in isolation
+//   - ✅ Self-documenting with concrete types
+//   - ✅ Refactoring tools work correctly
+func WithTypeSafe[From any, To any](b *MigrationBuilder, migrateFn func(From) (To, error)) *MigrationBuilder {
+	// Wrap the type-safe function with JSON marshaling adapter
+	fn := func(data map[string]interface{}) (map[string]interface{}, error) {
+		// Marshal map to JSON bytes
+		jsonBytes, err := json.Marshal(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal input: %w", err)
+		}
+
+		// Unmarshal to concrete source type
+		var old From
+		if err := json.Unmarshal(jsonBytes, &old); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal to source type: %w", err)
+		}
+
+		// Call the type-safe migration function
+		new, err := migrateFn(old)
+		if err != nil {
+			return nil, err
+		}
+
+		// Marshal result back to JSON
+		newBytes, err := json.Marshal(new)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal result: %w", err)
+		}
+
+		// Unmarshal to map for registry
+		var result map[string]interface{}
+		if err := json.Unmarshal(newBytes, &result); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal result: %w", err)
+		}
+
+		return result, nil
+	}
+
+	return b.Do(fn)
 }
 
 // Split is a helper that splits a field by delimiter into multiple fields.

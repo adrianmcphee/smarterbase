@@ -774,14 +774,14 @@ SmarterBase supports schema evolution without downtime through built-in migratio
 
 ```go
 // Original schema (v0)
-type User struct {
+type UserV0 struct {
     ID    string `json:"id"`
     Email string `json:"email"`
     Name  string `json:"name"`
 }
 
 // Evolved schema (v2)
-type User struct {
+type UserV2 struct {
     V         int    `json:"_v"`          // Version field
     ID        string `json:"id"`
     Email     string `json:"email"`
@@ -790,29 +790,44 @@ type User struct {
     Phone     string `json:"phone"`       // New field
 }
 
-// Register migration at app startup
-func init() {
-    smarterbase.Migrate("User").From(0).To(2).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-        // Split name into first_name and last_name
-        if name, ok := data["name"].(string); ok {
-            parts := strings.SplitN(name, " ", 2)
-            data["first_name"] = parts[0]
-            if len(parts) > 1 {
-                data["last_name"] = parts[1]
-            }
-            delete(data, "name")
-        }
-        data["phone"] = ""  // Add new field
-        data["_v"] = 2
-        return data, nil
-    })
+// 1. Define type-safe migration function
+func migrateUserV0ToV2(old UserV0) (UserV2, error) {
+    parts := strings.Fields(old.Name)
+    firstName := parts[0]
+    lastName := ""
+    if len(parts) > 1 {
+        lastName = strings.Join(parts[1:], " ")
+    }
+
+    return UserV2{
+        V:         2,
+        ID:        old.ID,
+        Email:     old.Email,
+        FirstName: firstName,
+        LastName:  lastName,
+        Phone:     "", // New field with default
+    }, nil
 }
 
-// Read old data - automatically migrates to v2
-var user User
+// 2. Register with type safety
+func init() {
+    smarterbase.WithTypeSafe(
+        smarterbase.Migrate("UserV2").From(0).To(2),
+        migrateUserV0ToV2,
+    )
+}
+
+// 3. Read old data - automatically migrates to v2
+var user UserV2
 user.V = 2  // Set expected version
-store.GetJSON(ctx, "users/123.json", &user)  // Migration happens here
+store.GetJSON(ctx, "users/123", &user)  // Migration happens here
 ```
+
+**Benefits:**
+- ✅ Full type safety - compiler catches errors
+- ✅ Easy to unit test migration logic
+- ✅ IDE autocomplete works
+- ✅ No runtime panics from type assertions
 
 ### Migration Helpers
 

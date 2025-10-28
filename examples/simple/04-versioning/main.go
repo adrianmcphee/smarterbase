@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -26,33 +27,49 @@ type UserV2 struct {
 	Phone     string `json:"phone"`
 }
 
+// ============================================================================
+// Type-Safe Migration Function
+// ============================================================================
+//
+// This is a pure, testable function with full type safety.
+// No map[string]interface{}, no type assertions, no runtime panics.
+
+// migrateUserV0ToV2 transforms a V0 user to V2 by splitting the name
+func migrateUserV0ToV2(old UserV0) (UserV2, error) {
+	if old.Email == "" || old.Name == "" {
+		return UserV2{}, errors.New("name and email required")
+	}
+
+	// Split "name" into "first_name" and "last_name"
+	parts := strings.Fields(old.Name)
+	firstName := parts[0]
+	lastName := ""
+	if len(parts) > 1 {
+		lastName = strings.Join(parts[1:], " ")
+	}
+
+	return UserV2{
+		V:         2,
+		ID:        old.ID,
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     old.Email,
+		Phone:     "", // New field with default value
+	}, nil
+}
+
 func main() {
 	ctx := context.Background()
 
 	// Register migration BEFORE connecting
 	// This migration transforms UserV0 → UserV2
 	// IMPORTANT: Use the FINAL type name ("UserV2") not the base name
-	simple.Migrate("UserV2").From(0).To(2).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
-		// Split "name" into "first_name" and "last_name"
-		if name, ok := data["name"].(string); ok {
-			parts := strings.SplitN(name, " ", 2)
-			data["first_name"] = parts[0]
-			if len(parts) > 1 {
-				data["last_name"] = parts[1]
-			} else {
-				data["last_name"] = ""
-			}
-			delete(data, "name") // Remove old field
-		}
-
-		// Add new field with default value
-		data["phone"] = ""
-
-		// Set version
-		data["_v"] = 2
-
-		return data, nil
-	})
+	//
+	// Using WithTypeSafe() gives us full type safety with zero boilerplate!
+	simple.WithTypeSafe(
+		simple.Migrate("UserV2").From(0).To(2),
+		migrateUserV0ToV2,
+	)
 
 	// Connect to database
 	db := simple.MustConnect()

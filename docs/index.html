@@ -465,22 +465,26 @@ type UserV2 struct {
     Email     string
 }
 
-// Register migration at startup
-smarterbase.Migrate("UserV2").
-    From(0).To(2).
-    Do(func(data map[string]interface{})
-        (map[string]interface{}, error) {
-        // Split name into first/last
-        parts := strings.Split(data["name"], " ")
-        data["first_name"] = parts[0]
-        data["last_name"] = parts[1]
-        data["_v"] = 2
-        return data, nil
-    })
+// Type-safe migration function
+func migrateUser(old UserV0) (UserV2, error) {
+    parts := strings.Fields(old.Name)
+    return UserV2{
+        V:         2,
+        FirstName: parts[0],
+        LastName:  strings.Join(parts[1:], " "),
+        Email:     old.Email,
+    }, nil
+}
+
+// Register with zero boilerplate
+smarterbase.WithTypeSafe(
+    smarterbase.Migrate("UserV2").From(0).To(2),
+    migrateUser,
+)
 
 // Old data migrates automatically
 var user UserV2
-user.V = 2  // Set expected version
+user.V = 2
 store.GetJSON(ctx, "users/123", &user)</code></pre>
                             </div>
                         </div>
