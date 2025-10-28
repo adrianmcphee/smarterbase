@@ -90,6 +90,95 @@ Infrastructure (S3, GCS, Filesystem, MinIO)
 - Comprehensive error handling with sentinel errors (errors.go)
 - Add observability (metrics, logging) to all operations
 
+### Type Safety: ALWAYS Prefer Concrete Types
+
+**CRITICAL RULE: Avoid `map[string]interface{}` in application code**
+
+Use concrete, typed structs instead of untyped maps. This provides:
+- ✅ Compile-time error detection (catch bugs before runtime)
+- ✅ IDE autocomplete and refactoring support
+- ✅ Self-documenting code with clear structure
+- ✅ Easy unit testing without JSON marshaling
+
+**❌ BAD: Brittle, runtime panics possible**
+```go
+func processUser(data map[string]interface{}) error {
+    name := data["name"].(string)  // Runtime panic if name is missing or wrong type!
+    email := data["email"].(string)
+    age := data["age"].(int)       // Runtime panic if age is float64!
+    return updateUser(name, email, age)
+}
+```
+
+**✅ GOOD: Type-safe, compiler-verified**
+```go
+type User struct {
+    Name  string `json:"name"`
+    Email string `json:"email"`
+    Age   int    `json:"age"`
+}
+
+func processUser(user User) error {
+    // Compiler ensures all fields exist and have correct types
+    return updateUser(user.Name, user.Email, user.Age)
+}
+```
+
+**Migration-Specific Guidance:**
+
+When writing schema migrations, define concrete types for each version:
+
+**❌ BAD: map[string]interface{} migrations (brittle)**
+```go
+smarterbase.Migrate("User").From(0).To(1).Do(func(data map[string]interface{}) (map[string]interface{}, error) {
+    parts := strings.Split(data["name"].(string), " ")  // Panics if "name" missing!
+    data["first_name"] = parts[0]
+    data["last_name"] = parts[1]
+    return data, nil
+})
+```
+
+**✅ GOOD: Type-safe migrations with WithTypeSafe()**
+```go
+type UserV0 struct {
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+
+type UserV1 struct {
+    V         int    `json:"_v"`
+    FirstName string `json:"first_name"`
+    LastName  string `json:"last_name"`
+    Email     string `json:"email"`
+}
+
+func migrateUserV0ToV1(old UserV0) (UserV1, error) {
+    parts := strings.Fields(old.Name)
+    return UserV1{
+        V:         1,
+        FirstName: parts[0],
+        LastName:  strings.Join(parts[1:], " "),
+        Email:     old.Email,
+    }, nil
+}
+
+// Register with zero boilerplate
+smarterbase.WithTypeSafe(
+    smarterbase.Migrate("User").From(0).To(1),
+    migrateUserV0ToV1,
+)
+```
+
+**When `interface{}` is acceptable:**
+- Backend interface methods (Get/Put abstraction)
+- Generic utility functions that must work with any type
+- JSON marshaling layer (internal to library)
+
+**In these rare cases:**
+- Document WHY interface{} is necessary
+- Keep the untyped layer as thin as possible
+- Provide type-safe wrappers for users
+
 ### Testing Requirements
 - Write tests for all new features
 - Use table-driven tests for multiple scenarios
