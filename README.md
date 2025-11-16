@@ -298,6 +298,69 @@ for _, key := range keys {
 
 **See [ADR-0006](./docs/adr/0006-collection-api.md) for full rationale and usage examples.**
 
+### New: Auto-Indexing & Cascade Deletes ✨
+
+**ADR-0008** introduces ergonomic improvements that eliminate 97% of indexing boilerplate:
+
+#### Auto-Indexing with Struct Tags
+
+Define indexes declaratively on your domain models using struct tags:
+
+```go
+// Define indexes directly on your model
+type User struct {
+    ID             string `json:"id"`
+    Email          string `json:"email" sb:"index,unique"`
+    PlatformUserID string `json:"platform_user_id" sb:"index,unique"`
+    ReferralCode   string `json:"referral_code,omitempty" sb:"index,unique,optional"`
+}
+
+type Session struct {
+    Token  string `json:"token" sb:"index,unique"`
+    UserID string `json:"user_id" sb:"index,multi"` // 1:N relationship
+}
+
+// Auto-register all indexes from struct tags
+smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "users", &User{})
+smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "sessions", &Session{})
+```
+
+**Eliminates 570-760 lines** of manual `RegisterIndex()` boilerplate (97% reduction).
+
+#### Declarative Cascade Deletes
+
+Register cascade relationships once, execute automatically:
+
+```go
+// Create cascade-aware index manager
+im := smarterbase.NewCascadeIndexManager(base, indexer, redisIndexer)
+
+// Register cascade relationships declaratively
+im.RegisterCascadeChain("properties", []smarterbase.CascadeSpec{
+    {ChildEntityType: "areas", ForeignKeyField: "property_id", DeleteFunc: s.DeleteArea},
+})
+
+im.RegisterCascadeChain("areas", []smarterbase.CascadeSpec{
+    {ChildEntityType: "photos", ForeignKeyField: "area_id", DeleteFunc: s.DeletePhoto},
+    {ChildEntityType: "voicenotes", ForeignKeyField: "area_id", DeleteFunc: s.DeleteVoiceNote},
+})
+
+// Delete becomes one line - cascades automatically
+func (s *Store) DeleteProperty(ctx context.Context, propertyID string) error {
+    return s.im.DeleteWithCascade(ctx, "properties", s.propertyKey(propertyID), propertyID)
+}
+```
+
+**Features:**
+- Uses Redis multi-indexes for O(1) child lookups when available
+- Falls back to full scan if Redis unavailable (graceful degradation)
+- Recursive - children cascade to their own children automatically
+- Transaction-like - fails entire operation if any delete fails
+
+**Eliminates ~100 lines** of manual cascade loops (90% reduction).
+
+**See [ADR-0008](./docs/adr/0008-ergonomic-indexing-and-cascades.md) for full documentation and examples.**
+
 ---
 
 ## ⚠️ Critical Gotchas (Read This First!)
