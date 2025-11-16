@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/adrianmcphee/smarterbase"
+	"github.com/adrianmcphee/smarterbase/v2"
 	"github.com/redis/go-redis/v9"
 )
 

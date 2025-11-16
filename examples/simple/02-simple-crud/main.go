@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/adrianmcphee/smarterbase/simple"
+	"github.com/adrianmcphee/smarterbase/v2/simple"
 )
 
 type Task struct {

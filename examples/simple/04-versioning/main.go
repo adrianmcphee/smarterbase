@@ -7,7 +7,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/adrianmcphee/smarterbase/simple"
+	"github.com/adrianmcphee/smarterbase/v2/simple"
 )
 
 // UserV0 - Original schema (no version field)

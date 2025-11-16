@@ -9,7 +9,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/adrianmcphee/smarterbase"
+	"github.com/adrianmcphee/smarterbase/v2"
 )
 
 // Event represents an application event

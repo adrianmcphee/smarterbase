@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/adrianmcphee/smarterbase"
+	"github.com/adrianmcphee/smarterbase/v2"
 )
 
 type testItem struct {

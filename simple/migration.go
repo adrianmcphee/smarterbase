@@ -1,6 +1,6 @@
 package simple
 
-import "github.com/adrianmcphee/smarterbase"
+import "github.com/adrianmcphee/smarterbase/v2"
 
 // Migrate registers schema migrations that work automatically with Simple API.
 // Migrations apply lazily when reading data via Collection.Get(), Collection.All(), etc.

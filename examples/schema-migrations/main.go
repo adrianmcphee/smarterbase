@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adrianmcphee/smarterbase"
+	"github.com/adrianmcphee/smarterbase/v2"
 )
 
 // Version 0: Original schema (no version field)

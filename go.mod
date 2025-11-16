@@ -1,4 +1,4 @@
-module github.com/adrianmcphee/smarterbase
+module github.com/adrianmcphee/smarterbase/v2
 
 go 1.25.2
 

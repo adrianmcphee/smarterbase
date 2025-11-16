@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/adrianmcphee/smarterbase/simple"
+	"github.com/adrianmcphee/smarterbase/v2/simple"
 )
 
 // User demonstrates struct tags for indexing

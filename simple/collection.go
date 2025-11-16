@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adrianmcphee/smarterbase"
+	"github.com/adrianmcphee/smarterbase/v2"
 )
 
 // Collection provides type-safe CRUD operations for a specific entity type.
