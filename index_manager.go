@@ -6,17 +6,15 @@ import (
 	"fmt"
 )
 
-// IndexManager coordinates updates across all index types (file-based, Redis, global)
+// IndexManager coordinates updates across Redis indexes
 // This provides a single point of coordination to prevent forgotten index updates.
 //
 // Benefits:
 // - Automatic updates across all configured indexes
 // - Consistent error handling and logging
-// - Graceful degradation if Redis is unavailable
 // - Reduces boilerplate in domain stores
 type IndexManager struct {
 	store        *Store
-	fileIndexer  *Indexer
 	redisIndexer *RedisIndexer
 	logger       Logger
 	metrics      Metrics
@@ -29,12 +27,6 @@ func NewIndexManager(store *Store) *IndexManager {
 		logger:  store.logger,
 		metrics: store.metrics,
 	}
-}
-
-// WithFileIndexer adds file-based indexing
-func (im *IndexManager) WithFileIndexer(indexer *Indexer) *IndexManager {
-	im.fileIndexer = indexer
-	return im
 }
 
 // WithRedisIndexer adds Redis-based indexing
@@ -79,10 +71,10 @@ func (im *IndexManager) Create(ctx context.Context, key string, data interface{}
 		return fmt.Errorf("failed to save data: %w", err)
 	}
 
-	// Update file-based indexes (best-effort)
-	if im.fileIndexer != nil {
-		if err := im.fileIndexer.UpdateIndexes(ctx, key, bytes); err != nil {
-			im.logger.Warn("file index update failed",
+	// Update Redis indexes
+	if im.redisIndexer != nil {
+		if err := im.redisIndexer.UpdateIndexes(ctx, key, bytes); err != nil {
+			im.logger.Warn("redis index update failed",
 				"key", key,
 				"error", err,
 			)
@@ -90,17 +82,6 @@ func (im *IndexManager) Create(ctx context.Context, key string, data interface{}
 			// Continue - don't fail the operation
 		} else {
 			im.metrics.Increment(MetricIndexUpdate)
-		}
-	}
-
-	// Update Redis indexes (best-effort)
-	if im.redisIndexer != nil {
-		if err := im.redisIndexer.UpdateIndexes(ctx, key, bytes); err != nil {
-			im.logger.Warn("redis index update failed",
-				"key", key,
-				"error", err,
-			)
-			// Continue - graceful degradation
 		}
 	}
 
@@ -141,24 +122,14 @@ func (im *IndexManager) Update(ctx context.Context, key string, newData interfac
 		return fmt.Errorf("failed to save data: %w", err)
 	}
 
-	// Update file-based indexes (best-effort)
-	if im.fileIndexer != nil {
-		if err := im.fileIndexer.UpdateIndexes(ctx, key, newBytes); err != nil {
-			im.logger.Warn("file index update failed",
-				"key", key,
-				"error", err,
-			)
-			im.metrics.Increment(MetricIndexErrors)
-		}
-	}
-
-	// Update Redis indexes (best-effort - replace old with new)
+	// Update Redis indexes (replace old with new)
 	if im.redisIndexer != nil {
 		if err := im.redisIndexer.ReplaceIndexes(ctx, key, oldBytes, newBytes); err != nil {
 			im.logger.Warn("redis index replace failed",
 				"key", key,
 				"error", err,
 			)
+			im.metrics.Increment(MetricIndexErrors)
 		}
 	}
 
@@ -199,9 +170,6 @@ func (im *IndexManager) Delete(ctx context.Context, key string) error {
 		return err
 	}
 
-	// Note: File-based indexes are typically cleaned up asynchronously
-	// via index repair jobs, not on every delete
-
 	return nil
 }
 
@@ -219,7 +187,6 @@ func (im *IndexManager) Exists(ctx context.Context, key string) (bool, error) {
 //
 //	// In store initialization:
 //	indexManager := smarterbase.NewIndexManager(store).
-//	    WithFileIndexer(fileIndexer).
 //	    WithRedisIndexer(redisIndexer)
 //
 //	// In CRUD operations:

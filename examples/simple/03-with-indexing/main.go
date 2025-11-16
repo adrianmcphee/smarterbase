@@ -14,8 +14,8 @@ import (
 // User demonstrates struct tags for indexing
 type User struct {
 	ID    string `json:"id" sb:"id"`
-	Email string `json:"email" sb:"index,unique"` // Unique index on email
-	Role  string `json:"role" sb:"index"`         // Multi-value index on role
+	Email string `json:"email" sb:"index"` // Index on email
+	Role  string `json:"role" sb:"index"`  // Index on role
 	Name  string `json:"name"`
 	Age   int    `json:"age"`
 }
@@ -44,9 +44,9 @@ func main() {
 	users := simple.NewCollection[User](db)
 
 	fmt.Println("=== SETUP ===")
-	fmt.Println("Indexes auto-registered:")
-	fmt.Println("- users-by-email (unique)")
-	fmt.Println("- users-by-role (multi-value)")
+	fmt.Println("Indexes auto-registered in Redis:")
+	fmt.Println("- users-by-email")
+	fmt.Println("- users-by-role")
 
 	// CREATE - Seed some test data
 	fmt.Println("\n=== CREATE USERS ===")
@@ -66,8 +66,8 @@ func main() {
 		fmt.Printf("Created: %s (%s) - %s\n", created.Name, created.Email, created.Role)
 	}
 
-	// FIND BY UNIQUE INDEX
-	fmt.Println("\n=== FIND BY EMAIL (Unique Index) ===")
+	// FIND BY EMAIL INDEX
+	fmt.Println("\n=== FIND BY EMAIL (Index) ===")
 
 	alice, err := users.FindOne(ctx, "email", "alice@example.com")
 	if err != nil {
@@ -75,8 +75,8 @@ func main() {
 	}
 	fmt.Printf("Found: %s (ID: %s)\n", alice.Name, alice.ID)
 
-	// FIND BY MULTI-VALUE INDEX
-	fmt.Println("\n=== FIND BY ROLE (Multi-Value Index) ===")
+	// FIND BY ROLE INDEX
+	fmt.Println("\n=== FIND BY ROLE (Index) ===")
 
 	admins, err := users.Find(ctx, "role", "admin")
 	if err != nil {

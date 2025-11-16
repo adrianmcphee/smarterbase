@@ -16,23 +16,16 @@ This boilerplate represents a **"framework tax"** of 670-860 lines (0.8-1.0% of 
 
 ```go
 // Current approach: 17 lines per index × 38 indexes = 646 lines
-func registerUserIndexes(idx *smarterbase.Indexer) {
-    idx.RegisterIndex(&smarterbase.IndexSpec{
+func registerUserIndexes(redisIndexer *smarterbase.RedisIndexer) {
+    redisIndexer.RegisterIndex(&smarterbase.IndexSpec{
         Name: "users-by-email",
-        KeyFunc: func(data interface{}) (string, error) {
+        EntityType: "users",
+        ExtractFunc: func(data interface{}) (string, error) {
             u := data.(*user.User)
             if u.Email == "" {
                 return "", fmt.Errorf("user has no email")
             }
             return u.Email, nil
-        },
-        ExtractFunc: func(data []byte) (interface{}, error) {
-            var u user.User
-            err := json.Unmarshal(data, &u)
-            return &u, err
-        },
-        IndexKey: func(email string) string {
-            return fmt.Sprintf("indexes/users-by-email/%s.json", email)
         },
     })
     // ... repeat 37 more times
@@ -91,32 +84,31 @@ Both features are:
 // Domain model with index tags
 type User struct {
     ID             string `json:"id"`
-    Email          string `json:"email" sb:"index,unique,optional"`
-    PlatformUserID string `json:"platform_user_id" sb:"index,unique"`
-    ReferralCode   string `json:"referral_code" sb:"index,unique"`
+    Email          string `json:"email" sb:"index,optional"`
+    PlatformUserID string `json:"platform_user_id" sb:"index"`
+    ReferralCode   string `json:"referral_code" sb:"index"`
 }
 
 type Session struct {
-    Token  string `json:"token" sb:"index,unique"`
-    UserID string `json:"user_id" sb:"index,multi"` // 1:N relationship
+    Token  string `json:"token" sb:"index"`
+    UserID string `json:"user_id" sb:"index"` // 1:N relationship
 }
 
-// Auto-register all indexes from tags
-smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "users", &User{})
-smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "sessions", &Session{})
+// Auto-register all indexes from tags (Redis required)
+smarterbase.AutoRegisterIndexes(redisIndexer, "users", &User{})
+smarterbase.AutoRegisterIndexes(redisIndexer, "sessions", &Session{})
 ```
 
 **Supported Tag Syntax:**
-- `sb:"index,unique"` - Unique file-based index (1:1 lookups)
-- `sb:"index,multi"` - Multi-value Redis index (1:N relationships)
-- `sb:"index,unique,optional"` - Allow empty values
-- `sb:"index,unique,name:custom-name"` - Custom index name
+- `sb:"index"` - Redis index
+- `sb:"index,optional"` - Allow empty values
+- `sb:"index,name:custom-name"` - Custom index name
 
 **Implementation:**
 - Uses reflection to parse struct tags at initialization
 - Auto-generates sensible index names from entity type + field name
-- Registers with existing Indexer/RedisIndexer (no new abstractions)
-- Falls back gracefully if Redis unavailable (multi-indexes skipped)
+- Registers with RedisIndexer (no new abstractions)
+- Redis is required for indexing
 
 **Code Reduction:** 570-760 lines → ~20 struct tags
 
@@ -125,8 +117,8 @@ smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "sessions", &Session{})
 **API Design:**
 
 ```go
-// Create cascade-aware index manager
-im := smarterbase.NewCascadeIndexManager(base, indexer, redisIndexer)
+// Create cascade-aware index manager (Redis required)
+im := smarterbase.NewCascadeIndexManager(base, redisIndexer)
 
 // Register cascade relationships declaratively
 im.RegisterCascadeChain("properties", []smarterbase.CascadeSpec{
@@ -146,8 +138,7 @@ func (s *Store) DeleteProperty(ctx context.Context, propertyID string) error {
 
 **Implementation:**
 - `CascadeIndexManager` wraps existing `IndexManager` (composition)
-- Uses Redis multi-indexes for O(1) child lookups when available
-- Falls back to full scan if Redis unavailable (graceful degradation)
+- Uses Redis indexes for O(1) child lookups (Redis required)
 - Recursive - children cascade to their own children automatically
 - Transaction-like - fails entire operation if any delete fails
 - No rollback (filesystem doesn't support it) but atomic failure
@@ -240,7 +231,6 @@ Don't add ergonomic features - boilerplate is the cost of flexibility.
 7. **Incremental adoption** - Migrate one store at a time
 8. **Production validated** - Code tested in real 81K-line application
 9. **Maintains Smarterbase philosophy:**
-   - Still gracefully degrades (Redis optional)
    - Still explicit (opt-in features)
    - Still flexible (can mix with manual registration)
    - Still simple (no complex abstractions)
@@ -273,18 +263,17 @@ Don't add ergonomic features - boilerplate is the cost of flexibility.
 
 1. **`auto_indexing.go`** (~180 lines)
    - `ParseIndexTag(tag string) (*IndexTag, bool)`
-   - `AutoRegisterIndexes(fileIndexer, redisIndexer, entityType, example)`
-   - `registerUniqueIndex()` helper
-   - `registerMultiIndex()` helper
+   - `AutoRegisterIndexes(redisIndexer, entityType, example)`
+   - `registerIndex()` helper
 
 2. **`cascades.go`** (~230 lines)
    - `type CascadeSpec struct`
    - `type CascadeManager struct`
    - `type CascadeIndexManager struct` (wraps IndexManager)
-   - `NewCascadeIndexManager()`
+   - `NewCascadeIndexManager(base, redisIndexer)`
    - `RegisterCascadeChain()`
    - `DeleteWithCascade()`
-   - `ExecuteCascadeDelete()` with Redis optimization
+   - `ExecuteCascadeDelete()` with Redis indexes
 
 3. **Documentation**
    - Update README.md with examples
@@ -294,12 +283,11 @@ Don't add ergonomic features - boilerplate is the cost of flexibility.
 ### Testing Requirements
 
 - ✅ Tag parsing (all syntax variations)
-- ✅ Auto-registration with unique/multi indexes
+- ✅ Auto-registration with Redis indexes
 - ✅ Optional field handling
 - ✅ Custom index names
 - ✅ Cascade delete 2-3 levels deep
-- ✅ Redis index optimization for cascades
-- ✅ Graceful fallback when Redis unavailable
+- ✅ Redis index usage for cascades
 - ✅ Transaction-like failure behavior
 - ✅ Circular cascade detection (error)
 - ✅ Mixed manual + auto registration

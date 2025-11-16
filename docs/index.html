@@ -181,7 +181,7 @@ import "github.com/adrianmcphee/smarterbase/simple"
 
 type User struct {
     ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index,unique"`
+    Email string `json:"email" sb:"index"`
     Role  string `json:"role" sb:"index"`
     Name  string `json:"name"`
 }
@@ -345,7 +345,7 @@ orderIDs, _ := redisIndexer.QueryMultiValueIndex(
                                 Fast O(1) Lookups via Redis
                             </h3>
                             <p class="text-base-content/80 mt-1">
-                                Multi-value indexes stored in Redis Sets. Query by any field with constant-time lookups.
+                                Indexes stored in Redis Sets. Query by any field with constant-time lookups. Redis is required for indexing.
                             </p>
                             <ul class="mt-4 list-inside list-disc">
                                 <li>O(1) index queries</li>
@@ -699,7 +699,7 @@ import (
 
 type User struct {
     ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index,unique"`
+    Email string `json:"email" sb:"index"`
     Name  string `json:"name"`
 }
 
@@ -735,22 +735,19 @@ func main() {
 
 type User struct {
     ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index,unique"`
-    Role  string `json:"role" sb:"index,multi"`
+    Email string `json:"email" sb:"index"`
+    Role  string `json:"role" sb:"index"`
 }
 
 backend := smarterbase.NewFilesystemBackend("./data")
 store := smarterbase.NewStore(backend)
-indexer := smarterbase.NewIndexer(store)
 redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 
 // Auto-register all indexes from struct tags
-smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "users", &User{})
+smarterbase.AutoRegisterIndexes(redisIndexer, "users", &User{})
 
 // That's it! Indexes are ready to use
-indexManager := smarterbase.NewIndexManager(store).
-    WithFileIndexer(indexer).
-    WithRedisIndexer(redisIndexer)
+indexManager := smarterbase.NewIndexManager(store, redisIndexer)
 
 user := &User{ID: smarterbase.NewID(), Email: "alice@example.com"}
 indexManager.Create(ctx, "users/"+user.ID, user)</code></pre>
@@ -766,7 +763,7 @@ indexManager.Create(ctx, "users/"+user.ID, user)</code></pre>
                             <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11: Declarative Cascade Deletes
 // Register parent-child relationships, delete recursively with one call
 
-cascadeIM := smarterbase.NewCascadeIndexManager(store, indexer, redisIndexer)
+cascadeIM := smarterbase.NewCascadeIndexManager(store, redisIndexer)
 
 // Register cascade chain: property → areas → photos
 cascadeIM.RegisterCascadeChain("properties", []smarterbase.CascadeSpec{

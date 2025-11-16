@@ -173,11 +173,9 @@ type CascadeIndexManager struct {
 // NewCascadeIndexManager creates an IndexManager with cascade support
 func NewCascadeIndexManager(
 	base *Store,
-	fileIndexer *Indexer,
 	redisIndexer *RedisIndexer,
 ) *CascadeIndexManager {
 	im := NewIndexManager(base).
-		WithFileIndexer(fileIndexer).
 		WithRedisIndexer(redisIndexer)
 
 	return &CascadeIndexManager{
@@ -212,8 +210,8 @@ func (cim *CascadeIndexManager) DeleteWithCascade(
 //	    im *CascadeIndexManager
 //	}
 //
-//	func NewPropertyStore(base, indexer, redisIndexer) *PropertyStore {
-//	    im := NewCascadeIndexManager(base, indexer, redisIndexer)
+//	func NewPropertyStore(base, redisIndexer) *PropertyStore {
+//	    im := NewCascadeIndexManager(base, redisIndexer)
 //
 //	    s := &PropertyStore{im: im}
 //

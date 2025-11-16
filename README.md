@@ -113,7 +113,7 @@ import "github.com/adrianmcphee/smarterbase/simple"
 
 type User struct {
     ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index,unique"`
+    Email string `json:"email" sb:"index"`
     Role  string `json:"role" sb:"index"`
 }
 
@@ -310,19 +310,19 @@ Define indexes declaratively on your domain models using struct tags:
 // Define indexes directly on your model
 type User struct {
     ID             string `json:"id"`
-    Email          string `json:"email" sb:"index,unique"`
-    PlatformUserID string `json:"platform_user_id" sb:"index,unique"`
-    ReferralCode   string `json:"referral_code,omitempty" sb:"index,unique,optional"`
+    Email          string `json:"email" sb:"index"`
+    PlatformUserID string `json:"platform_user_id" sb:"index"`
+    ReferralCode   string `json:"referral_code,omitempty" sb:"index,optional"`
 }
 
 type Session struct {
-    Token  string `json:"token" sb:"index,unique"`
-    UserID string `json:"user_id" sb:"index,multi"` // 1:N relationship
+    Token  string `json:"token" sb:"index"`
+    UserID string `json:"user_id" sb:"index"` // 1:N relationship
 }
 
 // Auto-register all indexes from struct tags
-smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "users", &User{})
-smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "sessions", &Session{})
+smarterbase.AutoRegisterIndexes(redisIndexer, "users", &User{})
+smarterbase.AutoRegisterIndexes(redisIndexer, "sessions", &Session{})
 ```
 
 **Eliminates 570-760 lines** of manual `RegisterIndex()` boilerplate (97% reduction).
@@ -333,7 +333,7 @@ Register cascade relationships once, execute automatically:
 
 ```go
 // Create cascade-aware index manager
-im := smarterbase.NewCascadeIndexManager(base, indexer, redisIndexer)
+im := smarterbase.NewCascadeIndexManager(base, redisIndexer)
 
 // Register cascade relationships declaratively
 im.RegisterCascadeChain("properties", []smarterbase.CascadeSpec{
@@ -352,8 +352,7 @@ func (s *Store) DeleteProperty(ctx context.Context, propertyID string) error {
 ```
 
 **Features:**
-- Uses Redis multi-indexes for O(1) child lookups when available
-- Falls back to full scan if Redis unavailable (graceful degradation)
+- Uses Redis indexes for O(1) child lookups
 - Recursive - children cascade to their own children automatically
 - Transaction-like - fails entire operation if any delete fails
 
@@ -790,28 +789,21 @@ store := smarterbase.NewStore(encryptedBackend)
 
 ## Indexing
 
-### File-Based Indexes (1:1)
+### Redis Indexes
 
-For unique mappings like email → user ID:
-
-```go
-indexer := smarterbase.NewIndexer(store)
-
-indexer.RegisterIndex(&smarterbase.IndexSpec{
-    Name: "users-by-email",
-    KeyFunc: func(data interface{}) (string, error) {
-        return data.(*User).Email, nil
-    },
-})
-```
-
-### Redis Indexes (1:N)
-
-For queries like "all orders for user X":
+For all queries (both 1:1 and 1:N relationships):
 
 ```go
 redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 
+// Register index for email → user (1:1)
+redisIndexer.RegisterMultiValueIndex("users", "email", func(data []byte) (string, string, error) {
+    var user User
+    json.Unmarshal(data, &user)
+    return user.ID, user.Email, nil
+})
+
+// Register index for user_id → orders (1:N)
 redisIndexer.RegisterMultiValueIndex("orders", "user_id", func(data []byte) (string, string, error) {
     var order Order
     json.Unmarshal(data, &order)

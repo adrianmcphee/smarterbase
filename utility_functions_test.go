@@ -108,44 +108,44 @@ func TestIndexManagerWithRedisIndexer(t *testing.T) {
 	}
 }
 
-// TestSimpleIndexSpec tests creating a simple index spec
-func TestSimpleIndexSpec(t *testing.T) {
-	spec := SimpleIndexSpec("users-by-email", "idx/users/email/", func(data interface{}) string {
-		if m, ok := data.(map[string]interface{}); ok {
-			if email, ok := m["email"].(string); ok {
-				return email
-			}
-		}
-		return ""
-	})
+// TestMultiIndexSpec tests creating a multi-index spec for Redis
+func TestMultiIndexSpec(t *testing.T) {
+	// Create a multi-index spec for Redis indexing
+	spec := &MultiIndexSpec{
+		Name:        "users-by-email",
+		EntityType:  "users",
+		ExtractFunc: ExtractJSONField("email"),
+	}
 
 	if spec.Name != "users-by-email" {
 		t.Errorf("expected name 'users-by-email', got '%s'", spec.Name)
 	}
 
-	if spec.KeyFunc == nil {
-		t.Error("expected KeyFunc to be set")
+	if spec.EntityType != "users" {
+		t.Errorf("expected entity type 'users', got '%s'", spec.EntityType)
 	}
 
 	if spec.ExtractFunc == nil {
 		t.Error("expected ExtractFunc to be set")
 	}
 
-	if spec.IndexKey == nil {
-		t.Error("expected IndexKey to be set")
-	}
+	// Test ExtractFunc
+	testData := []byte(`{"email": "test@example.com"}`)
 
-	// Test KeyFunc
-	testData := map[string]interface{}{
-		"email": "test@example.com",
-	}
-
-	key, err := spec.KeyFunc(testData)
+	entries, err := spec.ExtractFunc("users/user-123.json", testData)
 	if err != nil {
-		t.Fatalf("KeyFunc failed: %v", err)
+		t.Fatalf("ExtractFunc failed: %v", err)
 	}
 
-	if key != "test@example.com" {
-		t.Errorf("expected key 'test@example.com', got '%s'", key)
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 entry, got %d", len(entries))
+	}
+
+	if entries[0].IndexName != "email" {
+		t.Errorf("expected index name 'email', got '%s'", entries[0].IndexName)
+	}
+
+	if entries[0].IndexValue != "test@example.com" {
+		t.Errorf("expected index value 'test@example.com', got '%s'", entries[0].IndexValue)
 	}
 }

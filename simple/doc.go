@@ -17,7 +17,7 @@
 //
 //	type User struct {
 //	    ID    string `json:"id" sb:"id"`
-//	    Email string `json:"email" sb:"index,unique"`
+//	    Email string `json:"email" sb:"index"`
 //	    Name  string `json:"name"`
 //	}
 //
@@ -35,14 +35,13 @@
 // The Simple API uses struct tags to configure behavior:
 //
 //   - sb:"id" - Marks the ID field (defaults to field named "ID")
-//   - sb:"index" - Creates a queryable index on this field
-//   - sb:"index,unique" - Creates a unique index
+//   - sb:"index" - Creates a queryable Redis index on this field
 //
 // Example:
 //
 //	type Product struct {
 //	    ID       string  `json:"id" sb:"id"`
-//	    SKU      string  `json:"sku" sb:"index,unique"`
+//	    SKU      string  `json:"sku" sb:"index"`
 //	    Category string  `json:"category" sb:"index"`
 //	    Name     string  `json:"name"`
 //	    Price    float64 `json:"price"`
@@ -54,7 +53,7 @@
 //
 //   - DATA_PATH: Filesystem backend path (default: "./data")
 //   - AWS_BUCKET: S3 bucket name (enables S3 backend - not yet implemented)
-//   - REDIS_ADDR: Redis address (default: "localhost:6379")
+//   - REDIS_ADDR: Redis address (default: "localhost:6379") - REQUIRED for indexing
 //   - REDIS_PASSWORD: Redis password (optional)
 //   - REDIS_DB: Redis database number (default: 0)
 //

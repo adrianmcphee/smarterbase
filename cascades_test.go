@@ -244,9 +244,8 @@ func TestCascadeManagerPrintCascadeTree(t *testing.T) {
 func TestCascadeIndexManager(t *testing.T) {
 	backend := NewFilesystemBackend(t.TempDir())
 	store := NewStore(backend)
-	indexer := NewIndexer(store)
 
-	cim := NewCascadeIndexManager(store, indexer, nil)
+	cim := NewCascadeIndexManager(store, nil)
 
 	// Register cascade
 	deleteCallCount := 0
@@ -269,9 +268,8 @@ func TestCascadeIndexManager(t *testing.T) {
 func TestCascadeIndexManagerRegisterChain(t *testing.T) {
 	backend := NewFilesystemBackend(t.TempDir())
 	store := NewStore(backend)
-	indexer := NewIndexer(store)
 
-	cim := NewCascadeIndexManager(store, indexer, nil)
+	cim := NewCascadeIndexManager(store, nil)
 
 	// Register chain
 	cim.RegisterCascadeChain("properties", []CascadeSpec{

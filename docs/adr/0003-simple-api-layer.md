@@ -37,13 +37,13 @@ store := smarterbase.NewStore(backend)
 redisClient := redis.NewClient(smarterbase.RedisOptions())
 redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 
-redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
+redisIndexer.RegisterIndex(&smarterbase.IndexSpec{
     Name:        "users-by-email",
     EntityType:  "users",
     ExtractFunc: smarterbase.ExtractJSONField("email"),
 })
 
-indexManager := smarterbase.NewIndexManager(store).WithRedisIndexer(redisIndexer)
+indexManager := smarterbase.NewIndexManager(store, redisIndexer)
 
 user := &User{ID: smarterbase.NewID(), Email: "alice@example.com"}
 key := fmt.Sprintf("users/%s.json", user.ID)
@@ -120,12 +120,12 @@ import "github.com/adrianmcphee/smarterbase/simple"
 
 type User struct {
     ID    string `sb:"id"`
-    Email string `sb:"index,unique"`
+    Email string `sb:"index"`
     Name  string
 }
 
 func main() {
-    db := simple.MustConnect()  // Auto-detects env
+    db := simple.MustConnect()  // Redis is required
     defer db.Close()
 
     users := simple.Collection[User](db, "users")
@@ -197,7 +197,7 @@ import "github.com/adrianmcphee/smarterbase/simple"
 
 type User struct {
     ID    string `sb:"id"`
-    Email string `sb:"index,unique"`
+    Email string `sb:"index"`
     Name  string
 }
 
@@ -284,10 +284,10 @@ func (c *Collection[T]) Atomic(ctx context.Context, id string, fn func(*T) error
 **Struct tag conventions:**
 ```go
 type User struct {
-    ID    string `sb:"id"`           // Primary key field
-    Email string `sb:"index,unique"` // Unique index
-    Role  string `sb:"index"`        // Multi-value index
-    Name  string                     // No index
+    ID    string `sb:"id"`    // Primary key field
+    Email string `sb:"index"` // Redis index
+    Role  string `sb:"index"` // Redis index
+    Name  string              // No index
 }
 ```
 
@@ -601,7 +601,7 @@ users, err := smarterbase.UnmarshalBatchResults[User](results)
 - Generic type-safe CRUD operations
 - Automatic ID generation (or use provided ID)
 - Immutable Create (returns new object, doesn't mutate input)
-- Struct tag parsing for indexes: `sb:"id"`, `sb:"index"`, `sb:"index,unique"`
+- Struct tag parsing for indexes: `sb:"id"`, `sb:"index"`
 - Auto-registration of Redis indexes from struct tags
 - Smart pluralization (User → Users, Person → people, City → Cities)
 - Operations:
@@ -638,11 +638,10 @@ users, err := smarterbase.UnmarshalBatchResults[User](results)
 - Demonstrates immutable Create pattern
 
 ✅ **03-with-indexing** (~130 lines)
-- Redis-based indexing
+- Redis-based indexing (required)
 - Find/FindOne operations
-- Unique and multi-value indexes
+- Redis indexes
 - Index updates on modify
-- Graceful degradation notes
 
 ### Key Design Decisions Made
 

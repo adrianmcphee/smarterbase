@@ -2,7 +2,6 @@ package smarterbase
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 )
 
@@ -131,32 +130,13 @@ func TestIndexManagerDeleteNonexistent(t *testing.T) {
 	}
 }
 
-func TestIndexManagerWithFileIndexer(t *testing.T) {
+func TestIndexManagerWithRedisIndexerBasic(t *testing.T) {
 	backend := NewFilesystemBackend(t.TempDir())
 	store := NewStore(backend)
 
-	// Create file indexer with a simple index
-	indexer := NewIndexer(store)
-	indexer.RegisterIndex(&IndexSpec{
-		Name: "status",
-		KeyFunc: func(data interface{}) (string, error) {
-			if entity, ok := data.(*testEntity); ok {
-				return entity.Status, nil
-			}
-			return "", nil
-		},
-		ExtractFunc: func(data []byte) (interface{}, error) {
-			var entity testEntity
-			err := json.Unmarshal(data, &entity)
-			return &entity, err
-		},
-		IndexKey: func(key string) string {
-			return "indexes/status/" + key + ".json"
-		},
-	})
-
-	// Create index manager with file indexer
-	im := NewIndexManager(store).WithFileIndexer(indexer)
+	// For a basic test without actual Redis, just verify index manager works
+	// without Redis indexer (nil is acceptable)
+	im := NewIndexManager(store)
 
 	ctx := context.Background()
 	entity := &testEntity{ID: "123", Name: "Test", Status: "active"}
@@ -166,8 +146,7 @@ func TestIndexManagerWithFileIndexer(t *testing.T) {
 		t.Fatalf("Create failed: %v", err)
 	}
 
-	// Note: We can't easily verify the index was updated without more complex setup,
-	// but we can verify no errors occurred and the data was stored
+	// Verify data was stored
 	var retrieved testEntity
 	err = im.Get(ctx, "entities/123.json", &retrieved)
 	if err != nil {

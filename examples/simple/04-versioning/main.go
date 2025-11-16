@@ -14,7 +14,7 @@ import (
 type UserV0 struct {
 	ID    string `json:"id" sb:"id"`
 	Name  string `json:"name"`
-	Email string `json:"email" sb:"index,unique"`
+	Email string `json:"email" sb:"index"`
 }
 
 // UserV2 - Evolved schema with version field
@@ -23,7 +23,7 @@ type UserV2 struct {
 	ID        string `json:"id" sb:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Email     string `json:"email" sb:"index,unique"`
+	Email     string `json:"email" sb:"index"`
 	Phone     string `json:"phone"`
 }
 

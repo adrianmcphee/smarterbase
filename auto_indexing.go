@@ -1,7 +1,6 @@
 package smarterbase
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -17,10 +16,11 @@ type IndexTag struct {
 
 // ParseIndexTag parses a struct tag for indexing configuration
 // Supported formats:
-//   - sb:"index:unique" or sb:"index,unique" - creates unique file-based index
-//   - sb:"index:multi" or sb:"index,multi" - creates Redis multi-index
-//   - sb:"index:unique,name:custom-name" - with custom name
-//   - sb:"index:unique,optional" or sb:"index,unique,optional" - allows empty values
+//   - sb:"index" or sb:"index,multi" - creates Redis multi-index
+//   - sb:"index,name:custom-name" - with custom name
+//   - sb:"index,optional" - allows empty values
+//
+// Note: "unique" indexes are no longer supported - use Redis multi-indexes only
 func ParseIndexTag(tag string) (*IndexTag, bool) {
 	if tag == "" {
 		return nil, false
@@ -33,16 +33,27 @@ func ParseIndexTag(tag string) (*IndexTag, bool) {
 
 	parts := strings.Split(tag, ",")
 
+	// Check for and reject "unique" tags early
+	for _, part := range parts {
+		if strings.TrimSpace(part) == "unique" {
+			return nil, false // Unique indexes no longer supported
+		}
+	}
+
 	// Find index type
 	var indexType string
 	for i, part := range parts {
 		part = strings.TrimSpace(part)
 		if strings.HasPrefix(part, "index:") {
-			indexType = strings.TrimPrefix(part, "index:")
+			extractedType := strings.TrimPrefix(part, "index:")
+			if extractedType == "unique" {
+				return nil, false // Reject unique
+			}
+			indexType = extractedType
 		} else if part == "index" && i+1 < len(parts) {
-			// Format: "index,unique"
+			// Format: "index,multi"
 			nextPart := strings.TrimSpace(parts[i+1])
-			if nextPart == "unique" || nextPart == "multi" {
+			if nextPart == "multi" {
 				indexType = nextPart
 			}
 		} else if i == 0 && part == "index" {
@@ -52,16 +63,7 @@ func ParseIndexTag(tag string) (*IndexTag, bool) {
 	}
 
 	if indexType == "" {
-		// Default to unique if "unique" keyword found
-		for _, part := range parts {
-			if strings.TrimSpace(part) == "unique" {
-				indexType = "unique"
-				break
-			}
-		}
-		if indexType == "" {
-			indexType = "multi" // default
-		}
+		indexType = "multi" // default
 	}
 
 	it := &IndexTag{
@@ -85,12 +87,11 @@ func ParseIndexTag(tag string) (*IndexTag, bool) {
 // Example usage:
 //
 //	type User struct {
-//	    Email      string `json:"email" sb:"index:unique"`
-//	    PlatformID string `json:"platform_id" sb:"index:unique"`
+//	    Email      string `json:"email" sb:"index"`
+//	    PlatformID string `json:"platform_id" sb:"index"`
 //	}
-//	AutoRegisterIndexes(indexer, redisIndexer, "users", &User{})
+//	AutoRegisterIndexes(redisIndexer, "users", &User{})
 func AutoRegisterIndexes(
-	fileIndexer *Indexer,
 	redisIndexer *RedisIndexer,
 	entityType string,
 	example interface{},
@@ -127,79 +128,20 @@ func AutoRegisterIndexes(
 			indexTag.Name = fmt.Sprintf("%s-by-%s", entityType, strings.ReplaceAll(jsonName, "_", "-"))
 		}
 
-		switch indexTag.Type {
-		case "unique":
-			if fileIndexer == nil {
-				return fmt.Errorf("file indexer required for unique index on %s.%s", t.Name(), field.Name)
-			}
-			err := registerUniqueIndex(fileIndexer, indexTag.Name, entityType, jsonName, field.Name, example, indexTag.Optional)
-			if err != nil {
-				return fmt.Errorf("failed to register unique index for %s.%s: %w", t.Name(), field.Name, err)
-			}
+		// Only support multi (Redis) indexes
+		if indexTag.Type != "multi" {
+			return fmt.Errorf("unsupported index type '%s' for %s.%s - only 'multi' (Redis) indexes are supported", indexTag.Type, t.Name(), field.Name)
+		}
 
-		case "multi":
-			if redisIndexer == nil {
-				// Silently skip if Redis not available (graceful degradation)
-				continue
-			}
-			err := registerMultiIndex(redisIndexer, indexTag.Name, entityType, jsonName)
-			if err != nil {
-				return fmt.Errorf("failed to register multi index for %s.%s: %w", t.Name(), field.Name, err)
-			}
+		if redisIndexer == nil {
+			return fmt.Errorf("Redis indexer required for index on %s.%s", t.Name(), field.Name)
+		}
 
-		default:
-			return fmt.Errorf("unknown index type '%s' for %s.%s", indexTag.Type, t.Name(), field.Name)
+		err := registerMultiIndex(redisIndexer, indexTag.Name, entityType, jsonName)
+		if err != nil {
+			return fmt.Errorf("failed to register multi index for %s.%s: %w", t.Name(), field.Name, err)
 		}
 	}
-
-	return nil
-}
-
-// registerUniqueIndex creates a file-based unique index
-func registerUniqueIndex(
-	indexer *Indexer,
-	indexName string,
-	entityType string,
-	jsonFieldName string,
-	structFieldName string,
-	example interface{},
-	optional bool,
-) error {
-	exampleType := reflect.TypeOf(example)
-	if exampleType.Kind() == reflect.Ptr {
-		exampleType = exampleType.Elem()
-	}
-
-	indexer.RegisterIndex(&IndexSpec{
-		Name: indexName,
-		KeyFunc: func(data interface{}) (string, error) {
-			v := reflect.ValueOf(data)
-			if v.Kind() == reflect.Ptr {
-				v = v.Elem()
-			}
-
-			field := v.FieldByName(structFieldName)
-			if !field.IsValid() {
-				return "", fmt.Errorf("field %s not found", structFieldName)
-			}
-
-			fieldValue := fmt.Sprintf("%v", field.Interface())
-			if fieldValue == "" && !optional {
-				return "", fmt.Errorf("%s has no %s", entityType, jsonFieldName)
-			}
-
-			return fieldValue, nil
-		},
-		ExtractFunc: func(data []byte) (interface{}, error) {
-			// Create new instance of the type
-			instance := reflect.New(exampleType).Interface()
-			err := json.Unmarshal(data, instance)
-			return instance, err
-		},
-		IndexKey: func(value string) string {
-			return fmt.Sprintf("indexes/%s/%s.json", indexName, value)
-		},
-	})
 
 	return nil
 }
@@ -223,7 +165,6 @@ func registerMultiIndex(
 type IndexConfig struct {
 	EntityType   string
 	KeyPrefix    string
-	FileIndexer  *Indexer
 	RedisIndexer *RedisIndexer
 }
 
@@ -231,7 +172,7 @@ type IndexConfig struct {
 // with manual index registration for complex cases
 func RegisterIndexesForType(cfg IndexConfig, example interface{}, manualIndexes func()) error {
 	// Auto-register from struct tags
-	if err := AutoRegisterIndexes(cfg.FileIndexer, cfg.RedisIndexer, cfg.EntityType, example); err != nil {
+	if err := AutoRegisterIndexes(cfg.RedisIndexer, cfg.EntityType, example); err != nil {
 		return err
 	}
 

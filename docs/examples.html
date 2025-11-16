@@ -209,7 +209,7 @@
                             </div>
 
                             <p class="text-base-content/80 mb-4">
-                                Complete authentication system with email lookups, role-based queries, and automatic Redis indexing.
+                                Complete authentication system with email lookups, role-based queries, and automatic Redis indexing (Redis required).
                                 Perfect starting point for learning SmarterBase.
                             </p>
 
@@ -401,7 +401,7 @@ err := smarterbase.WithAtomicUpdate(
                             </div>
 
                             <p class="text-sm text-base-content/70 mb-4">
-                                Eliminate 97% of index boilerplate with struct tags. Define indexes on your models, auto-register them.
+                                Eliminate 97% of index boilerplate with struct tags. Define indexes on your models, auto-register them. Redis required for all indexing.
                             </p>
 
                             <div class="flex flex-wrap gap-1 mb-4">
@@ -412,13 +412,13 @@ err := smarterbase.WithAtomicUpdate(
 
                             <div class="bg-base-200 rounded-box p-3 mb-4">
                                 <pre class="text-xs overflow-x-auto"><code>type User struct {
-  Email string `json:"email" sb:"index,unique"`
-  Role  string `json:"role" sb:"index,multi"`
+  Email string `json:"email" sb:"index"`
+  Role  string `json:"role" sb:"index"`
 }
 
 // Auto-register - that's it!
 smarterbase.AutoRegisterIndexes(
-  indexer, redis, "users", &User{}
+  redis, "users", &User{}
 )</code></pre>
                             </div>
 
@@ -450,7 +450,7 @@ smarterbase.AutoRegisterIndexes(
                             </div>
 
                             <p class="text-sm text-base-content/70 mb-4">
-                                Eliminate 90% of cascade boilerplate. Register relationships once, delete automatically with Redis-optimized lookups.
+                                Eliminate 90% of cascade boilerplate. Register relationships once, delete automatically with Redis-optimized lookups (Redis required).
                             </p>
 
                             <div class="flex flex-wrap gap-1 mb-4">
@@ -952,7 +952,7 @@ s.im.DeleteWithCascade(ctx, "properties", key, id)</code></pre>
 
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">2</div>
-                                <h3 class="text-lg font-medium">Start Redis (Optional for some examples)</h3>
+                                <h3 class="text-lg font-medium">Start Redis (Required for indexing)</h3>
                             </div>
                             <pre class="bg-base-200 rounded-box p-4 overflow-x-auto mb-6"><code>docker run -d -p 6379:6379 redis:7-alpine</code></pre>
 
@@ -970,7 +970,7 @@ go run main.go</code></pre>
                         <i class="fa-solid fa-circle-info"></i>
                         <div>
                             <div class="font-semibold">All examples run standalone</div>
-                            <div class="text-sm">No database setup required. Examples use filesystem backend by default.</div>
+                            <div class="text-sm">No database setup required. Examples use filesystem backend for storage. Redis is required for indexing features.</div>
                         </div>
                     </div>
                 </div>

@@ -113,18 +113,16 @@ etag, err := backend.PutIfMatch(ctx, key, data, expectedETag)
 
 ### 2. Manual Index Management → Automatic Coordination ✅
 
-**Problem:** Applications need indexes for fast lookups, but coordinating updates across multiple index types (file-based, Redis) is error-prone. Forgotten updates lead to index drift.
+**Problem:** Applications need indexes for fast lookups. Manual index management is error-prone and leads to index drift.
 
-**Solution:** `IndexManager` automatically updates all configured indexes on every Create/Update/Delete operation.
+**Solution:** `IndexManager` automatically updates Redis indexes on every Create/Update/Delete operation.
 
 ```go
-// ✅ All indexes updated atomically
-indexManager := NewIndexManager(store).
-    WithFileIndexer(fileIndexer).      // 1:1 mappings
-    WithRedisIndexer(redisIndexer)     // 1:N multi-value
+// ✅ Redis indexes updated atomically
+indexManager := NewIndexManager(store, redisIndexer)
 
 indexManager.Create(ctx, key, user)
-// Indexes updated automatically, gracefully degrades if Redis unavailable
+// Redis indexes updated automatically
 ```
 
 ---
@@ -204,24 +202,17 @@ All backends implement:
 
 ### Indexing System
 
-**1. File-Based Indexes (1:1 mappings)**
-- Unique indexes (email → user)
-- Stored as JSON files in backend
-- Automatic updates via `Indexer`
-- SimpleIndexSpec helper
-
-**2. Redis Multi-Value Indexes (1:N mappings)**
-- Non-unique indexes (user_id → [session1, session2, ...])
+**Redis Indexes**
+- Both unique and multi-value indexes (1:1 and 1:N mappings)
 - O(1) lookups via Redis Sets
 - SUNION for OR queries
 - TTL support for expiring indexes
 - ExtractJSONField / ExtractNestedJSONField helpers
 
-**3. Index Coordination**
-- `IndexManager` updates all index types
-- Graceful degradation if Redis unavailable
-- Best-effort updates with logging on failure
+**Index Coordination**
+- `IndexManager` updates Redis indexes automatically
 - ReplaceIndexes for atomic update operations
+- Redis is required for indexing
 
 ---
 
@@ -756,14 +747,13 @@ store := smarterbase.NewStoreWithObservability(backend, logger, metrics)
 
 ```go
 redisIndexer := smarterbase.NewRedisIndexer(redisClient)
-redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
+redisIndexer.RegisterIndex(&smarterbase.IndexSpec{
     Name:       "users-by-email",
     EntityType: "users",
     ExtractFunc: smarterbase.ExtractJSONField("email"),
 })
 
-indexManager := smarterbase.NewIndexManager(store).
-    WithRedisIndexer(redisIndexer)
+indexManager := smarterbase.NewIndexManager(store, redisIndexer)
 ```
 
 ### 4. Use in Application
@@ -890,6 +880,7 @@ SmarterBase provides **database-like functionality** on object storage at **15% 
 - ✅ No database operations overhead
 - ✅ Leverages existing S3 infrastructure
 - ✅ Excellent durability (11 9s) and availability (99.99%)
+- ❌ Redis is required for indexing
 - ❌ S3 base latency 50-100ms (add caching for hot data)
 - ❌ No complex relational queries (JOINs, aggregations)
 - ❌ Best-effort transactions (not true ACID)

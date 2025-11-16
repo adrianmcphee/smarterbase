@@ -18,7 +18,7 @@ import (
 //
 //	type User struct {
 //	    ID    string `json:"id" sb:"id"`
-//	    Email string `json:"email" sb:"index,unique"`
+//	    Email string `json:"email" sb:"index"`
 //	    Name  string `json:"name"`
 //	}
 //
@@ -33,10 +33,9 @@ type Collection[T any] struct {
 	modelInfo *ModelInfo
 }
 
-// IndexSpec describes an index on a field.
+// IndexSpec describes a Redis index on a field.
 type IndexSpec struct {
-	Field  string
-	Unique bool
+	Field string
 }
 
 // ModelInfo contains metadata about the model type.
@@ -348,8 +347,7 @@ func (c *Collection[T]) parseModelInfo() {
 			}
 
 			spec := IndexSpec{
-				Field:  jsonName,
-				Unique: contains(parts, "unique"),
+				Field: jsonName,
 			}
 			c.indexes[jsonName] = spec
 			c.modelInfo.Indexes[jsonName] = spec
@@ -364,13 +362,10 @@ func (c *Collection[T]) registerIndexes() {
 		return
 	}
 
-	for fieldName, spec := range c.indexes {
+	for fieldName := range c.indexes {
 		indexName := fmt.Sprintf("%s-by-%s", c.name, fieldName)
 
-		// Note: Both unique and multi-value indexes use MultiIndexSpec
-		// Uniqueness constraints are enforced at application level
-		_ = spec.Unique // Planned for future use
-
+		// All indexes are registered as multi-value indexes in Redis
 		c.db.redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
 			Name:        indexName,
 			EntityType:  c.name,

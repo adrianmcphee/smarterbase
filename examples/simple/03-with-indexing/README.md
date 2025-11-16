@@ -19,8 +19,8 @@ docker run -d -p 6379:6379 redis
 
 - Defines a User struct with indexed fields (email, role)
 - Creates multiple users with different roles
-- Queries by unique index (email)
-- Queries by multi-value index (role)
+- Queries by indexed field (email)
+- Queries by indexed field (role)
 - Updates a user and re-queries to see changes
 - Lists all users
 
@@ -38,9 +38,9 @@ REDIS_ADDR=redis.example.com:6379 go run main.go
 
 ```
 === SETUP ===
-Indexes auto-registered:
-- users-by-email (unique)
-- users-by-role (multi-value)
+Indexes auto-registered in Redis:
+- users-by-email
+- users-by-role
 
 === CREATE USERS ===
 Created: Alice (alice@example.com) - admin
@@ -48,10 +48,10 @@ Created: Bob (bob@example.com) - user
 Created: Charlie (charlie@example.com) - user
 Created: Diana (diana@example.com) - admin
 
-=== FIND BY EMAIL (Unique Index) ===
+=== FIND BY EMAIL (Index) ===
 Found: Alice (ID: user-abc123)
 
-=== FIND BY ROLE (Multi-Value Index) ===
+=== FIND BY ROLE (Index) ===
 Found 2 admins:
   - Alice (alice@example.com)
   - Diana (diana@example.com)
@@ -85,15 +85,14 @@ All test users deleted
 ```go
 type User struct {
     ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index,unique"` // Unique index
-    Role  string `json:"role" sb:"index"`         // Multi-value index
-    Name  string `json:"name"`                    // Not indexed
+    Email string `json:"email" sb:"index"` // Index on email
+    Role  string `json:"role" sb:"index"`  // Index on role
+    Name  string `json:"name"`             // Not indexed
 }
 ```
 
 - `sb:"id"` - Marks the ID field (auto-detected if field named "ID")
-- `sb:"index"` - Creates a queryable index
-- `sb:"index,unique"` - Creates a unique index (optimized for 1:1 lookups)
+- `sb:"index"` - Creates a queryable index in Redis
 
 ### Automatic Index Registration
 
@@ -107,32 +106,30 @@ No manual index registration needed!
 ### Query Operations
 
 ```go
-// FindOne - returns first match (useful for unique indexes)
+// FindOne - returns first match
 user, err := users.FindOne(ctx, "email", "alice@example.com")
 
-// Find - returns all matches (useful for multi-value indexes)
+// Find - returns all matches
 admins, err := users.Find(ctx, "role", "admin")
 ```
 
 ### Index Updates
 
-When you update an object, indexes are automatically updated:
+When you update an object, Redis indexes are automatically updated:
 
 ```go
 bob.Role = "admin"
 users.Update(ctx, bob)
-// Old index entry (role=user) removed
-// New index entry (role=admin) added
+// Redis index updated: old entry (role=user) removed, new entry (role=admin) added
 ```
 
-## Graceful Degradation
+## Redis Requirement
 
-If Redis is not available:
-- `Find()` and `FindOne()` return errors
-- Other operations (Get, Create, Update, Delete) work normally
-- Data is still persisted to the backend (filesystem/S3)
-
-This allows you to develop without Redis and add it later when needed.
+This example requires Redis to be running:
+- `Find()` and `FindOne()` queries use Redis indexes
+- Redis is checked on startup and the example exits if unavailable
+- All indexes are stored and managed in Redis
+- Data is persisted to the backend (filesystem/S3), indexes are in Redis
 
 ## Next Steps
 

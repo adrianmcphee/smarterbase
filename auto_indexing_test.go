@@ -5,25 +5,25 @@ import (
 	"testing"
 )
 
-// Test domain models (prefixed to avoid conflicts)
+// Test domain models (Redis-only indexes)
 type AutoIndexTestUser struct {
 	ID             string `json:"id"`
-	Email          string `json:"email" sb:"index,unique"`
-	PlatformUserID string `json:"platform_user_id" sb:"index:unique"`
-	ReferralCode   string `json:"referral_code,omitempty" sb:"index,unique,optional"`
-	Username       string `json:"username" sb:"index,unique,name:custom-username-index"`
+	Email          string `json:"email" sb:"index"`
+	PlatformUserID string `json:"platform_user_id" sb:"index"`
+	ReferralCode   string `json:"referral_code,omitempty" sb:"index,optional"`
+	Username       string `json:"username" sb:"index,name:custom-username-index"`
 }
 
 type AutoIndexTestSession struct {
 	ID     string `json:"id"`
-	Token  string `json:"token" sb:"index,unique"`
-	UserID string `json:"user_id" sb:"index,multi"`
+	Token  string `json:"token" sb:"index"`
+	UserID string `json:"user_id" sb:"index"`
 }
 
 type AutoIndexTestProduct struct {
 	ID       string `json:"id"`
-	SKU      string `json:"sku" sb:"index,unique"`
-	Category string `json:"category" sb:"index,multi"`
+	SKU      string `json:"sku" sb:"index"`
+	Category string `json:"category" sb:"index"`
 }
 
 func TestParseIndexTag(t *testing.T) {
@@ -34,18 +34,6 @@ func TestParseIndexTag(t *testing.T) {
 		wantOk   bool
 		optional bool
 	}{
-		{
-			name:     "unique with colon",
-			tag:      "index:unique",
-			wantType: "unique",
-			wantOk:   true,
-		},
-		{
-			name:     "unique with comma",
-			tag:      "index,unique",
-			wantType: "unique",
-			wantOk:   true,
-		},
 		{
 			name:     "multi with colon",
 			tag:      "index:multi",
@@ -59,17 +47,22 @@ func TestParseIndexTag(t *testing.T) {
 			wantOk:   true,
 		},
 		{
-			name:     "optional unique",
-			tag:      "index,unique,optional",
-			wantType: "unique",
-			wantOk:   true,
-			optional: true,
-		},
-		{
 			name:     "just index defaults to multi",
 			tag:      "index",
 			wantType: "multi",
 			wantOk:   true,
+		},
+		{
+			name:     "optional multi",
+			tag:      "index,optional",
+			wantType: "multi",
+			wantOk:   true,
+			optional: true,
+		},
+		{
+			name:   "unique tag is rejected",
+			tag:    "index,unique",
+			wantOk: false,
 		},
 		{
 			name:   "no index tag",
@@ -104,7 +97,7 @@ func TestParseIndexTag(t *testing.T) {
 }
 
 func TestParseIndexTagCustomName(t *testing.T) {
-	tag, ok := ParseIndexTag("index,unique,name:custom-index-name")
+	tag, ok := ParseIndexTag("index,name:custom-index-name")
 	if !ok {
 		t.Fatal("ParseIndexTag() failed")
 	}
@@ -117,17 +110,23 @@ func TestAutoRegisterIndexes(t *testing.T) {
 	ctx := context.Background()
 	backend := NewFilesystemBackend(t.TempDir())
 	store := NewStore(backend)
-	indexer := NewIndexer(store)
+
+	// Create Redis indexer
+	redis := setupTestRedis(t)
+	if redis == nil {
+		t.Skip("Redis not available")
+	}
+	redisIndexer := NewRedisIndexer(redis)
 
 	// Test auto-registration
-	err := AutoRegisterIndexes(indexer, nil, "users", &AutoIndexTestUser{})
+	err := AutoRegisterIndexes(redisIndexer, "users", &AutoIndexTestUser{})
 	if err != nil {
 		t.Fatalf("AutoRegisterIndexes() error = %v", err)
 	}
 
-	// Verify indexes were registered by checking specs
-	if len(indexer.specs) != 4 { // email, platform_user_id, referral_code, username
-		t.Errorf("Expected 4 indexes registered, got %d", len(indexer.specs))
+	// Verify indexes were registered
+	if len(redisIndexer.specs) != 4 { // email, platform_user_id, referral_code, username
+		t.Errorf("Expected 4 indexes registered, got %d", len(redisIndexer.specs))
 	}
 
 	// Verify specific index names
@@ -139,7 +138,7 @@ func TestAutoRegisterIndexes(t *testing.T) {
 	}
 
 	for _, name := range expectedIndexes {
-		if _, exists := indexer.specs[name]; !exists {
+		if _, exists := redisIndexer.specs[name]; !exists {
 			t.Errorf("Expected index %s to be registered", name)
 		}
 	}
@@ -156,27 +155,32 @@ func TestAutoRegisterIndexes(t *testing.T) {
 	userJSON, _ := store.MarshalObject(user)
 
 	// Update indexes
-	err = indexer.UpdateIndexes(ctx, userKey, userJSON)
+	err = redisIndexer.UpdateIndexes(ctx, userKey, userJSON)
 	if err != nil {
 		t.Fatalf("UpdateIndexes() error = %v", err)
 	}
 
 	// Verify email index was created
-	objectKey, err := indexer.QueryIndex(ctx, "users-by-email", "test@example.com")
+	keys, err := redisIndexer.Query(ctx, "users", "email", "test@example.com")
 	if err != nil {
 		t.Errorf("Failed to query email index: %v", err)
 	}
-	if objectKey != userKey {
-		t.Errorf("Email index returned wrong key: got %s, want %s", objectKey, userKey)
+	if len(keys) != 1 || keys[0] != userKey {
+		t.Errorf("Email index returned wrong keys: got %v, want [%s]", keys, userKey)
 	}
 }
 
 func TestAutoRegisterIndexesOptional(t *testing.T) {
 	backend := NewFilesystemBackend(t.TempDir())
 	store := NewStore(backend)
-	indexer := NewIndexer(store)
 
-	err := AutoRegisterIndexes(indexer, nil, "users", &AutoIndexTestUser{})
+	redis := setupTestRedis(t)
+	if redis == nil {
+		t.Skip("Redis not available")
+	}
+	redisIndexer := NewRedisIndexer(redis)
+
+	err := AutoRegisterIndexes(redisIndexer, "users", &AutoIndexTestUser{})
 	if err != nil {
 		t.Fatalf("AutoRegisterIndexes() error = %v", err)
 	}
@@ -193,80 +197,74 @@ func TestAutoRegisterIndexesOptional(t *testing.T) {
 	userJSON, _ := store.MarshalObject(user)
 
 	// This should not error even though referral code is empty
-	err = indexer.UpdateIndexes(context.Background(), userKey, userJSON)
+	err = redisIndexer.UpdateIndexes(context.Background(), userKey, userJSON)
 	if err != nil {
 		t.Errorf("UpdateIndexes() with optional empty field should not error: %v", err)
 	}
 }
 
-func TestAutoRegisterIndexesWithRedis(t *testing.T) {
-	backend := NewFilesystemBackend(t.TempDir())
-	store := NewStore(backend)
-	indexer := NewIndexer(store)
-
-	// Skip Redis and just verify file indexes work
-	err := AutoRegisterIndexes(indexer, nil, "sessions", &AutoIndexTestSession{})
-	if err != nil {
-		t.Fatalf("AutoRegisterIndexes() error = %v", err)
-	}
-
-	// Verify unique index (token) was registered
-	if _, exists := indexer.specs["sessions-by-token"]; !exists {
-		t.Error("Expected sessions-by-token index to be registered")
-	}
-
-	// Multi-indexes should be skipped when Redis is nil (graceful degradation)
-	if _, exists := indexer.specs["sessions-by-user-id"]; exists {
-		t.Error("Multi-index should be skipped when Redis is nil")
+func TestAutoRegisterIndexesRequiresRedis(t *testing.T) {
+	// Test that AutoRegisterIndexes requires Redis
+	err := AutoRegisterIndexes(nil, "users", &AutoIndexTestUser{})
+	if err == nil {
+		t.Error("AutoRegisterIndexes() should error when Redis indexer is nil")
 	}
 }
 
 func TestAutoRegisterIndexesInvalidType(t *testing.T) {
-	indexer := NewIndexer(NewStore(NewFilesystemBackend(t.TempDir())))
+	redis := setupTestRedis(t)
+	if redis == nil {
+		t.Skip("Redis not available")
+	}
+	redisIndexer := NewRedisIndexer(redis)
 
 	// Test with non-struct
-	err := AutoRegisterIndexes(indexer, nil, "strings", "not a struct")
+	err := AutoRegisterIndexes(redisIndexer, "strings", "not a struct")
 	if err == nil {
 		t.Error("AutoRegisterIndexes() should error with non-struct type")
 	}
 }
 
 func TestAutoRegisterIndexesMultipleTypes(t *testing.T) {
-	backend := NewFilesystemBackend(t.TempDir())
-	store := NewStore(backend)
-	indexer := NewIndexer(store)
+	redis := setupTestRedis(t)
+	if redis == nil {
+		t.Skip("Redis not available")
+	}
+	redisIndexer := NewRedisIndexer(redis)
 
 	// Register indexes for multiple types
-	err := AutoRegisterIndexes(indexer, nil, "users", &AutoIndexTestUser{})
+	err := AutoRegisterIndexes(redisIndexer, "users", &AutoIndexTestUser{})
 	if err != nil {
 		t.Fatalf("AutoRegisterIndexes(users) error = %v", err)
 	}
 
-	err = AutoRegisterIndexes(indexer, nil, "products", &AutoIndexTestProduct{})
+	err = AutoRegisterIndexes(redisIndexer, "products", &AutoIndexTestProduct{})
 	if err != nil {
 		t.Fatalf("AutoRegisterIndexes(products) error = %v", err)
 	}
 
 	// Verify expected number of indexes
 	// Users: email, platform_user_id, referral_code, username = 4
-	// Products: sku = 1 (category is multi, skipped without Redis)
-	expectedCount := 5
-	if len(indexer.specs) != expectedCount {
-		t.Errorf("Expected %d indexes, got %d", expectedCount, len(indexer.specs))
+	// Products: sku, category = 2
+	expectedCount := 6
+	if len(redisIndexer.specs) != expectedCount {
+		t.Errorf("Expected %d indexes, got %d", expectedCount, len(redisIndexer.specs))
 	}
 }
 
 func TestRegisterIndexesForType(t *testing.T) {
-	backend := NewFilesystemBackend(t.TempDir())
-	store := NewStore(backend)
-	indexer := NewIndexer(store)
+	redis := setupTestRedis(t)
+	if redis == nil {
+		t.Skip("Redis not available")
+	}
+	redisIndexer := NewRedisIndexer(redis)
 
 	// Test combined auto + manual registration
 	manualCalled := false
 	err := RegisterIndexesForType(
 		IndexConfig{
-			EntityType:  "users",
-			FileIndexer: indexer,
+			EntityType:   "users",
+			RedisIndexer: redisIndexer,
 		},
 		&AutoIndexTestUser{},
 		func() {
@@ -284,7 +282,7 @@ func TestRegisterIndexesForType(t *testing.T) {
 	}
 
 	// Verify auto-registered indexes exist
-	if _, exists := indexer.specs["users-by-email"]; !exists {
+	if _, exists := redisIndexer.specs["users-by-email"]; !exists {
 		t.Error("Auto-registered index should exist after RegisterIndexesForType")
 	}
 }
