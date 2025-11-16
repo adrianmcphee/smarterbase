@@ -80,8 +80,8 @@
     <body>
         <div class="bg-base-200 border-base-300 border-b px-1 py-1.5 text-center text-[11px] sm:text-sm">
     <span>
-        <span class="text-primary font-medium">New in ADR-0006:</span>
-        QueryWithFallback + Boilerplate Reduction Helpers (85% less code!)
+        <span class="text-primary font-medium">New in v1.11 (ADR-0008):</span>
+        Auto-Indexing with Struct Tags + Declarative Cascade Deletes (97% less code!)
     </span>
 </div>
 
@@ -730,37 +730,69 @@ func main() {
                                 <div class="badge badge-primary">3</div>
                                 <h3 class="text-xl font-medium">Indexing (Core API)</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// Simple API: Indexes auto-created from struct tags
-// Just add `sb:"index"` and you're done!
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11 (ADR-0008): Auto-Indexing with Struct Tags
+// 97% less code - just define tags, call AutoRegisterIndexes!
 
-// Core API: Manual index registration for fine control
-import "github.com/adrianmcphee/smarterbase"
+type User struct {
+    ID    string `json:"id" sb:"id"`
+    Email string `json:"email" sb:"index,unique"`
+    Role  string `json:"role" sb:"index,multi"`
+}
 
 backend := smarterbase.NewFilesystemBackend("./data")
 store := smarterbase.NewStore(backend)
-
-// Setup Redis indexer
-redisClient := redis.NewClient(smarterbase.RedisOptions())
+indexer := smarterbase.NewIndexer(store)
 redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 
-// Register index with custom logic
-redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
-    Name:        "users-by-email",
-    EntityType:  "users",
-    ExtractFunc: smarterbase.ExtractJSONField("email"),
-})
+// Auto-register all indexes from struct tags
+smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "users", &User{})
 
-// Use IndexManager for coordinated updates
+// That's it! Indexes created from tags
+// Before: 570 lines of registration code
+// After: 1 line + struct tags
+
 indexManager := smarterbase.NewIndexManager(store).
+    WithFileIndexer(indexer).
     WithRedisIndexer(redisIndexer)
 
 user := &User{ID: smarterbase.NewID(), Email: "alice@example.com"}
-indexManager.Create(ctx, "users/"+user.ID, user)
+indexManager.Create(ctx, "users/"+user.ID, user)</code></pre>
+                        </div>
+                    </div>
 
-// Query with type safety
-users, _ := smarterbase.QueryIndexTyped[User](
-    ctx, indexManager, "users", "email", "alice@example.com",
-)</code></pre>
+                    <div class="card bg-base-100">
+                        <div class="card-body">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="badge badge-primary">4</div>
+                                <h3 class="text-xl font-medium">Cascade Deletes (Core API)</h3>
+                            </div>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11 (ADR-0008): Declarative Cascade Deletes
+// 90% less code - register relationships once, delete recursively!
+
+cascadeIM := smarterbase.NewCascadeIndexManager(store, indexer, redisIndexer)
+
+// Register cascade chain: property → areas → photos
+cascadeIM.RegisterCascadeChain("properties", []smarterbase.CascadeSpec{
+    {
+        ChildEntityType: "areas",
+        ForeignKeyField: "property_id",
+        DeleteFunc:      s.DeleteArea,  // Recursive!
+    },
+})
+
+cascadeIM.RegisterCascadeChain("areas", []smarterbase.CascadeSpec{
+    {
+        ChildEntityType: "photos",
+        ForeignKeyField: "area_id",
+        DeleteFunc:      s.DeletePhoto,
+    },
+})
+
+// Delete property - automatically cascades to areas & photos!
+cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)
+
+// Before: ~100 lines of manual loops + error handling
+// After: ~10 declarations + 1 delete call</code></pre>
                         </div>
                     </div>
                 </div>
