@@ -86,8 +86,8 @@
     <body>
         <div class="bg-base-200 border-base-300 border-b px-1 py-1.5 text-center text-[11px] sm:text-sm">
     <span>
-        <span class="text-primary font-medium">New in ADR-0006:</span>
-        QueryWithFallback + Boilerplate Reduction Helpers (85% less code!)
+        <span class="text-primary font-medium">New in v1.11 (ADR-0008):</span>
+        Auto-Indexing with Struct Tags + Declarative Cascade Deletes (97% less code!)
     </span>
 </div>
 
@@ -163,7 +163,7 @@
                     </p>
                     <div class="mt-8 flex justify-center gap-4">
                         <div class="stat bg-base-200 rounded-box border border-base-300">
-                            <div class="stat-value text-primary text-3xl">7</div>
+                            <div class="stat-value text-primary text-3xl">9</div>
                             <div class="stat-desc">Complete Examples</div>
                         </div>
                         <div class="stat bg-base-200 rounded-box border border-base-300">
@@ -386,6 +386,104 @@ err := smarterbase.WithAtomicUpdate(
                 </div>
 
                 <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- Auto-Indexing with Struct Tags (NEW - ADR-0008) -->
+                    <div class="card bg-base-100 border-2 border-primary/40 hover:border-primary transition-all shadow-lg">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="badge badge-primary">NEW in v1.11</div>
+                                <div class="badge badge-success badge-xs">Beginner</div>
+                            </div>
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fa-solid fa-tags text-2xl text-primary"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold">Auto-Indexing</h3>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Eliminate 97% of index boilerplate with struct tags. Define indexes on your models, auto-register them.
+                            </p>
+
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                <div class="badge badge-xs badge-primary">97% Less Code</div>
+                                <div class="badge badge-xs">Struct Tags</div>
+                                <div class="badge badge-xs">Self-Documenting</div>
+                            </div>
+
+                            <div class="bg-base-200 rounded-box p-3 mb-4">
+                                <pre class="text-xs overflow-x-auto"><code>type User struct {
+  Email string `json:"email" sb:"index,unique"`
+  Role  string `json:"role" sb:"index,multi"`
+}
+
+// Auto-register - that's it!
+smarterbase.AutoRegisterIndexes(
+  indexer, redis, "users", &User{}
+)</code></pre>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mb-4">
+                                <div>570-760 lines → 20 tags</div>
+                                <div>Use cases: Any app with indexes</div>
+                            </div>
+
+                            <a href="https://github.com/adrianmcphee/smarterbase#new-auto-indexing--cascade-deletes-"
+                               target="_blank" class="btn btn-sm btn-primary w-full">
+                                <i class="fa-solid fa-code"></i>
+                                View Docs
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Declarative Cascade Deletes (NEW - ADR-0008) -->
+                    <div class="card bg-base-100 border-2 border-primary/40 hover:border-primary transition-all shadow-lg">
+                        <div class="card-body">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="badge badge-primary">NEW in v1.11</div>
+                                <div class="badge badge-warning badge-xs">Intermediate</div>
+                            </div>
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fa-solid fa-sitemap text-2xl text-primary"></i>
+                                <div>
+                                    <h3 class="text-lg font-bold">Cascade Deletes</h3>
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-base-content/70 mb-4">
+                                Eliminate 90% of cascade boilerplate. Register relationships once, delete automatically with Redis-optimized lookups.
+                            </p>
+
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                <div class="badge badge-xs badge-primary">90% Less Code</div>
+                                <div class="badge badge-xs">Declarative</div>
+                                <div class="badge badge-xs">Recursive</div>
+                            </div>
+
+                            <div class="bg-base-200 rounded-box p-3 mb-4">
+                                <pre class="text-xs overflow-x-auto"><code>// Register cascade chain
+im.RegisterCascadeChain("properties", []CascadeSpec{
+  {ChildEntityType: "areas",
+   ForeignKeyField: "property_id",
+   DeleteFunc: s.DeleteArea},
+})
+
+// Delete - cascades automatically!
+s.im.DeleteWithCascade(ctx, "properties", key, id)</code></pre>
+                            </div>
+
+                            <div class="text-xs text-base-content/60 mb-4">
+                                <div>~100 lines → ~10 declarations</div>
+                                <div>Use cases: Parent-child relationships</div>
+                            </div>
+
+                            <a href="https://github.com/adrianmcphee/smarterbase#new-auto-indexing--cascade-deletes-"
+                               target="_blank" class="btn btn-sm btn-primary w-full">
+                                <i class="fa-solid fa-code"></i>
+                                View Docs
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- Production Patterns (NEW - ADR-0006 Showcase) -->
                     <div class="card bg-base-100 border-2 border-primary hover:border-primary/60 transition-all">
                         <div class="card-body">
