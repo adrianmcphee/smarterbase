@@ -1,3 +1,74 @@
+## [2.0.0](https://github.com/adrianmcphee/smarterbase/compare/v1.11.0...v2.0.0) (2025-11-16)
+
+### ⚠ BREAKING CHANGES
+
+* Remove file-based indexing in favor of Redis-only indexes
+
+CONTEXT:
+Smarterbase previously supported dual indexing (file-based + Redis).
+This added complexity, slower performance, and filesystem clutter.
+Redis is already required for rate limiting, sessions, and locks,
+so graceful degradation provided no real benefit.
+
+CHANGES:
+
+Core Library:
+- Delete indexer.go (120 lines) and indexer_test.go (291 lines)
+- Remove Indexer type and file-based index support
+- Update AutoRegisterIndexes() signature: remove fileIndexer parameter
+  OLD: AutoRegisterIndexes(indexer, redisIndexer, entityType, example)
+  NEW: AutoRegisterIndexes(redisIndexer, entityType, example)
+- Update NewCascadeIndexManager() signature: remove indexer parameter
+  OLD: NewCascadeIndexManager(base, indexer, redisIndexer)
+  NEW: NewCascadeIndexManager(base, redisIndexer)
+- Remove IndexManager.WithFileIndexer() method
+- Reject sb:"index,unique" tags in ParseIndexTag()
+
+Struct Tags:
+- All indexes now use sb:"index" (Redis multi-value)
+- Remove distinction between unique and multi-value indexes
+- Application layer handles uniqueness constraints
+
+Tests:
+- Update auto_indexing_test.go for Redis-only testing
+- Fix cascades_test.go to use new signatures
+- Fix index_manager_test.go to remove file indexer usage
+- Fix utility_functions_test.go to use MultiIndexSpec
+
+Documentation:
+- Add ADR-0009: Redis-Only Indexing Architecture
+- Update ADR-0003 and ADR-0008 for Redis-only approach
+- Update website HTML files (index.html, examples.html)
+- Update example code (03-with-indexing, 04-versioning)
+- Update DATASHEET.md and simple API documentation
+
+BENEFITS:
+✅ Simpler architecture - single indexing system
+✅ Faster performance - all lookups in-memory Redis
+✅ Less code - ~400 lines removed
+✅ Cleaner filesystem - no indexes/ directories
+✅ Better DX - single sb:"index" tag for everything
+
+MIGRATION:
+1. Change sb:"index,unique" to sb:"index" in struct tags
+2. Update AutoRegisterIndexes() calls to remove first parameter
+3. Update NewCascadeIndexManager() calls to remove indexer parameter
+4. Remove WithFileIndexer() from IndexManager initialization
+
+See ADR-0009 for complete details.
+
+### Documentation
+
+* add auto-indexing and cascade delete examples to website ([a41f697](https://github.com/adrianmcphee/smarterbase/commit/a41f697cd219dc6ddc321ba92f16b1106c778937))
+* remove before/after comparisons from homepage examples ([4aead46](https://github.com/adrianmcphee/smarterbase/commit/4aead4682714fc91233dc8a56c17f774f4394547))
+* remove percentage claims from banners ([3fd0b77](https://github.com/adrianmcphee/smarterbase/commit/3fd0b7726cad59f2e552e8f9a01e7d3d140542b3))
+* tone down language in ADR-0008 ([f3ae4b5](https://github.com/adrianmcphee/smarterbase/commit/f3ae4b5c58feddfecc5d6466931ce09ab411dc08))
+* update homepage to showcase ADR-0008 features ([43c27a8](https://github.com/adrianmcphee/smarterbase/commit/43c27a8419f2be9f6b6dfe6460215fcc99466cf7))
+
+### Code Refactoring
+
+* remove file-based indexing, Redis-only architecture ([438fd46](https://github.com/adrianmcphee/smarterbase/commit/438fd466ef85564cbf594496f0fe187f26452677))
+
 ## [1.11.0](https://github.com/adrianmcphee/smarterbase/compare/v1.10.0...v1.11.0) (2025-11-16)
 
 ### Features
