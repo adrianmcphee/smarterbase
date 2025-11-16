@@ -118,7 +118,7 @@ smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "sessions", &Session{})
 - Registers with existing Indexer/RedisIndexer (no new abstractions)
 - Falls back gracefully if Redis unavailable (multi-indexes skipped)
 
-**Code Reduction:** 570-760 lines → ~20 struct tags (97% reduction)
+**Code Reduction:** 570-760 lines → ~20 struct tags
 
 ### Feature 2: Declarative Cascade Deletes
 
@@ -152,7 +152,7 @@ func (s *Store) DeleteProperty(ctx context.Context, propertyID string) error {
 - Transaction-like - fails entire operation if any delete fails
 - No rollback (filesystem doesn't support it) but atomic failure
 
-**Code Reduction:** ~100 lines → ~10 declarations (90% reduction)
+**Code Reduction:** ~100 lines → ~10 declarations
 
 ## Alternatives Considered
 
@@ -231,7 +231,7 @@ Don't add ergonomic features - boilerplate is the cost of flexibility.
 
 ### Positive
 
-1. **Massive boilerplate reduction** - 97% reduction in index code, 90% reduction in cascade code
+1. **Significant reduction in index code** - From 570-760 lines to ~20 struct tags, and cascade code from ~100 lines to ~10 declarations
 2. **Self-documenting code** - Indexes visible on domain models, cascades declared upfront
 3. **Fewer bugs** - Declarative code has less room for copy-paste errors
 4. **Easier onboarding** - New developers see indexes in struct tags instead of separate files
@@ -318,9 +318,9 @@ Don't add ergonomic features - boilerplate is the cost of flexibility.
 ## Success Metrics
 
 **Developer Experience:**
-- Time to add new index: 15-20 lines → 1 struct tag (20x faster)
-- Time to add cascade: 20-30 lines → 1 declaration (20x faster)
-- Code reduction: 670-860 lines → ~30 lines (96% reduction)
+- Time to add new index: 15-20 lines → 1 struct tag
+- Time to add cascade: 20-30 lines → 1 declaration
+- Total code reduction: 670-860 lines → ~30 lines
 
 **Production Validation:**
 - Validated in 81,354 line production codebase
