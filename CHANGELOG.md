@@ -1,3 +1,13 @@
+## [1.11.0](https://github.com/adrianmcphee/smarterbase/compare/v1.10.0...v1.11.0) (2025-11-16)
+
+### Features
+
+* add auto-indexing with struct tags and declarative cascade deletes ([5ed8c9e](https://github.com/adrianmcphee/smarterbase/commit/5ed8c9e8e9111bf04c0918df2201b2fe4d553635))
+
+### Documentation
+
+* add type safety guidance to .ai-context ([90bab48](https://github.com/adrianmcphee/smarterbase/commit/90bab480e947b7649515c1ba43f134cf1b483407))
+
 ## [1.10.0](https://github.com/adrianmcphee/smarterbase/compare/v1.9.0...v1.10.0) (2025-10-28)
 
 ### Features
