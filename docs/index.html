@@ -730,8 +730,8 @@ func main() {
                                 <div class="badge badge-primary">3</div>
                                 <h3 class="text-xl font-medium">Indexing (Core API)</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11 (ADR-0008): Auto-Indexing with Struct Tags
-// 97% less code - just define tags, call AutoRegisterIndexes!
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11: Auto-Indexing with Struct Tags
+// Define your indexes on the model, auto-register them. That's it.
 
 type User struct {
     ID    string `json:"id" sb:"id"`
@@ -747,10 +747,7 @@ redisIndexer := smarterbase.NewRedisIndexer(redisClient)
 // Auto-register all indexes from struct tags
 smarterbase.AutoRegisterIndexes(indexer, redisIndexer, "users", &User{})
 
-// That's it! Indexes created from tags
-// Before: 570 lines of registration code
-// After: 1 line + struct tags
-
+// That's it! Indexes are ready to use
 indexManager := smarterbase.NewIndexManager(store).
     WithFileIndexer(indexer).
     WithRedisIndexer(redisIndexer)
@@ -766,8 +763,8 @@ indexManager.Create(ctx, "users/"+user.ID, user)</code></pre>
                                 <div class="badge badge-primary">4</div>
                                 <h3 class="text-xl font-medium">Cascade Deletes (Core API)</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11 (ADR-0008): Declarative Cascade Deletes
-// 90% less code - register relationships once, delete recursively!
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11: Declarative Cascade Deletes
+// Register parent-child relationships, delete recursively with one call
 
 cascadeIM := smarterbase.NewCascadeIndexManager(store, indexer, redisIndexer)
 
@@ -789,10 +786,7 @@ cascadeIM.RegisterCascadeChain("areas", []smarterbase.CascadeSpec{
 })
 
 // Delete property - automatically cascades to areas & photos!
-cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)
-
-// Before: ~100 lines of manual loops + error handling
-// After: ~10 declarations + 1 delete call</code></pre>
+cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)</code></pre>
                         </div>
                     </div>
                 </div>
