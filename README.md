@@ -97,7 +97,7 @@ Your App → SmarterBase → Redis (indexes) + S3 (storage)
 ## Installation
 
 ```bash
-go get github.com/adrianmcphee/smarterbase
+go get github.com/adrianmcphee/smarterbase/v2
 ```
 
 ---
@@ -109,7 +109,7 @@ SmarterBase provides two APIs for different use cases:
 ### Simple API - For Rapid Development
 
 ```go
-import "github.com/adrianmcphee/smarterbase/simple"
+import "github.com/adrianmcphee/smarterbase/v2/simple"
 
 type User struct {
     ID    string `json:"id" sb:"id"`
@@ -137,7 +137,7 @@ admins, _ := users.Find(ctx, "role", "admin")
 ### Core API - For Full Control
 
 ```go
-import "github.com/adrianmcphee/smarterbase"
+import "github.com/adrianmcphee/smarterbase/v2"
 
 // Explicit configuration
 backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "bucket", redisClient)
@@ -530,7 +530,7 @@ package main
 
 import (
     "context"
-    "github.com/adrianmcphee/smarterbase"
+    "github.com/adrianmcphee/smarterbase/v2"
 )
 
 type User struct {
@@ -1031,7 +1031,7 @@ import (
     "context"
     "log"
 
-    "github.com/adrianmcphee/smarterbase"
+    "github.com/adrianmcphee/smarterbase/v2"
     "github.com/aws/aws-sdk-go-v2/config"
     "github.com/aws/aws-sdk-go-v2/service/s3"
     "github.com/prometheus/client_golang/prometheus"

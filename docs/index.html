@@ -177,7 +177,7 @@
 
                     <div class="bg-base-200 rounded-box p-6">
                         <pre class="text-sm overflow-x-auto max-w-full"><code>// Simple API - struct tags = instant queries
-import "github.com/adrianmcphee/smarterbase/simple"
+import "github.com/adrianmcphee/smarterbase/v2/simple"
 
 type User struct {
     ID    string `json:"id" sb:"id"`
@@ -680,7 +680,7 @@ store.GetJSON(ctx, "users/123", &user)</code></pre>
                                 <div class="badge badge-primary">1</div>
                                 <h3 class="text-xl font-medium">Installation</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>go get github.com/adrianmcphee/smarterbase</code></pre>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>go get github.com/adrianmcphee/smarterbase/v2</code></pre>
                         </div>
                     </div>
 
@@ -694,7 +694,7 @@ store.GetJSON(ctx, "users/123", &user)</code></pre>
 
 import (
     "context"
-    "github.com/adrianmcphee/smarterbase/simple"
+    "github.com/adrianmcphee/smarterbase/v2/simple"
 )
 
 type User struct {

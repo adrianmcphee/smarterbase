@@ -724,13 +724,13 @@ Create/Update/Delete
 ### 1. Installation
 
 ```bash
-go get github.com/adrianmcphee/smarterbase
+go get github.com/adrianmcphee/smarterbase/v2
 ```
 
 ### 2. Basic Setup
 
 ```go
-import "github.com/adrianmcphee/smarterbase"
+import "github.com/adrianmcphee/smarterbase/v2"
 
 // Development: Filesystem
 backend := smarterbase.NewFilesystemBackend("./data")
