@@ -1,3 +1,13 @@
+## [2.0.2](https://github.com/adrianmcphee/smarterbase/compare/v2.0.1...v2.0.2) (2025-11-22)
+
+### Documentation
+
+* update import paths to v2 in documentation ([6d26c37](https://github.com/adrianmcphee/smarterbase/commit/6d26c379384357827502d30a5dc7c3d97135590b))
+
+### Code Refactoring
+
+* remove legacy file-based indexing and improve error handling ([3901b86](https://github.com/adrianmcphee/smarterbase/commit/3901b863a876bde6a28ce4df14dc139c1ea05b93))
+
 ## [2.0.0](https://github.com/adrianmcphee/smarterbase/compare/v1.11.0...v2.0.0) (2025-11-16)
 
 ### ⚠ BREAKING CHANGES
