@@ -603,3 +603,18 @@ func TestRedisIndexer_NonOwnedClient(t *testing.T) {
 		t.Error("redis client should still be usable")
 	}
 }
+
+// TestRedisIndexer_NilReceiver tests calling methods on a nil receiver
+func TestRedisIndexer_NilReceiver(t *testing.T) {
+	var indexer *RedisIndexer
+	ctx := context.Background()
+
+	// Query should not panic
+	_, err := indexer.Query(ctx, "users", "email", "alice@example.com")
+	if err == nil {
+		t.Error("expected error when calling Query on nil receiver")
+	}
+	if err.Error() != "redis indexer is nil" {
+		t.Errorf("expected 'redis indexer is nil', got '%v'", err)
+	}
+}

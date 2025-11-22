@@ -133,6 +133,9 @@ func (r *RedisIndexer) updateIndex(ctx context.Context, spec *MultiIndexSpec, ob
 //
 // Example: Query(ctx, "user_id", "user-123") → ["sessions/abc.json", "sessions/def.json"]
 func (r *RedisIndexer) Query(ctx context.Context, entityType, indexName, indexValue string) ([]string, error) {
+	if r == nil {
+		return nil, fmt.Errorf("redis indexer is nil")
+	}
 	if r.redis == nil {
 		return nil, fmt.Errorf("redis not available")
 	}

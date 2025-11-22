@@ -377,28 +377,6 @@ func (s *Store) ListPaginated(ctx context.Context, prefix string, handler func(k
 	return s.backend.ListPaginated(ctx, prefix, handler)
 }
 
-// Index represents a reverse index mapping
-type Index struct {
-	Key     string                 // Index storage key
-	Entries map[string]string      // itemID -> parentID
-	Meta    map[string]interface{} // Optional metadata
-}
-
-// GetIndex fetches an index
-func (s *Store) GetIndex(ctx context.Context, key string) (*Index, error) {
-	idx := &Index{Key: key, Entries: make(map[string]string)}
-	err := s.GetJSON(ctx, key, &idx.Entries)
-	if err != nil {
-		return nil, err
-	}
-	return idx, nil
-}
-
-// PutIndex stores an index
-func (s *Store) PutIndex(ctx context.Context, idx *Index) error {
-	return s.PutJSON(ctx, idx.Key, idx.Entries)
-}
-
 // MarshalObject marshals an object to JSON (utility function)
 // Renamed from MarshalJSON to avoid conflict with json.Marshaler interface
 func (s *Store) MarshalObject(value interface{}) ([]byte, error) {
@@ -408,87 +386,6 @@ func (s *Store) MarshalObject(value interface{}) ([]byte, error) {
 // Backend returns the underlying backend (for advanced use cases like index repair)
 func (s *Store) Backend() Backend {
 	return s.backend
-}
-
-// UpdateIndex atomically updates an index entry with retry and exponential backoff
-func (s *Store) UpdateIndex(ctx context.Context, key string, itemID, parentID string) error {
-	config := DefaultRetryConfig()
-
-	for i := 0; i < config.MaxRetries; i++ {
-		// Get current index with ETag
-		var entries map[string]string
-		etag, err := s.GetJSONWithETag(ctx, key, &entries)
-		if err != nil {
-			// Index doesn't exist, create it
-			entries = make(map[string]string)
-			etag = ""
-		}
-
-		// Update entry
-		entries[itemID] = parentID
-
-		// Try to save with ETag
-		_, err = s.PutJSONWithETag(ctx, key, entries, etag)
-		if err == nil {
-			return nil
-		}
-
-		// ETag mismatch - retry with backoff and jitter
-		if i < config.MaxRetries-1 { // Don't sleep on last iteration
-			backoff := config.InitialBackoff * time.Duration(1<<uint(i))
-			jitter := time.Duration(float64(backoff) * config.JitterPercent * (1.0 - (float64(i%2) * 0.5)))
-			time.Sleep(backoff + jitter)
-		}
-	}
-
-	err := WithContext(ErrIndexRetries, map[string]interface{}{
-		"key":     key,
-		"retries": config.MaxRetries,
-	})
-	s.logger.Error("index update failed after retries",
-		"key", key,
-		"retries", config.MaxRetries,
-		"error", err,
-	)
-	s.metrics.Increment(MetricIndexErrors)
-	s.metrics.Gauge(MetricIndexRetries, float64(config.MaxRetries))
-	return err
-}
-
-// RemoveFromIndex atomically removes an entry from an index
-func (s *Store) RemoveFromIndex(ctx context.Context, key string, itemID string) error {
-	config := DefaultRetryConfig()
-
-	for i := 0; i < config.MaxRetries; i++ {
-		var entries map[string]string
-		etag, err := s.GetJSONWithETag(ctx, key, &entries)
-		if err != nil {
-			return err // Index doesn't exist
-		}
-
-		delete(entries, itemID)
-
-		_, err = s.PutJSONWithETag(ctx, key, entries, etag)
-		if err == nil {
-			return nil
-		}
-
-		if i < config.MaxRetries-1 {
-			backoff := config.InitialBackoff * time.Duration(1<<uint(i))
-			time.Sleep(backoff)
-		}
-	}
-
-	err := WithContext(ErrIndexRetries, map[string]interface{}{
-		"key":     key,
-		"retries": config.MaxRetries,
-	})
-	s.logger.Error("index removal failed after retries",
-		"key", key,
-		"retries", config.MaxRetries,
-		"error", err,
-	)
-	return err
 }
 
 // Ping checks backend health
