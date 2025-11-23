@@ -1,3 +1,9 @@
+## [2.2.3](https://github.com/adrianmcphee/smarterbase/compare/v2.2.2...v2.2.3) (2025-11-23)
+
+### Bug Fixes
+
+* **indexer:** prevent cross-entity index pollution ([ec4eb98](https://github.com/adrianmcphee/smarterbase/commit/ec4eb983ebcdb8d02bc09a146121ab8f7f602c54))
+
 ## [2.2.2](https://github.com/adrianmcphee/smarterbase/compare/v2.2.1...v2.2.2) (2025-11-23)
 
 ### Bug Fixes
