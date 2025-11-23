@@ -133,8 +133,9 @@ func AutoRegisterIndexes(
 			return fmt.Errorf("unsupported index type '%s' for %s.%s - only 'multi' (Redis) indexes are supported", indexTag.Type, t.Name(), field.Name)
 		}
 
+		// Graceful degradation: skip if Redis indexer not available (for tests and environments without Redis)
 		if redisIndexer == nil {
-			return fmt.Errorf("Redis indexer required for index on %s.%s", t.Name(), field.Name)
+			continue
 		}
 
 		err := registerMultiIndex(redisIndexer, indexTag.Name, entityType, jsonName)

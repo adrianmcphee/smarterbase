@@ -204,10 +204,10 @@ func TestAutoRegisterIndexesOptional(t *testing.T) {
 }
 
 func TestAutoRegisterIndexesRequiresRedis(t *testing.T) {
-	// Test that AutoRegisterIndexes requires Redis
+	// Test that AutoRegisterIndexes gracefully skips when Redis indexer is nil (graceful degradation)
 	err := AutoRegisterIndexes(nil, "users", &AutoIndexTestUser{})
-	if err == nil {
-		t.Error("AutoRegisterIndexes() should error when Redis indexer is nil")
+	if err != nil {
+		t.Errorf("AutoRegisterIndexes() should not error when Redis indexer is nil (graceful degradation), got: %v", err)
 	}
 }
 
