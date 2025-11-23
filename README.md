@@ -1576,6 +1576,7 @@ SmarterBase provides a `RedisOptions()` helper for production-ready Redis config
 
 ```go
 // Reads from environment variables (REDIS_ADDR, REDIS_PASSWORD, REDIS_DB)
+// Automatically enables TLS for managed Redis (port 25061)
 // Defaults to localhost:6379 for local development
 redisClient := redis.NewClient(smarterbase.RedisOptions())
 ```
@@ -1584,6 +1585,7 @@ redisClient := redis.NewClient(smarterbase.RedisOptions())
 - `REDIS_ADDR` - Redis server address (default: `localhost:6379`)
 - `REDIS_PASSWORD` - Redis password (default: empty)
 - `REDIS_DB` - Redis database number (default: `0`)
+- `REDIS_TLS_ENABLED` - Enable TLS connection (default: `false`, auto-enabled for port 25061)
 
 **Local development:**
 ```bash

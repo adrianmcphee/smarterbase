@@ -10,6 +10,7 @@ func TestRedisOptions_Defaults(t *testing.T) {
 	os.Unsetenv("REDIS_ADDR")
 	os.Unsetenv("REDIS_PASSWORD")
 	os.Unsetenv("REDIS_DB")
+	os.Unsetenv("REDIS_TLS_ENABLED")
 
 	opts := RedisOptions()
 
@@ -23,6 +24,10 @@ func TestRedisOptions_Defaults(t *testing.T) {
 
 	if opts.DB != 0 {
 		t.Errorf("expected default db 0, got %d", opts.DB)
+	}
+
+	if opts.TLSConfig != nil {
+		t.Error("expected default TLS config nil")
 	}
 }
 
@@ -135,5 +140,107 @@ func TestGetEnvAsInt(t *testing.T) {
 				t.Errorf("expected %d, got %d", tt.expected, result)
 			}
 		})
+	}
+}
+
+func TestRedisOptions_WithTLS(t *testing.T) {
+	os.Setenv("REDIS_ADDR", "redis.tls.example.com:6380")
+	os.Setenv("REDIS_TLS_ENABLED", "true")
+	defer func() {
+		os.Unsetenv("REDIS_ADDR")
+		os.Unsetenv("REDIS_TLS_ENABLED")
+	}()
+
+	opts := RedisOptions()
+
+	if opts.TLSConfig == nil {
+		t.Fatal("expected TLS config to be set")
+	}
+
+	if opts.TLSConfig.ServerName != "redis.tls.example.com" {
+		t.Errorf("expected ServerName redis.tls.example.com, got %s", opts.TLSConfig.ServerName)
+	}
+}
+
+func TestRedisOptionsWithOverrides_WithTLS(t *testing.T) {
+	os.Setenv("REDIS_ADDR", "default.example.com:6379")
+	os.Setenv("REDIS_TLS_ENABLED", "true")
+	defer func() {
+		os.Unsetenv("REDIS_ADDR")
+		os.Unsetenv("REDIS_TLS_ENABLED")
+	}()
+
+	// Case 1: Override address
+	opts := RedisOptionsWithOverrides("custom.example.com:6380", "", 0, 0)
+
+	if opts.TLSConfig == nil {
+		t.Fatal("expected TLS config to be set")
+	}
+
+	if opts.TLSConfig.ServerName != "custom.example.com" {
+		t.Errorf("expected ServerName custom.example.com, got %s", opts.TLSConfig.ServerName)
+	}
+
+	// Case 2: No override address (should use env var)
+	opts2 := RedisOptionsWithOverrides("", "", 0, 0)
+
+	if opts2.TLSConfig == nil {
+		t.Fatal("expected TLS config to be set")
+	}
+
+	if opts2.TLSConfig.ServerName != "default.example.com" {
+		t.Errorf("expected ServerName default.example.com, got %s", opts2.TLSConfig.ServerName)
+	}
+}
+
+func TestRedisOptions_TLSDisabled(t *testing.T) {
+	os.Setenv("REDIS_ADDR", "redis.example.com:6379")
+	os.Setenv("REDIS_TLS_ENABLED", "false")
+	defer func() {
+		os.Unsetenv("REDIS_ADDR")
+		os.Unsetenv("REDIS_TLS_ENABLED")
+	}()
+
+	opts := RedisOptions()
+
+	if opts.TLSConfig != nil {
+		t.Error("expected TLS config to be nil when disabled")
+	}
+}
+
+func TestRedisOptions_AutoTLSEnabled(t *testing.T) {
+	os.Setenv("REDIS_ADDR", "redis.digitalocean.com:25061")
+	os.Unsetenv("REDIS_TLS_ENABLED") // Ensure not explicitly enabled
+	defer func() {
+		os.Unsetenv("REDIS_ADDR")
+	}()
+
+	opts := RedisOptions()
+
+	if opts.TLSConfig == nil {
+		t.Fatal("expected TLS config to be set for port 25061")
+	}
+
+	if opts.TLSConfig.ServerName != "redis.digitalocean.com" {
+		t.Errorf("expected ServerName redis.digitalocean.com, got %s", opts.TLSConfig.ServerName)
+	}
+}
+
+func TestRedisOptionsWithOverrides_AutoTLSEnabled(t *testing.T) {
+	os.Setenv("REDIS_ADDR", "default.example.com:6379")
+	os.Unsetenv("REDIS_TLS_ENABLED")
+	defer func() {
+		os.Unsetenv("REDIS_ADDR")
+	}()
+
+	// Override with managed Redis address
+	opts := RedisOptionsWithOverrides("managed.digitalocean.com:25061", "", 0, 0)
+
+	if opts.TLSConfig == nil {
+		t.Fatal("expected TLS config to be set for port 25061")
+	}
+
+	if opts.TLSConfig.ServerName != "managed.digitalocean.com" {
+		t.Errorf("expected ServerName managed.digitalocean.com, got %s", opts.TLSConfig.ServerName)
 	}
 }

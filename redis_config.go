@@ -1,8 +1,11 @@
 package smarterbase
 
 import (
+	"crypto/tls"
+	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -13,6 +16,7 @@ import (
 //   - REDIS_ADDR (default: "localhost:6379")
 //   - REDIS_PASSWORD (default: "")
 //   - REDIS_DB (default: 0)
+//   - REDIS_TLS_ENABLED (default: false, auto-enabled for port 25061)
 //
 // This is a convenience function for production deployments following 12-factor app
 // principles. It provides sensible defaults for local development while allowing
@@ -31,6 +35,7 @@ import (
 //	// export REDIS_ADDR=redis.prod.example.com:6379
 //	// export REDIS_PASSWORD=secret
 //	// export REDIS_DB=0
+//	// export REDIS_TLS_ENABLED=true
 //
 // For more complex setups, use redis.Options directly:
 //
@@ -50,11 +55,23 @@ func RedisOptions() *redis.Options {
 
 	db := getEnvAsInt("REDIS_DB", 0)
 
-	return &redis.Options{
+	opts := &redis.Options{
 		Addr:     addr,
 		Password: password,
 		DB:       db,
 	}
+
+	// Enable TLS if explicitly requested or for managed Redis ports
+	tlsEnabled := os.Getenv("REDIS_TLS_ENABLED") == "true" || strings.HasSuffix(addr, ":25061")
+	if tlsEnabled {
+		host := extractHostname(addr)
+		opts.TLSConfig = &tls.Config{
+			MinVersion: tls.VersionTLS12,
+			ServerName: host,
+		}
+	}
+
+	return opts
 }
 
 // RedisOptionsWithOverrides returns redis.Options with explicit overrides for common parameters.
@@ -90,6 +107,18 @@ func RedisOptionsWithOverrides(addr, password string, poolSize, minIdleConns int
 	// Override with explicit values if provided
 	if addr != "" {
 		opts.Addr = addr
+		// If TLS is enabled, we must update ServerName to match the new address
+		if opts.TLSConfig != nil {
+			opts.TLSConfig.ServerName = extractHostname(addr)
+		}
+		// Enable TLS for managed Redis ports if not already enabled
+		if opts.TLSConfig == nil && strings.HasSuffix(addr, ":25061") {
+			host := extractHostname(addr)
+			opts.TLSConfig = &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				ServerName: host,
+			}
+		}
 	}
 	if password != "" {
 		opts.Password = password
@@ -99,6 +128,11 @@ func RedisOptionsWithOverrides(addr, password string, poolSize, minIdleConns int
 	}
 	if minIdleConns > 0 {
 		opts.MinIdleConns = minIdleConns
+	}
+
+	// Ensure ServerName is set if TLS is enabled
+	if opts.TLSConfig != nil && opts.TLSConfig.ServerName == "" {
+		opts.TLSConfig.ServerName = extractHostname(opts.Addr)
 	}
 
 	return opts
@@ -117,4 +151,14 @@ func getEnvAsInt(key string, defaultVal int) int {
 	}
 
 	return value
+}
+
+// extractHostname returns the hostname from a host:port string.
+// If parsing fails (e.g. no port), returns the original string.
+func extractHostname(addr string) string {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return addr
+	}
+	return host
 }

@@ -30,6 +30,8 @@ Each ADR follows this structure:
 | [0006](0006-collection-api.md) | Pragmatic Helper Functions to Reduce Boilerplate | Accepted | 2025-01-18 |
 | [0007](0007-type-safe-migrations.md) | Type-Safe Schema Migrations | Accepted | 2025-10-28 |
 | [0008](0008-ergonomic-indexing-and-cascades.md) | Ergonomic Indexing and Cascade Deletes | Accepted | 2025-01-16 |
+| [0009](0009-redis-only-indexing.md) | Redis-Only Indexing Architecture | Accepted | 2025-01-16 |
+| [0010](0010-managed-redis-tls-sni.md) | Automatic TLS and SNI for Managed Redis | Accepted | 2025-11-23 |
 
 ## References
 
