@@ -1,3 +1,9 @@
+## [2.2.0](https://github.com/adrianmcphee/smarterbase/compare/v2.1.0...v2.2.0) (2025-11-23)
+
+### Features
+
+* add Redis-backed uniqueness constraints ([05e07c7](https://github.com/adrianmcphee/smarterbase/commit/05e07c7044334a7cab217a752a9691929ea5cb23))
+
 ## [2.1.0](https://github.com/adrianmcphee/smarterbase/compare/v2.0.2...v2.1.0) (2025-11-23)
 
 ### Features
