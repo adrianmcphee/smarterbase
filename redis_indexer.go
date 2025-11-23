@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -82,7 +83,15 @@ func (r *RedisIndexer) UpdateIndexes(ctx context.Context, objectKey string, data
 		return nil // Graceful degradation if Redis unavailable
 	}
 
+	// Extract entity type from object key (e.g., "admin_users/user-123.json" -> "admin_users")
+	entityType := extractEntityTypeFromKey(objectKey)
+
 	for _, spec := range r.specs {
+		// Only process specs matching this entity type to prevent cross-entity pollution
+		if spec.EntityType != entityType {
+			continue
+		}
+
 		if err := r.updateIndex(ctx, spec, objectKey, data); err != nil {
 			return fmt.Errorf("failed to update index %s: %w", spec.Name, err)
 		}
@@ -226,7 +235,15 @@ func (r *RedisIndexer) RemoveFromIndexes(ctx context.Context, objectKey string, 
 		return nil // Graceful degradation
 	}
 
+	// Extract entity type from object key (e.g., "admin_users/user-123.json" -> "admin_users")
+	entityType := extractEntityTypeFromKey(objectKey)
+
 	for _, spec := range r.specs {
+		// Only process specs matching this entity type to prevent cross-entity pollution
+		if spec.EntityType != entityType {
+			continue
+		}
+
 		if err := r.removeFromIndex(ctx, spec, objectKey, data); err != nil {
 			return fmt.Errorf("failed to remove from index %s: %w", spec.Name, err)
 		}
@@ -299,6 +316,17 @@ func (r *RedisIndexer) ReplaceIndexes(ctx context.Context, objectKey string, old
 // Example: idx:sessions:user_id:user-123
 func (r *RedisIndexer) getSetKey(entityType, indexName, indexValue string) string {
 	return fmt.Sprintf("idx:%s:%s:%s", entityType, indexName, indexValue)
+}
+
+// extractEntityTypeFromKey extracts the entity type from an object key
+// Example: "admin_users/user-123.json" -> "admin_users"
+// Example: "magic_link_tokens/token-456.json" -> "magic_link_tokens"
+func extractEntityTypeFromKey(objectKey string) string {
+	parts := strings.Split(objectKey, "/")
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return ""
 }
 
 // RebuildIndex rebuilds a secondary index from scratch
