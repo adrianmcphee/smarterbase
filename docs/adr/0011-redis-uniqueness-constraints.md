@@ -160,27 +160,7 @@ func (im *IndexManager) Update(ctx context.Context, key string, newData interfac
 
 ## Alternatives Considered
 
-### Option 1: Database-Backed Storage Layer
-
-Add PostgreSQL/SQLite as an alternative storage backend with native UNIQUE constraints.
-
-**Pros:**
-- True ACID transactions
-- Native constraint enforcement at database level
-- Foreign keys, joins, complex queries
-- Mature tooling and ecosystem
-
-**Cons:**
-- Fundamental architecture change - no longer file-based storage
-- Incompatible with existing S3/GCS backends
-- Much heavier dependency (RDBMS instead of object storage)
-- Loses simplicity of file-based storage model
-- Would split userbase (file-based vs DB-based)
-- Doesn't help users already on S3/filesystem
-
-**Verdict:** Rejected - fundamentally changes library's value proposition
-
-### Option 2: Distributed Locks
+### Option 1: Distributed Locks
 
 Use Redis distributed locks around Create() operations.
 
@@ -206,7 +186,7 @@ Create(user)
 
 **Verdict:** Rejected - SET NX is simpler and faster
 
-### Option 3: Email/ID-Based Keys
+### Option 2: Email/ID-Based Keys
 
 Use deterministic keys: `users/{hash(email)}/profile.json`
 
@@ -223,7 +203,7 @@ Use deterministic keys: `users/{hash(email)}/profile.json`
 
 **Verdict:** Rejected - too limiting, breaks existing architecture
 
-### Option 4: Application-Level Locking
+### Option 3: Application-Level Locking
 
 Use in-memory sync.Mutex per entity type.
 
