@@ -1,3 +1,9 @@
+## [2.1.0](https://github.com/adrianmcphee/smarterbase/compare/v2.0.2...v2.1.0) (2025-11-23)
+
+### Features
+
+* **redis:** add automatic TLS and SNI for managed Redis ([500fb42](https://github.com/adrianmcphee/smarterbase/commit/500fb42d5179f33eac55ee3fda5c04c0523f6359))
+
 ## [2.0.2](https://github.com/adrianmcphee/smarterbase/compare/v2.0.1...v2.0.2) (2025-11-22)
 
 ### Documentation
