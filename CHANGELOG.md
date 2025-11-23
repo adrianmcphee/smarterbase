@@ -1,3 +1,9 @@
+## [2.2.2](https://github.com/adrianmcphee/smarterbase/compare/v2.2.1...v2.2.2) (2025-11-23)
+
+### Bug Fixes
+
+* make AutoRegisterIndexes strict - Redis is required, use miniredis in tests ([d57f6d0](https://github.com/adrianmcphee/smarterbase/commit/d57f6d0e9d8feaab693f73cffb1ec9be45e7ebe0))
+
 ## [2.2.1](https://github.com/adrianmcphee/smarterbase/compare/v2.2.0...v2.2.1) (2025-11-23)
 
 ### Bug Fixes
