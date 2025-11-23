@@ -1,3 +1,15 @@
+## [2.2.1](https://github.com/adrianmcphee/smarterbase/compare/v2.2.0...v2.2.1) (2025-11-23)
+
+### Bug Fixes
+
+* make AutoRegisterIndexes graceful when redisIndexer is nil ([7055916](https://github.com/adrianmcphee/smarterbase/commit/70559164594deca68237869fbfe103d136a5c7a6))
+
+### Documentation
+
+* add ADR-0011 for Redis uniqueness constraints ([7464500](https://github.com/adrianmcphee/smarterbase/commit/746450070dfefe5b52bcc785d457cefc9ff8ccf1))
+* fix ADR-0011 alternative option wording ([7012bf5](https://github.com/adrianmcphee/smarterbase/commit/7012bf5a3cb97fe4a24d1ab043d60f2169ec5bba))
+* remove PostgreSQL alternative from ADR-0011 ([46297d8](https://github.com/adrianmcphee/smarterbase/commit/46297d8258fa839fd7392f1246de5e3e804dd7ff))
+
 ## [2.2.0](https://github.com/adrianmcphee/smarterbase/compare/v2.1.0...v2.2.0) (2025-11-23)
 
 ### Features
