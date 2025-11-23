@@ -160,23 +160,25 @@ func (im *IndexManager) Update(ctx context.Context, key string, newData interfac
 
 ## Alternatives Considered
 
-### Option 1: PostgreSQL with UNIQUE Constraints
+### Option 1: Database-Backed Storage Layer
 
-Full migration to PostgreSQL with native UNIQUE constraints.
+Add PostgreSQL/SQLite as an alternative storage backend with native UNIQUE constraints.
 
 **Pros:**
 - True ACID transactions
-- Native constraint enforcement
-- Foreign keys, joins, triggers
+- Native constraint enforcement at database level
+- Foreign keys, joins, complex queries
+- Mature tooling and ecosystem
 
 **Cons:**
-- Major architectural change
-- Loses event-driven architecture benefits (Redis Streams)
-- Much higher cost ($15-60/mo for managed PG vs existing $15/mo Redis)
-- More complex deployment and operations
-- Overkill for simple uniqueness requirement
+- Fundamental architecture change - no longer file-based storage
+- Incompatible with existing S3/GCS backends
+- Much heavier dependency (RDBMS instead of object storage)
+- Loses simplicity of file-based storage model
+- Would split userbase (file-based vs DB-based)
+- Doesn't help users already on S3/filesystem
 
-**Verdict:** Rejected - too heavyweight for the problem
+**Verdict:** Rejected - fundamentally changes library's value proposition
 
 ### Option 2: Distributed Locks
 
