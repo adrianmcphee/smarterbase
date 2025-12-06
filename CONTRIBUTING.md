@@ -19,24 +19,30 @@ Thank you for your interest in contributing to SmarterBase! This document provid
 
 ### Prerequisites
 
-- Go 1.18 or later
+- Go 1.21 or later
 - Git
+
+### Building
+
+```bash
+# Build the binary
+make build
+
+# Run the server
+make run
+```
 
 ### Running Tests
 
 ```bash
 # Run all tests
-go test -v
+make test
 
 # Run with race detection
-go test -v -race
+make test-race
 
-# Run benchmarks
-go test -bench=. -benchmem
-
-# Check coverage
-go test -cover -coverprofile=coverage.out
-go tool cover -html=coverage.out
+# Quick dev cycle
+make dev
 ```
 
 ### Code Style
@@ -44,7 +50,19 @@ go tool cover -html=coverage.out
 - Follow standard Go formatting: `go fmt`
 - Run the linter: `go vet`
 - Write clear, descriptive commit messages
-- Add comments for exported functions and types
+
+## Project Structure
+
+```
+smarterbase/
+├── cmd/smarterbase/     # CLI entry point
+├── internal/
+│   ├── protocol/        # PostgreSQL wire protocol
+│   ├── executor/        # SQL execution
+│   └── storage/         # JSONL file storage
+├── e2e/                 # End-to-end tests
+└── docs/                # Documentation
+```
 
 ## Making Changes
 
@@ -54,41 +72,18 @@ go tool cover -html=coverage.out
 - For large changes, open an issue first to discuss
 - Make sure tests pass before submitting
 
-### Code Guidelines
-
-1. **Write Tests**
-   - Add tests for new functionality
-   - Update tests for changed functionality
-   - Aim for >70% code coverage
-
-2. **Documentation**
-   - Update README.md if adding features
-   - Add godoc comments for exported items
-   - Include examples in comments where helpful
-
-3. **Commit Messages**
-   ```
-   Short summary (50 chars or less)
-
-   More detailed explanation if needed. Wrap at 72 characters.
-
-   - Bullet points are okay
-   - Reference issues: Fixes #123
-   ```
-
 ### What to Contribute
 
 **We welcome:**
 - Bug fixes
 - Performance improvements
 - Documentation improvements
-- New backend implementations
+- Additional SQL support
 - Test coverage improvements
-- Example code
 
 **Please discuss first:**
 - Major architectural changes
-- Breaking changes to public API
+- Breaking changes to SQL compatibility
 - New dependencies
 
 ## Submitting Changes
@@ -102,47 +97,18 @@ go tool cover -html=coverage.out
    - Use a clear, descriptive title
    - Reference any related issues
    - Describe what changed and why
-   - Include test results if applicable
 
 3. **Code Review**:
    - Address review feedback promptly
-   - Keep discussions professional and constructive
-   - Be patient - reviews take time
+   - Keep discussions professional
 
 ## Pull Request Checklist
 
-- [ ] Tests pass locally (`go test -v -race`)
-- [ ] Code is formatted (`go fmt`)
-- [ ] No lint errors (`go vet`)
+- [ ] Tests pass locally (`make test`)
+- [ ] Code is formatted (`go fmt ./...`)
+- [ ] No lint errors (`go vet ./...`)
 - [ ] Documentation updated if needed
 - [ ] Commit messages are clear
-- [ ] Branch is up to date with main
-
-## Backend Implementation Guide
-
-If you're adding a new storage backend:
-
-1. **Implement the `Backend` interface**:
-   ```go
-   type Backend interface {
-       Get(ctx context.Context, key string) ([]byte, error)
-       Put(ctx context.Context, key string, data []byte) error
-       Delete(ctx context.Context, key string) error
-       // ... other methods
-   }
-   ```
-
-2. **Add compliance tests**:
-   ```go
-   func TestYourBackend_Compliance(t *testing.T) {
-       backend := NewYourBackend(...)
-       RunBackendComplianceTests(t, backend)
-   }
-   ```
-
-3. **Update documentation**:
-   - Add example to README.md
-   - Document any special configuration
 
 ## Reporting Issues
 
@@ -153,32 +119,18 @@ Include:
 - OS and architecture
 - Minimal reproduction case
 - Expected vs actual behavior
-- Error messages and stack traces
+- Error messages
 
 ### Feature Requests
 
 Include:
 - Use case description
-- Proposed API or behavior
+- Proposed SQL syntax or behavior
 - Why existing features don't work
-- Willingness to implement
-
-## Questions?
-
-- Check existing issues and discussions
-- Open a new issue with the "question" label
-- Be specific about what you're trying to do
-
-## Code of Conduct
-
-- Be respectful and inclusive
-- Focus on what is best for the community
-- Show empathy towards others
-- Accept constructive criticism gracefully
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the BSL 1.1 License.
 
 ---
 

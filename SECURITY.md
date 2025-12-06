@@ -6,8 +6,8 @@ We actively support the latest version of SmarterBase with security updates.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 3.x.x   | :white_check_mark: |
+| < 3.0   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -35,129 +35,48 @@ When reporting a vulnerability, please include:
   - Medium: 14-30 days
   - Low: 30+ days or next release
 
-### Disclosure Policy
+## Security Considerations
 
-- We follow responsible disclosure practices
-- We will coordinate with you on the disclosure timeline
-- Security fixes will be released as soon as possible
-- Credit will be given to reporters (unless anonymity is requested)
+### 1. Development Database Only
 
-## Security Best Practices
+SmarterBase is designed for **development and prototyping**, not production workloads. Security considerations:
 
-When using SmarterBase in production:
+- No authentication by default (configure `password` if needed)
+- No encryption at rest
+- No TLS support currently
+- Single-server only
 
-### 1. **Use S3BackendWithRedisLock for Production**
-```go
-// ✅ SAFE: Prevents race conditions
-backend := smarterbase.NewS3BackendWithRedisLock(s3Client, bucket, redisClient)
+For production, migrate to PostgreSQL.
 
-// ❌ UNSAFE: Only for single-writer scenarios
-backend := smarterbase.NewS3Backend(s3Client, bucket)
+### 2. File System Security
+
+SmarterBase stores data as JSON files:
+
+```
+./data/
+├── _schema/
+│   └── users.json      # Schema definition
+└── users.jsonl         # All user data
 ```
 
-### 2. **Enable Encryption at Rest**
-```go
-// Generate or load encryption key from secrets manager
-encryptionKey := loadFromSecretsManager() // 32-byte key
-
-// Wrap backend with encryption
-encryptedBackend, _ := smarterbase.NewEncryptionBackend(backend, encryptionKey)
+Ensure appropriate file permissions:
+```bash
+chmod 700 ./data
 ```
 
-### 3. **Secure Redis Connection**
-```go
-redisClient := redis.NewClient(&redis.Options{
-    Addr:     "localhost:6379",
-    Password: os.Getenv("REDIS_PASSWORD"), // Use env var
-    TLS:      &tls.Config{},               // Enable TLS
-})
-```
+### 3. Network Security
 
-### 4. **Use IAM Roles for S3 Access**
-```go
-// Use IAM roles instead of access keys
-cfg, _ := config.LoadDefaultConfig(ctx)
-s3Client := s3.NewFromConfig(cfg)
-```
+By default, SmarterBase listens on localhost. For remote access:
+- Use a reverse proxy with TLS
+- Restrict access via firewall
+- Use password authentication
 
-### 5. **Set Appropriate Timeouts**
-```go
-ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-defer cancel()
+### 4. Data Visibility
 
-// All operations respect context timeout
-store.GetJSON(ctx, key, &data)
-```
-
-### 6. **Validate Input Data**
-```go
-// Validate before storing
-if len(key) == 0 || len(key) > 1024 {
-    return errors.New("invalid key length")
-}
-
-// Sanitize user input
-key = strings.TrimSpace(key)
-```
-
-### 7. **Monitor and Alert**
-```go
-// Enable metrics and logging
-logger, _ := smarterbase.NewProductionZapLogger()
-metrics := smarterbase.NewPrometheusMetrics(prometheus.DefaultRegisterer)
-store := smarterbase.NewStoreWithObservability(backend, logger, metrics)
-
-// Alert on anomalies
-// - High error rates
-// - Index drift
-// - Lock timeouts
-```
-
-## Known Security Considerations
-
-### 1. **Redis Security**
-- Redis contains indexes but NOT the source data
-- If Redis is compromised, rebuild indexes from S3
-- Use Redis AUTH and TLS in production
-- Run Redis on private network
-
-### 2. **S3 Security**
-- S3 bucket should not be public
-- Use bucket policies to restrict access
-- Enable S3 versioning for data recovery
-- Enable S3 access logging
-
-### 3. **Encryption Key Management**
-- Store encryption keys in AWS Secrets Manager or HashiCorp Vault
-- Rotate keys periodically
-- Never commit keys to version control
-- Use different keys for different environments
-
-### 4. **Network Security**
-- Run application on private subnet
-- Use VPC endpoints for S3
-- Use security groups to restrict Redis access
-- Enable CloudTrail for API auditing
-
-## Dependencies
-
-SmarterBase uses the following security-sensitive dependencies:
-
-- **github.com/aws/aws-sdk-go-v2**: AWS SDK (keep updated)
-- **github.com/redis/go-redis/v9**: Redis client (keep updated)
-- **crypto/aes**: Standard library cryptography
-
-We monitor these dependencies for security advisories and update promptly.
-
-## Security Updates
-
-Security updates will be announced via:
-
-1. GitHub Security Advisories
-2. Release notes in CHANGELOG.md
-3. Git tags with version bumps
-
-Subscribe to repository releases to be notified of security updates.
+All data is stored as human-readable JSON. This is a feature for development but means:
+- Sensitive data is visible in plain text
+- Do not store secrets, passwords, or PII
+- Use real PostgreSQL for sensitive data
 
 ## Questions?
 
