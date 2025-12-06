@@ -1,1269 +1,985 @@
-<!doctype html>
-<html lang="en" class="group/html" data-theme="dark">
-    <head>
-        <meta charset="utf-8" />
-<title>SmarterBase - Iterate on Your Data Model Without Migrations</title>
-<meta content="PostgreSQL-compatible database that stores data as JSON files. Change your schema anytime—just edit the file. Perfect for AI-assisted coding with Claude Code, Cursor, and Copilot." name="description" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmarterBase - The Database for the AI Era</title>
+    <meta name="description" content="PostgreSQL-compatible database that stores data as JSON files. Change your schema anytime—just edit the file. Perfect for AI-assisted coding.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-<link rel="shortcut icon" href="./images/favicon.ico" />
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #e4e4e7;
+            overflow-x: hidden;
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/card3d@2.6.5/dist/card3d.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
 
-      <link rel="stylesheet" href="./assets/index.css">
-      <style>
-        html, body {
-          overflow-x: hidden !important;
-          max-width: 100vw !important;
-          width: 100% !important;
-        }
-        * {
-          max-width: 100% !important;
-          box-sizing: border-box !important;
-        }
-        .container {
-          padding-left: 1rem !important;
-          padding-right: 1rem !important;
-          max-width: 100vw !important;
-          width: 100% !important;
-        }
-        @media (min-width: 640px) {
-          .container {
-            padding-left: 1.5rem !important;
-            padding-right: 1.5rem !important;
-          }
-        }
-        @media (min-width: 1024px) {
-          .container {
-            padding-left: 2rem !important;
-            padding-right: 2rem !important;
-          }
-        }
-        pre, code {
-          max-width: 100% !important;
-          overflow-x: auto !important;
-          word-wrap: break-word !important;
-          white-space: pre-wrap !important;
-        }
-        .grid {
-          max-width: 100% !important;
-          width: 100% !important;
-        }
-        section {
-          max-width: 100vw !important;
-          overflow-x: hidden !important;
-        }
-        h1, h2, h3, h4, h5, h6 {
-          word-wrap: break-word !important;
-          overflow-wrap: break-word !important;
-        }
-      </style>
-    </head>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
 
-    <body>
-<div
-    id="layout-topbar"
-    class="bg-base-100 lg:bg-base-100/90 border-base-300 sticky top-0 z-10 border-b data-[at-top=true]:border-transparent lg:backdrop-blur-sm">
-    <div class="container">
-        <nav class="flex items-center justify-between py-2 px-4">
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .code-syntax-blue { color: #60a5fa; }
+        .code-syntax-green { color: #4ade80; }
+        .code-syntax-purple { color: #c084fc; }
+        .code-syntax-gray { color: #71717a; }
+        .code-syntax-yellow { color: #facc15; }
+
+        .reveal-hidden {
+            opacity: 0;
+            transform: translateY(30px);
+            filter: blur(4px);
+        }
+
+        .reveal-visible {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+
+        /* Terminal styles */
+        .terminal-window {
+            background: #0d0d0d;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .terminal-header {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .prompt { color: #71717a; }
+        .command { color: #ffffff; }
+        .output { color: #a1a1aa; }
+        .success { color: #4ade80; }
+        .info { color: #60a5fa; }
+        .highlight { color: #60a5fa; }
+        .comment { color: #52525b; font-style: italic; }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #71717a;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .glow { text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+    </style>
+</head>
+<body class="antialiased selection:bg-blue-500/30">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-[#050505]/80 backdrop-blur-md transition-all duration-500">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <label
-                    for="menu-drawer"
-                    id="menu-drawer-trigger"
-                    aria-label="open sidebar"
-                    class="btn btn-square btn-ghost btn-sm lg:hidden">
-                    <i class="fa-solid fa-bars"></i>
-                </label>
-                <a href="#" class="text-xl font-semibold">SmarterBase</a>
+                <div class="w-5 h-5 bg-blue-600 rounded-sm"></div>
+                <span class="font-semibold text-lg tracking-tight text-white">SmarterBase</span>
             </div>
 
-            <div class="max-lg:hidden">
-                <ul class="menu menu-horizontal gap-2 px-1">
-                    <li class="font-medium"><a href="#home">Home</a></li>
-                    <li class="font-medium"><a href="#features">Features</a></li>
-                    <li class="font-medium"><a href="#how-it-works">How It Works</a></li>
-                    <li class="font-medium"><a href="#llm-friendly">LLM-Friendly</a></li>
-                    <li class="font-medium"><a href="#docs">Docs</a></li>
-                </ul>
+            <div class="hidden md:flex items-center gap-8 text-sm text-zinc-400">
+                <a href="#home" class="hover:text-white transition-colors">Home</a>
+                <a href="#features" class="hover:text-white transition-colors">Features</a>
+                <a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a>
+                <a href="#llm-friendly" class="hover:text-white transition-colors">LLM-Friendly</a>
+                <a href="#docs" class="hover:text-white transition-colors">Docs</a>
             </div>
 
-            <div class="space-x-2">
-                <a class="btn btn-ghost btn-sm" href="https://github.com/adrianmcphee/smarterbase" target="_blank">
-                    <i class="fa-brands fa-github"></i>
-                    GitHub
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="text-zinc-400 hover:text-white transition-colors">
+                    <i data-lucide="github" class="w-5 h-5"></i>
                 </a>
-                <a class="btn btn-primary btn-sm" href="#quickstart">Get Started</a>
+                <a href="#quickstart" class="bg-white text-black px-4 py-1.5 rounded-full text-sm font-medium hover:bg-zinc-200 transition-colors">
+                    Get Started
+                </a>
             </div>
-        </nav>
+        </div>
+    </nav>
 
-        <div class="drawer">
-            <input id="menu-drawer" type="checkbox" class="drawer-toggle" />
-            <div class="drawer-side">
-                <label for="menu-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-                <div class="bg-base-100 min-h-full w-60 p-5">
-                    <a href="#" class="text-xl font-semibold">SmarterBase</a>
-                    <ul class="menu w-full gap-2 p-0 pt-4">
-                        <li class="font-medium"><a href="#home">Home</a></li>
-                        <li class="font-medium"><a href="#features">Features</a></li>
-                        <li class="font-medium"><a href="#how-it-works">How It Works</a></li>
-                        <li class="font-medium"><a href="#llm-friendly">LLM-Friendly</a></li>
-                        <li class="font-medium"><a href="#docs">Docs</a></li>
-                    </ul>
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 overflow-hidden" id="home">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+
+            <!-- Hero Content -->
+            <div class="space-y-8">
+                <div class="space-y-4 reveal-on-scroll" data-delay="100">
+                    <h1 class="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tighter text-white leading-[1.1]">
+                        Iterate on your data model. <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Without migrations.</span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-zinc-400 max-w-xl leading-relaxed reveal-on-scroll" data-delay="200">
+                        A PostgreSQL-compatible database that stores data as JSON files. Change your schema anytime—just edit the file. No migration files, no <code class="bg-white/10 px-1 py-0.5 rounded text-zinc-200 text-sm font-mono">ALTER TABLE</code>, no coordination.
+                    </p>
+                    <p class="text-base text-zinc-500 reveal-on-scroll" data-delay="300">
+                        Perfect for <span class="text-zinc-300">AI-assisted coding</span> (Claude Code, Cursor, Copilot), early development, and prototypes.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4 reveal-on-scroll" data-delay="400">
+                    <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all shadow-[0_0_20px_-5px_rgba(37,99,235,0.5)]">
+                        <i data-lucide="github" class="w-4 h-4"></i>
+                        View on GitHub
+                    </a>
+                    <a href="#quickstart" class="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 px-5 py-2.5 rounded-lg text-sm font-medium transition-all">
+                        Get Started
+                    </a>
+                </div>
+
+                <div class="flex flex-wrap gap-3 pt-2 reveal-on-scroll" data-delay="500">
+                    <span class="px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-xs text-zinc-400">Go 1.25+</span>
+                    <span class="px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-xs text-zinc-400">BSL 1.1</span>
+                    <span class="px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-xs text-zinc-400">Any PostgreSQL Driver</span>
+                </div>
+            </div>
+
+            <!-- Hero Terminal (Animated) -->
+            <div class="relative reveal-on-scroll" data-delay="600">
+                <div class="animate-float">
+                    <div class="terminal-window rounded-xl shadow-2xl overflow-hidden">
+                        <div class="terminal-header flex items-center gap-2 px-4 py-3">
+                            <div class="flex gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
+                            </div>
+                            <div class="text-xs text-zinc-500 font-mono ml-4">smarterbase@localhost ~ zsh</div>
+                        </div>
+                        <div class="p-6 font-mono text-xs md:text-sm overflow-y-auto" style="height: 420px;" id="main-terminal-body">
+                            <div id="terminal-content"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-
-        <section class="py-8 lg:py-20" id="home">
-            <div class="container">
-                <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
-                    <div>
-                        <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
-                            Iterate on your data model.
-                            <span class="text-primary">Without migrations.</span>
-                        </h1>
-                        <p class="text-base-content/80 mt-8 sm:text-lg">
-                            A PostgreSQL-compatible database that stores data as <strong>JSON files</strong>.
-                            Change your schema anytime—just edit the file. No migration files, no <code>ALTER TABLE</code>, no coordination.
-                        </p>
-                        <p class="text-base-content/60 mt-4 sm:text-base">
-                            Perfect for <strong>AI-assisted coding</strong> (Claude Code, Cursor, Copilot), <strong>early development</strong>, and <strong>prototypes</strong>.
-                        </p>
-                        <div class="mt-8 inline-flex gap-3 sm:mt-12">
-                            <a href="https://github.com/adrianmcphee/smarterbase" target="_blank">
-                                <button class="btn btn-primary">
-                                    <i class="fa-brands fa-github"></i>
-                                    View on GitHub
-                                </button>
-                            </a>
-                            <a href="#quickstart">
-                                <button class="btn btn-ghost">Get Started</button>
-                            </a>
-                        </div>
-                        <div class="mt-8 flex items-center gap-3">
-                            <div class="badge badge-outline">Go 1.25+</div>
-                            <div class="badge badge-outline">BSL 1.1</div>
-                            <div class="badge badge-outline">Any PostgreSQL Driver</div>
-                        </div>
+        <!-- Driver Support Banner -->
+        <div class="max-w-7xl mx-auto px-6 mt-16 reveal-on-scroll" data-delay="700">
+            <p class="text-zinc-500 text-sm mb-4">Works with any PostgreSQL driver</p>
+            <div class="terminal-window rounded-xl overflow-hidden" id="driver-terminal-window">
+                <div class="terminal-header flex items-center gap-2 px-4 py-2">
+                    <div class="flex gap-2">
+                        <div class="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50"></div>
                     </div>
+                    <div class="text-xs text-zinc-500 font-mono ml-4">Any Language</div>
+                </div>
+                <div class="p-4 pl-6 font-mono text-xs overflow-y-auto" style="height: 180px;" id="driver-terminal-body">
+                    <div id="driver-terminal-content"></div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                    <div class="terminal-window rounded-lg overflow-hidden shadow-2xl" id="terminal-demo">
-                        <style>
-                            @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+    <!-- Problem Section -->
+    <section class="py-24 border-t border-white/5 bg-zinc-900/20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 reveal-on-scroll">
+                <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-4">Migrations Slow You Down</h2>
+                <p class="text-zinc-400 max-w-2xl mx-auto text-lg">Traditional database workflows create friction during the exploration phase.</p>
+            </div>
 
-                            .terminal-window {
-                                font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-                                background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-                                border: 1px solid #2d2d44;
-                            }
-
-                            .terminal-header {
-                                background: linear-gradient(180deg, #2d2d44 0%, #1f1f33 100%);
-                                border-bottom: 1px solid #3d3d55;
-                            }
-
-                            .terminal-body {
-                                background: #0d1117;
-                                position: relative;
-                                overflow: hidden;
-                            }
-
-                            .terminal-body::before {
-                                content: '';
-                                position: absolute;
-                                top: 0;
-                                left: 0;
-                                right: 0;
-                                bottom: 0;
-                                background: repeating-linear-gradient(
-                                    0deg,
-                                    rgba(0, 0, 0, 0.1) 0px,
-                                    rgba(0, 0, 0, 0.1) 1px,
-                                    transparent 1px,
-                                    transparent 2px
-                                );
-                                pointer-events: none;
-                                opacity: 0.3;
-                            }
-
-                            .terminal-text {
-                                text-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
-                            }
-
-                            .prompt { color: #7ee787; }
-                            .command { color: #f0f6fc; font-weight: 500; }
-                            .output { color: #8b949e; }
-                            .success { color: #3fb950; }
-                            .info { color: #58a6ff; }
-                            .highlight { color: #ffa657; }
-                            .json-key { color: #79c0ff; }
-                            .json-string { color: #a5d6ff; }
-                            .comment { color: #6e7681; font-style: italic; }
-
-                            .cursor {
-                                display: inline-block;
-                                width: 8px;
-                                height: 16px;
-                                background: #7ee787;
-                                animation: blink 1s step-end infinite;
-                                vertical-align: text-bottom;
-                                margin-left: 2px;
-                            }
-
-                            @keyframes blink {
-                                50% { opacity: 0; }
-                            }
-
-                            .typing-line {
-                                overflow: hidden;
-                                white-space: nowrap;
-                            }
-
-                            .glow {
-                                animation: glow 2s ease-in-out infinite alternate;
-                            }
-
-                            @keyframes glow {
-                                from { text-shadow: 0 0 5px rgba(0, 255, 136, 0.3); }
-                                to { text-shadow: 0 0 10px rgba(0, 255, 136, 0.5), 0 0 20px rgba(0, 255, 136, 0.2); }
-                            }
-                        </style>
-
-                        <div class="terminal-header px-4 py-2.5 flex items-center gap-3">
-                            <div class="flex gap-2">
-                                <div class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-sm"></div>
-                                <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm"></div>
-                                <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm"></div>
-                            </div>
-                            <div class="flex-1 text-center">
-                                <span class="text-gray-400 text-xs tracking-wide">smarterbase@localhost ~ zsh</span>
-                            </div>
-                            <div class="w-16"></div>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-8 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group reveal-on-scroll" data-delay="100">
+                    <div class="flex items-start gap-4">
+                        <div class="mt-1 text-zinc-500 group-hover:text-red-400 transition-colors">01</div>
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-2">Migration Debt</h3>
+                            <p class="text-zinc-400 leading-relaxed mb-3">Your "figuring it out" phase becomes permanent history.</p>
+                            <p class="text-sm text-red-400/80">Everyone replays 100+ exploratory migrations.</p>
                         </div>
-
-                        <div class="terminal-body p-4 sm:p-6 pl-8 sm:pl-12 text-xs sm:text-sm leading-relaxed overflow-x-auto overflow-y-auto" style="height: 420px;" id="main-terminal-body">
-                            <div class="terminal-text" id="terminal-content"></div>
-                            <span class="cursor" id="terminal-cursor"></span>
-                        </div>
-
-                        <script>
-                        (function() {
-                            const terminalScript = [
-                                { type: 'prompt', text: '~/myproject $ ' },
-                                { type: 'type', text: 'smarterbase --port 5433 --data ./data', speed: 40 },
-                                { type: 'wait', ms: 300 },
-                                { type: 'line', text: '' },
-                                { type: 'line', text: '<span class="info">  +---------------------------------------+</span>' },
-                                { type: 'line', text: '<span class="info">  |      </span><span class="success glow">S M A R T E R B A S E</span><span class="info">          |</span>' },
-                                { type: 'line', text: '<span class="info">  +---------------------------------------+</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'line', text: '<span class="output">  <span class="success">v1.0.0</span> - PostgreSQL-compatible file store</span>' },
-                                { type: 'line', text: '<span class="output">  Listening on port <span class="highlight">5433</span>...</span>' },
-                                { type: 'wait', ms: 400 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '~/myproject $ ' },
-                                { type: 'type', text: 'psql -h localhost -p 5433', speed: 35 },
-                                { type: 'wait', ms: 200 },
-                                { type: 'line', text: '<span class="output">Connected to smarterbase</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'smarterbase=# ', cls: 'highlight' },
-                                { type: 'type', text: 'CREATE TABLE users (', speed: 30 },
-                                { type: 'line', text: '<span class="command">    id TEXT PRIMARY KEY,</span>' },
-                                { type: 'line', text: '<span class="command">    name TEXT,</span>' },
-                                { type: 'line', text: '<span class="command">    email TEXT</span>' },
-                                { type: 'line', text: '<span class="command">);</span>' },
-                                { type: 'wait', ms: 200 },
-                                { type: 'line', text: '<span class="success">CREATE TABLE</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'smarterbase=# ', cls: 'highlight' },
-                                { type: 'type', text: 'INSERT INTO users VALUES', speed: 35 },
-                                { type: 'line', text: '<span class="command">  (\'u1\', \'Alice\', \'alice@example.com\'),</span>' },
-                                { type: 'line', text: '<span class="command">  (\'u2\', \'Bob\', \'bob@example.com\');</span>' },
-                                { type: 'wait', ms: 200 },
-                                { type: 'line', text: '<span class="success">INSERT 0 2</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'smarterbase=# ', cls: 'highlight' },
-                                { type: 'type', text: '\\q', speed: 100 },
-                                { type: 'wait', ms: 300 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '~/myproject $ ' },
-                                { type: 'type', text: 'tree data/', speed: 50 },
-                                { type: 'wait', ms: 200 },
-                                { type: 'line', text: '<span class="info">data/</span>' },
-                                { type: 'line', text: '<span class="output">├── <span class="info">_schema/</span></span>' },
-                                { type: 'line', text: '<span class="output">│   └── users.json</span>' },
-                                { type: 'line', text: '<span class="output">└── <span class="success">users.jsonl</span>  <span class="comment">← your data!</span></span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '~/myproject $ ' },
-                                { type: 'type', text: 'cat data/users.jsonl', speed: 40 },
-                                { type: 'wait', ms: 150 },
-                                { type: 'line', text: '<span class="json-string">{"id":"u1","name":"Alice","email":"alice@example.com"}</span>' },
-                                { type: 'line', text: '<span class="json-string">{"id":"u2","name":"Bob","email":"bob@example.com"}</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '~/myproject $ ' },
-                                { type: 'type', text: 'cat data/_schema/users.json | jq', speed: 35 },
-                                { type: 'wait', ms: 150 },
-                                { type: 'line', text: '{' },
-                                { type: 'line', text: '  <span class="json-key">"name"</span>: <span class="json-string">"users"</span>,' },
-                                { type: 'line', text: '  <span class="json-key">"columns"</span>: [' },
-                                { type: 'line', text: '    {<span class="json-key">"name"</span>: <span class="json-string">"id"</span>, <span class="json-key">"primary_key"</span>: <span class="success">true</span>},' },
-                                { type: 'line', text: '    {<span class="json-key">"name"</span>: <span class="json-string">"name"</span>, <span class="json-key">"type"</span>: <span class="json-string">"text"</span>},' },
-                                { type: 'line', text: '    {<span class="json-key">"name"</span>: <span class="json-string">"email"</span>, <span class="json-key">"type"</span>: <span class="json-string">"text"</span>}' },
-                                { type: 'line', text: '  ]' },
-                                { type: 'line', text: '}' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '~/myproject $ ' },
-                                { type: 'type', text: '# Schema is just JSON. Edit it directly!', speed: 25, cls: 'comment' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '~/myproject $ ' },
-                            ];
-
-                            const container = document.getElementById('terminal-content');
-                            const terminalBody = document.getElementById('main-terminal-body');
-                            const cursor = document.getElementById('terminal-cursor');
-                            let currentLine = null;
-
-                            async function sleep(ms) {
-                                return new Promise(resolve => setTimeout(resolve, ms));
-                            }
-
-                            function scrollToBottom() {
-                                terminalBody.scrollTop = terminalBody.scrollHeight;
-                            }
-
-                            async function typeText(text, speed, cls) {
-                                for (let i = 0; i < text.length; i++) {
-                                    const span = document.createElement('span');
-                                    span.className = cls || 'command';
-                                    span.textContent = text[i];
-                                    currentLine.appendChild(span);
-                                    scrollToBottom();
-                                    await sleep(speed + Math.random() * 20);
-                                }
-                            }
-
-                            async function runTerminal() {
-                                container.innerHTML = '';
-                                terminalBody.scrollTop = 0;
-                                currentLine = document.createElement('div');
-                                container.appendChild(currentLine);
-
-                                for (const step of terminalScript) {
-                                    switch (step.type) {
-                                        case 'prompt':
-                                            const prompt = document.createElement('span');
-                                            prompt.className = step.cls || 'prompt';
-                                            prompt.textContent = step.text;
-                                            currentLine.appendChild(prompt);
-                                            scrollToBottom();
-                                            break;
-
-                                        case 'type':
-                                            await typeText(step.text, step.speed, step.cls);
-                                            break;
-
-                                        case 'line':
-                                            currentLine = document.createElement('div');
-                                            if (step.text) {
-                                                currentLine.innerHTML = step.text;
-                                            } else {
-                                                currentLine.innerHTML = '&nbsp;';
-                                            }
-                                            container.appendChild(currentLine);
-                                            scrollToBottom();
-                                            break;
-
-                                        case 'wait':
-                                            await sleep(step.ms);
-                                            break;
-                                    }
-                                }
-
-                                // Wait 5 seconds then loop
-                                await sleep(5000);
-                                runTerminal();
-                            }
-
-                            // Start when visible
-                            const observer = new IntersectionObserver((entries) => {
-                                if (entries[0].isIntersecting) {
-                                    runTerminal();
-                                    observer.disconnect();
-                                }
-                            });
-                            observer.observe(container);
-                        })();
-                        </script>
                     </div>
                 </div>
 
-                <!-- Second terminal: Language drivers -->
-                <div class="mt-8 lg:mt-12">
-                    <h3 class="text-center text-base-content/60 text-lg mb-4">Works with any PostgreSQL driver</h3>
-                    <div class="terminal-window rounded-lg overflow-hidden shadow-xl max-w-3xl mx-auto" id="terminal-drivers">
-                        <div class="terminal-header px-4 py-2 flex items-center gap-3">
-                            <div class="flex gap-2">
-                                <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
-                                <div class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
-                                <div class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
-                            </div>
-                            <div class="flex-1 text-center">
-                                <span class="text-gray-400 text-xs">Any Language</span>
-                            </div>
+                <div class="p-8 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group reveal-on-scroll" data-delay="200">
+                    <div class="flex items-start gap-4">
+                        <div class="mt-1 text-zinc-500 group-hover:text-red-400 transition-colors">02</div>
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-2">AI Can't Help</h3>
+                            <p class="text-zinc-400 leading-relaxed mb-3">Claude can't "just fix the schema".</p>
+                            <p class="text-sm text-red-400/80">Has to generate migration SQL.</p>
                         </div>
-                        <div class="terminal-body p-4 pl-8 text-xs sm:text-sm leading-relaxed overflow-x-auto overflow-y-auto" style="height: 220px;" id="driver-terminal-body">
-                            <div class="terminal-text" id="driver-terminal-content"></div>
-                        </div>
-                        <script>
-                        (function() {
-                            const driverScript = [
-                                { type: 'line', text: '<span class="comment"># Python</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '>>> ' },
-                                { type: 'type', text: 'import psycopg2', speed: 30 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '>>> ' },
-                                { type: 'type', text: 'conn = psycopg2.connect("host=localhost port=5433")', speed: 25 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: '>>> ' },
-                                { type: 'type', text: 'cur.execute("SELECT * FROM users")', speed: 30 },
-                                { type: 'line', text: '<span class="success">[(\'u1\', \'Alice\'), (\'u2\', \'Bob\')]</span>' },
-                                { type: 'wait', ms: 800 },
-                                { type: 'clear' },
-                                { type: 'line', text: '<span class="comment">// Go</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'go > ' },
-                                { type: 'type', text: 'db, _ := sql.Open("postgres", "host=localhost port=5433")', speed: 25 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'go > ' },
-                                { type: 'type', text: 'rows, _ := db.Query("SELECT * FROM users")', speed: 30 },
-                                { type: 'line', text: '<span class="success">&{rows: [{u1 Alice} {u2 Bob}]}</span>' },
-                                { type: 'wait', ms: 800 },
-                                { type: 'clear' },
-                                { type: 'line', text: '<span class="comment"># Ruby</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'irb> ' },
-                                { type: 'type', text: 'require \'pg\'', speed: 40 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'irb> ' },
-                                { type: 'type', text: 'conn = PG.connect(host: \'localhost\', port: 5433)', speed: 25 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'irb> ' },
-                                { type: 'type', text: 'conn.exec("SELECT * FROM users").values', speed: 30 },
-                                { type: 'line', text: '<span class="success">=> [["u1", "Alice"], ["u2", "Bob"]]</span>' },
-                                { type: 'wait', ms: 800 },
-                                { type: 'clear' },
-                                { type: 'line', text: '<span class="comment">// Node.js</span>' },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'node > ' },
-                                { type: 'type', text: 'const { Pool } = require(\'pg\')', speed: 30 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'node > ' },
-                                { type: 'type', text: 'const pool = new Pool({ host: \'localhost\', port: 5433 })', speed: 25 },
-                                { type: 'line', text: '' },
-                                { type: 'prompt', text: 'node > ' },
-                                { type: 'type', text: 'await pool.query(\'SELECT * FROM users\')', speed: 30 },
-                                { type: 'line', text: '<span class="success">{ rows: [{ id: \'u1\', name: \'Alice\' }, ...] }</span>' },
-                                { type: 'wait', ms: 800 },
-                            ];
-
-                            const container = document.getElementById('driver-terminal-content');
-                            let currentLine = null;
-
-                            async function sleep(ms) {
-                                return new Promise(resolve => setTimeout(resolve, ms));
-                            }
-
-                            async function typeText(text, speed) {
-                                for (let i = 0; i < text.length; i++) {
-                                    const span = document.createElement('span');
-                                    span.className = 'command';
-                                    span.textContent = text[i];
-                                    currentLine.appendChild(span);
-                                    await sleep(speed + Math.random() * 15);
-                                }
-                            }
-
-                            async function runDriverTerminal() {
-                                container.innerHTML = '';
-                                currentLine = document.createElement('div');
-                                container.appendChild(currentLine);
-
-                                for (const step of driverScript) {
-                                    switch (step.type) {
-                                        case 'prompt':
-                                            const prompt = document.createElement('span');
-                                            prompt.className = 'highlight';
-                                            prompt.textContent = step.text;
-                                            currentLine.appendChild(prompt);
-                                            break;
-                                        case 'type':
-                                            await typeText(step.text, step.speed);
-                                            break;
-                                        case 'line':
-                                            currentLine = document.createElement('div');
-                                            currentLine.innerHTML = step.text || '&nbsp;';
-                                            container.appendChild(currentLine);
-                                            break;
-                                        case 'wait':
-                                            await sleep(step.ms);
-                                            break;
-                                        case 'clear':
-                                            container.innerHTML = '';
-                                            currentLine = document.createElement('div');
-                                            container.appendChild(currentLine);
-                                            break;
-                                    }
-                                }
-                                await sleep(3000);
-                                runDriverTerminal();
-                            }
-
-                            const observer = new IntersectionObserver((entries) => {
-                                if (entries[0].isIntersecting) {
-                                    runDriverTerminal();
-                                    observer.disconnect();
-                                }
-                            });
-                            observer.observe(container);
-                        })();
-                        </script>
                     </div>
                 </div>
 
-                <div class="mt-12 lg:mt-32">
-                    <h2 class="text-base-content/60 text-center text-xl font-medium">
-                        Migrations Slow You Down
-                    </h2>
-                    <div class="mt-8 grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
-                        <div class="card border-error/30 border-2 bg-base-200">
-                            <div class="card-body">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-error text-2xl">1</span>
-                                    <h3 class="text-lg font-semibold">Migration Debt</h3>
-                                </div>
-                                <div class="mt-4 space-y-2 text-sm">
-                                    <div>Your "figuring it out" phase becomes permanent history</div>
-                                    <div class="text-error">Everyone replays 100+ exploratory migrations</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card border-error/30 border-2 bg-base-200">
-                            <div class="card-body">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-error text-2xl">2</span>
-                                    <h3 class="text-lg font-semibold">AI Can't Help</h3>
-                                </div>
-                                <div class="mt-4 space-y-2 text-sm">
-                                    <div>Claude can't "just fix the schema"</div>
-                                    <div class="text-error">Has to generate migration SQL</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card border-error/30 border-2 bg-base-200">
-                            <div class="card-body">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-error text-2xl">3</span>
-                                    <h3 class="text-lg font-semibold">Opaque Data</h3>
-                                </div>
-                                <div class="mt-4 space-y-2 text-sm">
-                                    <div>Can't just <code>cat</code> a record</div>
-                                    <div class="text-error">Need tools to see your own data</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card border-error/30 border-2 bg-base-200">
-                            <div class="card-body">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-error text-2xl">4</span>
-                                    <h3 class="text-lg font-semibold">SQLite Lock-in</h3>
-                                </div>
-                                <div class="mt-4 space-y-2 text-sm">
-                                    <div>Different SQL dialect</div>
-                                    <div class="text-error">PostgreSQL migration means rewrites</div>
-                                </div>
-                            </div>
+                <div class="p-8 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group reveal-on-scroll" data-delay="300">
+                    <div class="flex items-start gap-4">
+                        <div class="mt-1 text-zinc-500 group-hover:text-red-400 transition-colors">03</div>
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-2">Opaque Data</h3>
+                            <p class="text-zinc-400 leading-relaxed mb-3">Can't just cat a record.</p>
+                            <p class="text-sm text-red-400/80">Need tools to see your own data.</p>
                         </div>
                     </div>
-                    <div class="mt-8">
-                        <div class="card border-primary/30 border-2 bg-primary/5">
-                            <div class="card-body text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <span class="text-primary text-2xl">SmarterBase</span>
-                                </div>
-                                <div class="mt-4 text-lg">
-                                    <strong>Schema is JSON. Edit it directly. No migrations. Export to PostgreSQL when ready.</strong>
-                                </div>
-                            </div>
+                </div>
+
+                <div class="p-8 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group reveal-on-scroll" data-delay="400">
+                    <div class="flex items-start gap-4">
+                        <div class="mt-1 text-zinc-500 group-hover:text-red-400 transition-colors">04</div>
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-2">SQLite Lock-in</h3>
+                            <p class="text-zinc-400 leading-relaxed mb-3">Different SQL dialect.</p>
+                            <p class="text-sm text-red-400/80">PostgreSQL migration means rewrites.</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="py-8 lg:py-16 bg-base-300/30" id="features">
-            <div class="container">
-                <div class="text-center mb-12">
-                    <h2 class="text-2xl font-semibold sm:text-3xl">Why SmarterBase Works</h2>
+    <!-- Why SmarterBase -->
+    <section class="py-24 relative" id="features">
+        <div class="absolute inset-0 bg-blue-900/5 skew-y-3 pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto px-6 relative">
+            <div class="text-center mb-16 reveal-on-scroll">
+                <span class="text-blue-500 font-medium tracking-wide uppercase text-sm">Features</span>
+                <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-white mt-2 mb-4">Why SmarterBase Works</h2>
+                <p class="text-zinc-400">Schema is JSON. Edit it directly. No migrations. Export to PostgreSQL when ready.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="glass-card p-6 rounded-xl hover:border-blue-500/30 transition-all duration-300 group reveal-on-scroll" data-delay="100">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="refresh-cw" class="text-blue-400 w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">No Migrations</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed">Schema is JSON. Edit it directly. No migration files needed.</p>
                 </div>
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-rotate text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">No Migrations</h3>
-                            <p class="text-sm text-base-content/70">Schema is JSON. Edit it directly. No migration files.</p>
+
+                <div class="glass-card p-6 rounded-xl hover:border-blue-500/30 transition-all duration-300 group reveal-on-scroll" data-delay="200">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="bot" class="text-blue-400 w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">AI-Friendly</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed">Claude Code, Cursor, Copilot can edit schema JSON directly.</p>
+                </div>
+
+                <div class="glass-card p-6 rounded-xl hover:border-blue-500/30 transition-all duration-300 group reveal-on-scroll" data-delay="300">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="database" class="text-blue-400 w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">Postgres Compatible</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed">Wire protocol works with any pg driver. Same queries.</p>
+                </div>
+
+                <div class="glass-card p-6 rounded-xl hover:border-blue-500/30 transition-all duration-300 group reveal-on-scroll" data-delay="400">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="eye" class="text-blue-400 w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">See Everything</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed">cat, grep, git diff your data instantly.</p>
+                </div>
+
+                <div class="glass-card p-6 rounded-xl hover:border-blue-500/30 transition-all duration-300 group reveal-on-scroll" data-delay="500">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="zap" class="text-blue-400 w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">NVMe Speed</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed">10-100µs local reads. Faster than network databases.</p>
+                </div>
+
+                <div class="glass-card p-6 rounded-xl hover:border-blue-500/30 transition-all duration-300 group reveal-on-scroll" data-delay="600">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="arrow-right-left" class="text-blue-400 w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">Easy Migration</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed">Export to PostgreSQL when ready. Your queries work.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="py-24 border-t border-white/5 bg-zinc-900/30" id="how-it-works">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12 reveal-on-scroll">
+                <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-4">How It Works</h2>
+                <p class="text-zinc-400">PostgreSQL wire protocol + SQL parser + JSON file storage</p>
+            </div>
+
+            <div class="bg-black/50 border border-white/10 rounded-xl p-8 mb-12 flex flex-col items-center justify-center min-h-[300px] reveal-on-scroll" data-delay="200">
+                <div class="flex flex-col md:flex-row items-center gap-4 md:gap-12 w-full max-w-4xl justify-center relative">
+                    <div class="flex flex-col items-center z-10">
+                        <div class="w-32 h-20 rounded-lg border border-zinc-700 bg-zinc-900 flex items-center justify-center text-center text-xs font-mono text-zinc-300">
+                            Protocol<br>(pg wire)
                         </div>
                     </div>
-
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-robot text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">AI-Friendly</h3>
-                            <p class="text-sm text-base-content/70">Claude Code, Cursor, Copilot can edit schema JSON directly.</p>
+                    <div class="hidden md:block h-[1px] w-24 bg-zinc-700"></div>
+                    <div class="md:hidden w-[1px] h-12 bg-zinc-700"></div>
+                    <div class="flex flex-col items-center z-10">
+                        <div class="w-32 h-20 rounded-lg border border-blue-500/50 bg-blue-900/10 shadow-[0_0_15px_rgba(59,130,246,0.2)] flex items-center justify-center text-center text-xs font-mono text-blue-200">
+                            Parser<br>(SQL)
                         </div>
                     </div>
-
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-database text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">PostgreSQL Compatible</h3>
-                            <p class="text-sm text-base-content/70">Wire protocol works with any pg driver. Same queries.</p>
+                    <div class="hidden md:block h-[1px] w-24 bg-zinc-700"></div>
+                    <div class="md:hidden w-[1px] h-12 bg-zinc-700"></div>
+                    <div class="flex flex-col items-center z-10">
+                        <div class="w-32 h-20 rounded-lg border border-zinc-700 bg-zinc-900 flex items-center justify-center text-center text-xs font-mono text-zinc-300">
+                            Storage<br>(JSONL files)
                         </div>
                     </div>
+                </div>
 
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-eye text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">See Everything</h3>
-                            <p class="text-sm text-base-content/70"><code>cat</code>, <code>grep</code>, <code>git diff</code> your data</p>
+                <div class="mt-8 border-t border-dashed border-zinc-800 pt-8 w-full max-w-2xl font-mono text-xs text-zinc-500">
+                    <p class="mb-2">Your App (any PostgreSQL driver)</p>
+                    <p class="pl-4 border-l border-zinc-800 ml-2 mb-2">↓ PostgreSQL wire protocol</p>
+                    <p class="mb-4">smarterbase</p>
+                    <p class="pl-4 border-l border-zinc-800 ml-2 mb-2">↓ JSON files on disk</p>
+                    <div class="bg-zinc-900/50 p-4 rounded border border-white/5">
+                        ./data/<br>
+                        ├── _schema/<br>
+                        │   └── users.json   <span class="text-zinc-600"># {"columns": [...]}</span><br>
+                        └── users.jsonl      <span class="text-zinc-600"># All rows, one JSON per line</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="space-y-2 reveal-on-scroll" data-delay="100">
+                    <div class="flex items-center gap-2 text-blue-400 mb-2">
+                        <i data-lucide="network" class="w-5 h-5"></i>
+                        <h3 class="font-medium text-white">Protocol</h3>
+                    </div>
+                    <p class="text-sm text-zinc-400 leading-relaxed">PostgreSQL wire protocol. Any pg driver works.</p>
+                </div>
+                <div class="space-y-2 reveal-on-scroll" data-delay="200">
+                    <div class="flex items-center gap-2 text-blue-400 mb-2">
+                        <i data-lucide="code-2" class="w-5 h-5"></i>
+                        <h3 class="font-medium text-white">Parser</h3>
+                    </div>
+                    <p class="text-sm text-zinc-400 leading-relaxed">SQL parsing. No query planner needed.</p>
+                </div>
+                <div class="space-y-2 reveal-on-scroll" data-delay="300">
+                    <div class="flex items-center gap-2 text-blue-400 mb-2">
+                        <i data-lucide="hard-drive" class="w-5 h-5"></i>
+                        <h3 class="font-medium text-white">Storage</h3>
+                    </div>
+                    <p class="text-sm text-zinc-400 leading-relaxed">JSONL files + indexes. Atomic writes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LLM Friendly -->
+    <section class="py-24 border-t border-white/5" id="llm-friendly">
+        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+            <div class="reveal-on-scroll" data-delay="100">
+                <h2 class="text-3xl font-semibold tracking-tight text-white mb-6">LLM-Friendly Storage (JSONL)</h2>
+                <p class="text-zinc-400 mb-8 text-lg">One file per table. One JSON object per line. Full context for AI.</p>
+
+                <ul class="space-y-4">
+                    <li class="flex gap-3 items-start">
+                        <i data-lucide="check" class="w-5 h-5 text-blue-500 mt-0.5 shrink-0"></i>
+                        <div class="text-sm text-zinc-300"><strong class="text-white">Full table context</strong> – LLMs see your entire table in one cat command.</div>
+                    </li>
+                    <li class="flex gap-3 items-start">
+                        <i data-lucide="check" class="w-5 h-5 text-blue-500 mt-0.5 shrink-0"></i>
+                        <div class="text-sm text-zinc-300"><strong class="text-white">Schema + data together</strong> – <code class="bg-zinc-800 px-1 rounded text-xs">cat data/_schema/users.json data/users.jsonl</code></div>
+                    </li>
+                    <li class="flex gap-3 items-start">
+                        <i data-lucide="check" class="w-5 h-5 text-blue-500 mt-0.5 shrink-0"></i>
+                        <div class="text-sm text-zinc-300"><strong class="text-white">Easy editing</strong> – No migrations, just edit JSON files directly.</div>
+                    </li>
+                    <li class="flex gap-3 items-start">
+                        <i data-lucide="check" class="w-5 h-5 text-blue-500 mt-0.5 shrink-0"></i>
+                        <div class="text-sm text-zinc-300"><strong class="text-white">Git-friendly</strong> – Track schema and data changes with version control.</div>
+                    </li>
+                </ul>
+            </div>
+            <div class="bg-[#0A0A0A] border border-white/10 rounded-xl p-6 font-mono text-xs overflow-x-auto reveal-on-scroll" data-delay="300">
+<pre class="leading-relaxed"><span class="text-zinc-500"># Schema</span>
+<span class="text-purple-400">cat</span> data/_schema/users.json
+{
+  <span class="code-syntax-green">"name"</span>:<span class="code-syntax-yellow">"users"</span>,
+  <span class="code-syntax-green">"columns"</span>:[
+    {<span class="code-syntax-green">"name"</span>:<span class="code-syntax-yellow">"id"</span>,<span class="code-syntax-green">"primary_key"</span>:<span class="code-syntax-blue">true</span>},
+    {<span class="code-syntax-green">"name"</span>:<span class="code-syntax-yellow">"name"</span>,<span class="code-syntax-green">"type"</span>:<span class="code-syntax-yellow">"text"</span>},
+    {<span class="code-syntax-green">"name"</span>:<span class="code-syntax-yellow">"email"</span>,<span class="code-syntax-green">"type"</span>:<span class="code-syntax-yellow">"text"</span>}
+  ]
+}
+
+<span class="text-zinc-500"># Data (JSONL - one row per line)</span>
+<span class="text-purple-400">cat</span> data/users.jsonl
+{<span class="code-syntax-green">"id"</span>:<span class="code-syntax-yellow">"u1"</span>,<span class="code-syntax-green">"name"</span>:<span class="code-syntax-yellow">"Alice"</span>,<span class="code-syntax-green">"email"</span>:<span class="code-syntax-yellow">"alice@example.com"</span>}
+{<span class="code-syntax-green">"id"</span>:<span class="code-syntax-yellow">"u2"</span>,<span class="code-syntax-green">"name"</span>:<span class="code-syntax-yellow">"Bob"</span>,<span class="code-syntax-green">"email"</span>:<span class="code-syntax-yellow">"bob@example.com"</span>}
+
+<span class="text-zinc-500"># LLMs see your whole data model at once!</span></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Supported SQL -->
+    <section class="py-24 border-t border-white/5 bg-zinc-900/20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12 reveal-on-scroll">
+                <h2 class="text-3xl font-semibold tracking-tight text-white mb-2">Supported SQL</h2>
+                <p class="text-zinc-400">Single-table CRUD covers 90% of prototype needs</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="rounded-xl border border-blue-900/30 bg-blue-900/5 p-6 reveal-on-scroll" data-delay="100">
+                    <h3 class="text-blue-400 font-medium mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i> Supported
+                    </h3>
+                    <div class="font-mono text-xs text-zinc-300 space-y-4">
+                        <div>
+                            <span class="text-zinc-500">-- Data Definition</span><br>
+                            <span class="text-blue-400">CREATE TABLE</span> users (<br>
+                            &nbsp;id UUID PRIMARY KEY,<br>
+                            &nbsp;email TEXT, name TEXT<br>
+                            );<br>
+                            <span class="text-blue-400">CREATE INDEX</span> idx_role ON users(role);
+                        </div>
+                        <div>
+                            <span class="text-zinc-500">-- Queries</span><br>
+                            <span class="text-blue-400">SELECT * FROM</span> users <span class="text-blue-400">WHERE</span> id = $1<br>
+                            <span class="text-blue-400">SELECT * FROM</span> users <span class="text-blue-400">ORDER BY</span> id DESC <span class="text-blue-400">LIMIT</span> 10
                         </div>
                     </div>
+                </div>
 
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-bolt text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">NVMe Speed</h3>
-                            <p class="text-sm text-base-content/70">10-100μs local reads. Faster than network databases.</p>
+                <div class="rounded-xl border border-red-900/20 bg-red-900/5 p-6 opacity-80 reveal-on-scroll" data-delay="200">
+                    <h3 class="text-red-400 font-medium mb-4 flex items-center gap-2">
+                        <i data-lucide="x-circle" class="w-4 h-4"></i> Not Supported (Use PostgreSQL)
+                    </h3>
+                    <div class="font-mono text-xs text-zinc-400 space-y-4">
+                        <div>
+                            <span class="text-zinc-600">-- No JOINs</span><br>
+                            <span class="line-through decoration-red-500/50">SELECT * FROM users u JOIN orders o...</span>
                         </div>
-                    </div>
-
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-arrow-right-arrow-left text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">Easy Migration</h3>
-                            <p class="text-sm text-base-content/70">Export to PostgreSQL when ready. Your queries work.</p>
+                        <div>
+                            <span class="text-zinc-600">-- No aggregations</span><br>
+                            <span class="line-through decoration-red-500/50">SELECT COUNT(*) FROM users</span>
+                        </div>
+                        <div>
+                            <span class="text-zinc-600">-- No transactions</span><br>
+                            <span class="line-through decoration-red-500/50">BEGIN; INSERT ...; COMMIT;</span>
+                        </div>
+                        <div class="pt-4 text-zinc-500 italic">
+                            If you need these, migrate to PostgreSQL.
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="relative py-8 lg:py-20" id="how-it-works">
-            <div class="absolute start-[10%]">
-                <div
-                    class="from-primary/10 to-secondary/10 pointer-events-none aspect-square w-60 rounded-full bg-gradient-to-r blur-3xl lg:w-[600px]"></div>
-            </div>
+    <!-- Use Cases -->
+    <section class="py-24 border-t border-white/5 bg-zinc-900/30">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-center text-white mb-12 reveal-on-scroll">When to Use SmarterBase</h2>
 
-            <div class="container">
-                <div class="flex flex-col items-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">How It Works</h2>
-                    <p class="text-base-content/80 mt-4 sm:text-lg">
-                        PostgreSQL wire protocol + SQL parser + JSON file storage
-                    </p>
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="p-8 rounded-xl bg-[#080808] border border-blue-900/20 shadow-lg reveal-on-scroll" data-delay="100">
+                    <h3 class="text-blue-400 font-medium mb-6 text-lg">Use It For</h3>
+                    <ul class="space-y-4">
+                        <li class="flex gap-3">
+                            <i data-lucide="check" class="w-5 h-5 text-blue-500 shrink-0"></i>
+                            <span class="text-sm text-zinc-300"><strong class="text-white">AI-assisted coding</strong> – Claude Code, Cursor, Copilot can edit schema directly</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <i data-lucide="check" class="w-5 h-5 text-blue-500 shrink-0"></i>
+                            <span class="text-sm text-zinc-300"><strong class="text-white">Early development</strong> – Explore your data model without migration debt</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <i data-lucide="check" class="w-5 h-5 text-blue-500 shrink-0"></i>
+                            <span class="text-sm text-zinc-300"><strong class="text-white">Prototypes & demos</strong> – Self-contained, no database setup required</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <i data-lucide="check" class="w-5 h-5 text-blue-500 shrink-0"></i>
+                            <span class="text-sm text-zinc-300"><strong class="text-white">Learning</strong> – See your data as JSON files</span>
+                        </li>
+                    </ul>
                 </div>
 
-                <div class="mt-8 lg:mt-16">
-                    <div class="bg-base-200 rounded-box p-6 max-w-3xl mx-auto">
-                        <pre class="text-sm overflow-x-auto"><code>┌─────────────────────────────────────────────────────────────┐
-│                      smarterbase                             │
-│                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐   │
-│  │   protocol   │  │    parser    │  │     storage      │   │
-│  │  (pg wire)   │─▶│    (SQL)     │─▶│  (JSON files)    │   │
-│  └──────────────┘  └──────────────┘  └──────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-
-Your App (any PostgreSQL driver)
-        |
-        | PostgreSQL wire protocol
-        v
-   smarterbase
-        |
-        v
-   JSON files on disk
-
-./data/
-├── _schema/
-│   └── users.json           # {"columns": [...]}
-└── users/
-    ├── u1.json              # {"id":"u1","name":"Alice",...}
-    └── u2.json              # {"id":"u2","name":"Bob",...}
-
-# LLMs can see everything
-cat data/_schema/users.json  # schema
-cat data/users/*.json        # all rows</code></pre>
-                    </div>
-
-                    <div class="mt-12 grid gap-8 md:grid-cols-3">
-                        <div class="card card-border">
-                            <div class="card-body">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                        <i class="fa-solid fa-network-wired text-2xl text-primary"></i>
-                                    </div>
-                                    <h3 class="text-lg font-medium">Protocol</h3>
-                                </div>
-                                <p class="mt-2">
-                                    PostgreSQL wire protocol. Any pg driver works.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="card card-border">
-                            <div class="card-body">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                        <i class="fa-solid fa-code text-2xl text-primary"></i>
-                                    </div>
-                                    <h3 class="text-lg font-medium">Parser</h3>
-                                </div>
-                                <p class="mt-2">
-                                    SQL parsing. No query planner needed.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="card card-border">
-                            <div class="card-body">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                        <i class="fa-solid fa-hard-drive text-2xl text-primary"></i>
-                                    </div>
-                                    <h3 class="text-lg font-medium">Storage</h3>
-                                </div>
-                                <p class="mt-2">
-                                    JSON files + JSON indexes. Atomic writes.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="p-8 rounded-xl bg-[#080808] border border-white/5 reveal-on-scroll" data-delay="300">
+                    <h3 class="text-zinc-400 font-medium mb-6 text-lg">Graduate to PostgreSQL When You Need</h3>
+                    <ul class="space-y-4">
+                        <li class="flex gap-3">
+                            <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-600 shrink-0"></i>
+                            <span class="text-sm text-zinc-400"><strong class="text-zinc-300">Transactions</strong> – ACID guarantees</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-600 shrink-0"></i>
+                            <span class="text-sm text-zinc-400"><strong class="text-zinc-300">JOINs and aggregations</strong> – Complex queries</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-600 shrink-0"></i>
+                            <span class="text-sm text-zinc-400"><strong class="text-zinc-300">Multi-server</strong> – Replication, clustering</span>
+                        </li>
+                        <li class="flex gap-3">
+                            <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-600 shrink-0"></i>
+                            <span class="text-sm text-zinc-400"><strong class="text-zinc-300">Scale</strong> – More than ~1M rows/table</span>
+                        </li>
+                    </ul>
+                    <p class="mt-6 text-xs text-zinc-500 italic">Export to PostgreSQL anytime. Your queries already work.</p>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="py-8 lg:py-20 bg-base-300/30" id="llm-friendly">
-            <div class="container">
-                <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
-                    <div>
-                        <h2 class="text-3xl font-semibold sm:text-4xl">LLM-Friendly Storage (JSONL)</h2>
-                        <p class="text-base-content/80 mt-4 sm:text-lg">
-                            One file per table. One JSON object per line. Full context for AI.
-                        </p>
+    <!-- Pricing -->
+    <section class="py-24 border-t border-white/5 text-center">
+        <div class="max-w-2xl mx-auto px-6 reveal-on-scroll">
+            <h2 class="text-3xl font-semibold tracking-tight text-white mb-4">Open Source</h2>
+            <p class="text-zinc-400 mb-8">Free to use. BSL 1.1 license (converts to MIT after 4 years).</p>
 
-                        <ul class="mt-8 space-y-4">
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>Full table context</strong> - LLMs see your entire table in one <code>cat</code> command
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>Schema + data together</strong> - <code>cat data/_schema/users.json data/users.jsonl</code>
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>Easy editing</strong> - No migrations, just edit JSON files directly
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>Git-friendly</strong> - Track schema and data changes with version control
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>Standard format</strong> - JSONL is used by OpenAI, BigQuery, and many data tools
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
+            <div class="inline-block rounded-2xl bg-gradient-to-b from-zinc-800 to-black p-[1px]">
+                <div class="rounded-2xl bg-black p-8 text-left w-full max-w-sm mx-auto">
+                    <span class="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded mb-4 inline-block">Free Forever</span>
+                    <h3 class="text-2xl font-semibold text-white mb-2">SmarterBase</h3>
+                    <p class="text-xs text-zinc-500 mb-6">PostgreSQL-compatible file store</p>
 
-                    <div class="bg-base-200 rounded-box p-6">
-                        <pre class="text-sm overflow-x-auto"><code># Schema
-cat data/_schema/users.json
-{"name":"users","columns":[
-  {"name":"id","type":"text","primary_key":true},
-  {"name":"name","type":"text"},
-  {"name":"email","type":"text"}
-]}
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex gap-2 text-sm text-zinc-300">
+                            <i data-lucide="check" class="w-4 h-4 text-white"></i> PostgreSQL wire protocol
+                        </li>
+                        <li class="flex gap-2 text-sm text-zinc-300">
+                            <i data-lucide="check" class="w-4 h-4 text-white"></i> JSONL file storage
+                        </li>
+                        <li class="flex gap-2 text-sm text-zinc-300">
+                            <i data-lucide="check" class="w-4 h-4 text-white"></i> Schema as editable JSON
+                        </li>
+                        <li class="flex gap-2 text-sm text-zinc-300">
+                            <i data-lucide="check" class="w-4 h-4 text-white"></i> Export to PostgreSQL
+                        </li>
+                    </ul>
 
-# Data (JSONL - one row per line)
-cat data/users.jsonl
-{"id":"u1","name":"Alice","email":"alice@example.com"}
-{"id":"u2","name":"Bob","email":"bob@example.com"}
-
-# LLMs see your whole data model at once!</code></pre>
-                    </div>
+                    <div class="text-4xl font-bold text-white">$0</div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="py-8 lg:py-20" id="sql">
-            <div class="container">
-                <div class="text-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">Supported SQL</h2>
-                    <p class="text-base-content/80 mt-4 sm:text-lg">
-                        Single-table CRUD covers 90% of prototype needs
-                    </p>
-                </div>
+    <!-- Quick Start -->
+    <section class="py-24 border-t border-white/5 bg-[#080808]" id="quickstart">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-semibold tracking-tight text-center text-white mb-4 reveal-on-scroll">Quick Start</h2>
+            <p class="text-center text-zinc-400 mb-12 reveal-on-scroll" data-delay="100">Get started in minutes</p>
 
-                <div class="mt-8 grid gap-8 lg:grid-cols-2">
-                    <div class="card bg-base-200">
-                        <div class="card-body">
-                            <h3 class="text-lg font-semibold text-primary">Supported</h3>
-                            <pre class="text-sm overflow-x-auto mt-4"><code class="language-sql">-- Data Definition
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid7(),
-    email TEXT UNIQUE,
-    name TEXT
-)
-CREATE INDEX idx_role ON users(role)
-
--- Queries
-SELECT * FROM users WHERE id = $1
-SELECT * FROM users WHERE email = $1
-SELECT * FROM users WHERE role = 'admin'
-    ORDER BY id DESC LIMIT 10
-
--- Mutations
-INSERT INTO users (email, name) VALUES ($1, $2)
-UPDATE users SET name = $1 WHERE id = $2
-DELETE FROM users WHERE id = $1</code></pre>
-                        </div>
+            <div class="space-y-8">
+                <div class="group reveal-on-scroll" data-delay="200">
+                    <div class="flex items-center gap-4 mb-3">
+                        <span class="flex items-center justify-center w-6 h-6 rounded bg-blue-600 text-xs font-bold text-white">1</span>
+                        <h3 class="text-white font-medium">Install & Start</h3>
                     </div>
-
-                    <div class="card bg-base-200">
-                        <div class="card-body">
-                            <h3 class="text-lg font-semibold text-error">Not Supported (Use PostgreSQL)</h3>
-                            <pre class="text-sm overflow-x-auto mt-4"><code class="language-sql">-- No JOINs
-SELECT * FROM users u
-JOIN orders o ON o.user_id = u.id
-
--- No aggregations
-SELECT COUNT(*) FROM users
-WHERE role = 'admin'
-
--- No subqueries
-SELECT * FROM users
-WHERE id IN (SELECT user_id FROM ...)
-
--- No transactions
-BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
-                            <p class="mt-4 text-sm text-base-content/70">
-                                If you need these, you need PostgreSQL. That's the point: migrate when you're ready.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="py-8 lg:py-20 bg-base-300/30" id="uuidv7">
-            <div class="container">
-                <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
-                    <div>
-                        <h2 class="text-3xl font-semibold sm:text-4xl">UUIDv7 Primary Keys</h2>
-                        <p class="text-base-content/80 mt-4 sm:text-lg">
-                            Time-ordered UUIDs that sort chronologically
-                        </p>
-
-                        <ul class="mt-8 space-y-4">
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>Time-ordered</strong> - IDs sort chronologically. No need for <code>created_at</code> index.
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>No coordination</strong> - Generate IDs anywhere without a central authority.
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>PostgreSQL-native</strong> - PostgreSQL 17+ supports UUIDv7. Migration is seamless.
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-check text-primary mt-1"></i>
-                                <div>
-                                    <strong>Filesystem-friendly</strong> - Lexicographic sort = chronological sort.
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="bg-base-200 rounded-box p-6">
-                        <pre class="text-sm overflow-x-auto"><code>019363e8-7a6b-7def-8000-1a2b3c4d5e6f
-|        |    |
-|        |    +-- version 7 marker
-|        +-- random bits
-+-- millisecond timestamp (48 bits)
-
-# ORDER BY id DESC = most recent first
-# ls ./data/users/ = creation order</code></pre>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="py-8 lg:py-20" id="use-cases">
-            <div class="container">
-                <div class="text-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">When to Use SmarterBase</h2>
-                </div>
-
-                <div class="mt-8 grid gap-6 lg:grid-cols-2">
-                    <div class="card border-primary/30 border-2 bg-primary/5">
-                        <div class="card-body">
-                            <h3 class="text-lg font-semibold text-primary">Use It For</h3>
-                            <div class="mt-4 space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>AI-assisted coding</strong> - Claude Code, Cursor, Copilot can edit schema directly</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Early development</strong> - Explore your data model without migration debt</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Prototypes & demos</strong> - Self-contained, no database setup required</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Learning</strong> - See your data as JSON files</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card border-warning/30 border-2 bg-base-200">
-                        <div class="card-body">
-                            <h3 class="text-lg font-semibold text-warning">Graduate to PostgreSQL When You Need</h3>
-                            <div class="mt-4 space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-arrow-right text-warning"></i>
-                                    <span><strong>Transactions</strong> - ACID guarantees across operations</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-arrow-right text-warning"></i>
-                                    <span><strong>JOINs and aggregations</strong> - Complex queries</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-arrow-right text-warning"></i>
-                                    <span><strong>Multi-server</strong> - Replication, clustering</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-arrow-right text-warning"></i>
-                                    <span><strong>Scale</strong> - More than ~1M rows/table</span>
-                                </div>
-                            </div>
-                            <p class="mt-4 text-sm text-base-content/70">
-                                Export to PostgreSQL anytime. Your queries already work.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="py-8 lg:py-20 bg-base-300/30" id="pricing">
-            <div class="container">
-                <div class="text-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">Open Source</h2>
-                    <p class="text-base-content/80 mt-2 sm:text-lg">
-                        Free to use. BSL 1.1 license (converts to MIT after 4 years).
-                    </p>
-                </div>
-
-                <div class="mt-12 max-w-2xl mx-auto">
-                    <div class="card bg-base-100 border-2 border-primary">
-                        <div class="card-body">
-                            <div class="badge badge-primary mb-2">Free Forever</div>
-                            <h3 class="text-2xl font-bold">SmarterBase</h3>
-                            <p class="text-base-content/70 mt-2">PostgreSQL-compatible file store</p>
-                            <div class="mt-6 space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-success"></i>
-                                    <span>PostgreSQL wire protocol</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-success"></i>
-                                    <span>JSON file storage</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-success"></i>
-                                    <span>Schema as editable JSON</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-success"></i>
-                                    <span>Export to PostgreSQL</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-success"></i>
-                                    <span>Unlimited tables & rows</span>
-                                </div>
-                            </div>
-                            <div class="mt-6">
-                                <span class="text-3xl font-bold">$0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="py-8 lg:py-20 bg-base-200" id="quickstart">
-            <div class="container">
-                <div class="text-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">Quick Start</h2>
-                    <p class="text-base-content/80 mt-2 sm:text-lg">
-                        Get started in minutes
-                    </p>
-                </div>
-
-                <div class="mt-12 max-w-4xl mx-auto space-y-8">
-                    <div class="card bg-base-100">
-                        <div class="card-body">
-                            <div class="flex items-center gap-2 mb-4">
-                                <div class="badge badge-primary">1</div>
-                                <h3 class="text-xl font-medium">Install & Start</h3>
-                            </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Install
-go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
-
-# Start the server
-smarterbase --port 5433 --data ./data</code></pre>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100">
-                        <div class="card-body">
-                            <div class="flex items-center gap-2 mb-4">
-                                <div class="badge badge-primary">2</div>
-                                <h3 class="text-xl font-medium">Create Tables with SQL</h3>
-                            </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Connect with psql
-psql -h localhost -p 5433
-
-# Create tables
-CREATE TABLE users (id UUID PRIMARY KEY, email TEXT, name TEXT);
-INSERT INTO users VALUES (gen_random_uuid7(), 'alice@example.com', 'Alice');</code></pre>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100">
-                        <div class="card-body">
-                            <div class="flex items-center gap-2 mb-4">
-                                <div class="badge badge-primary">3</div>
-                                <h3 class="text-xl font-medium">Edit Schema Directly (No Migrations!)</h3>
-                            </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Schema is just JSON
-cat data/_schema/users.json
-
-# Edit it with your favorite AI tool
-claude "add a role column to users"
-# → edits data/_schema/users.json directly</code></pre>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100">
-                        <div class="card-body">
-                            <div class="flex items-center gap-2 mb-4">
-                                <div class="badge badge-primary">4</div>
-                                <h3 class="text-xl font-medium">Connect from Any Language</h3>
-                            </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Python / SQLAlchemy / Django
-DATABASE_URL = "postgresql://localhost:5433/myapp"
-
-# Node.js / Prisma / TypeORM
-const pool = new Pool({ host: 'localhost', port: 5433 });
-
-# Go / GORM / sqlx
-db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100">
-                        <div class="card-body">
-                            <div class="flex items-center gap-2 mb-4">
-                                <div class="badge badge-primary">5</div>
-                                <h3 class="text-xl font-medium">Migrate to PostgreSQL (When Ready)</h3>
-                            </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Export your data
-smarterbase export > dump.sql
-
-# Import to PostgreSQL
-psql myapp < dump.sql
-
-# Update your config
-DATABASE_URL = "postgresql://prod-db:5432/myapp"</code></pre>
-                        </div>
+                    <div class="bg-[#050505] border border-white/10 rounded-lg p-4 font-mono text-xs overflow-x-auto group-hover:border-white/20 transition-colors">
+                        <span class="text-zinc-500"># Install</span><br>
+                        go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest<br><br>
+                        <span class="text-zinc-500"># Start the server</span><br>
+                        smarterbase --port 5433 --data ./data
                     </div>
                 </div>
 
-                <div class="mt-12 text-center">
-                    <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="btn btn-primary btn-lg">
-                        <i class="fa-brands fa-github text-lg"></i>
+                <div class="group reveal-on-scroll" data-delay="300">
+                    <div class="flex items-center gap-4 mb-3">
+                        <span class="flex items-center justify-center w-6 h-6 rounded bg-blue-600 text-xs font-bold text-white">2</span>
+                        <h3 class="text-white font-medium">Create Tables with SQL</h3>
+                    </div>
+                    <div class="bg-[#050505] border border-white/10 rounded-lg p-4 font-mono text-xs overflow-x-auto group-hover:border-white/20 transition-colors">
+                        <span class="text-zinc-500"># Connect with psql</span><br>
+                        psql -h localhost -p 5433<br><br>
+                        <span class="text-zinc-500"># Create tables</span><br>
+                        CREATE TABLE users (id UUID PRIMARY KEY, email TEXT, name TEXT);<br>
+                        INSERT INTO users VALUES (gen_random_uuid7(), 'alice@example.com', 'Alice');
+                    </div>
+                </div>
+
+                <div class="group reveal-on-scroll" data-delay="400">
+                    <div class="flex items-center gap-4 mb-3">
+                        <span class="flex items-center justify-center w-6 h-6 rounded bg-blue-600 text-xs font-bold text-white">3</span>
+                        <h3 class="text-white font-medium">Edit Schema Directly (No Migrations!)</h3>
+                    </div>
+                    <div class="bg-[#050505] border border-white/10 rounded-lg p-4 font-mono text-xs overflow-x-auto group-hover:border-white/20 transition-colors">
+                        <span class="text-zinc-500"># Schema is just JSON</span><br>
+                        cat data/_schema/users.json<br><br>
+                        <span class="text-zinc-500"># Edit it with your favorite AI tool</span><br>
+                        claude "add a role column to users"<br>
+                        <span class="text-zinc-500"># → edits data/_schema/users.json directly</span>
+                    </div>
+                </div>
+
+                <div class="text-center pt-8 reveal-on-scroll" data-delay="500">
+                    <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all">
+                        <i data-lucide="github" class="w-4 h-4"></i>
                         View Full Documentation on GitHub
                     </a>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="py-8 lg:py-20" id="docs">
-            <div class="container">
-                <div class="text-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">Documentation</h2>
-                </div>
-
-                <div class="mt-12 grid gap-6 lg:grid-cols-2">
-                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/README.md" target="_blank"
-                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
-                        <div class="card-body">
-                            <div class="flex items-center justify-between gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-book-open text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium flex-1">README</h3>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </div>
-                            <p class="mt-2">
-                                Complete user guide with examples and quick start.
-                            </p>
-                        </div>
-                    </a>
-
-                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/rfc/0001-filesystem-native-postgres-protocol.md" target="_blank"
-                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
-                        <div class="card-body">
-                            <div class="flex items-center justify-between gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-file-lines text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium flex-1">RFC-0001: Technical Specification</h3>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </div>
-                            <p class="mt-2">
-                                Architecture, implementation details, and design decisions.
-                            </p>
-                        </div>
-                    </a>
-
-                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/adr/0001-postgresql-wire-protocol-over-filesystem.md" target="_blank"
-                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
-                        <div class="card-body">
-                            <div class="flex items-center justify-between gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-clipboard-check text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium flex-1">ADR-0001: Architecture Decision</h3>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </div>
-                            <p class="mt-2">
-                                Why PostgreSQL wire protocol over filesystem storage.
-                            </p>
-                        </div>
-                    </a>
-
-                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/CONTRIBUTING.md" target="_blank"
-                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
-                        <div class="card-body">
-                            <div class="flex items-center justify-between gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-code-pull-request text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium flex-1">Contributing Guide</h3>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </div>
-                            <p class="mt-2">
-                                Development setup and contribution workflow.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <footer class="border-base-300 border-t">
-            <div class="container">
-                <div class="py-8 sm:py-10 md:px-16 xl:px-40 xl:py-16">
-                    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                        <div>
-                            <p class="text-xl font-medium">SmarterBase</p>
-                            <p class="mt-4 text-sm text-base-content/70">
-                                Iterate on your data model without migrations. PostgreSQL compatible.
-                            </p>
-                        </div>
-
-                        <div>
-                            <h2 class="text-lg font-medium">Resources</h2>
-                            <div class="mt-4 space-y-2 text-sm">
-                                <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="block hover:text-primary transition-all">GitHub</a>
-                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/README.md" target="_blank" class="block hover:text-primary transition-all">Documentation</a>
-                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/rfc/0001-filesystem-native-postgres-protocol.md" target="_blank" class="block hover:text-primary transition-all">RFC</a>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h2 class="text-lg font-medium">Community</h2>
-                            <div class="mt-4 space-y-2 text-sm">
-                                <a href="https://github.com/adrianmcphee/smarterbase/issues" target="_blank" class="block hover:text-primary transition-all">Issues</a>
-                                <a href="https://github.com/adrianmcphee/smarterbase/pulls" target="_blank" class="block hover:text-primary transition-all">Pull Requests</a>
-                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/CONTRIBUTING.md" target="_blank" class="block hover:text-primary transition-all">Contributing</a>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h2 class="text-lg font-medium">License</h2>
-                            <div class="mt-4 space-y-2 text-sm">
-                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/LICENSE" target="_blank" class="block hover:text-primary transition-all">BSL 1.1</a>
-                                <p class="text-base-content/70">Free for internal use. Commercial license for SaaS.</p>
-                            </div>
-                        </div>
+    <!-- Documentation -->
+    <section class="py-24 border-t border-white/5" id="docs">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl font-semibold tracking-tight text-white mb-12 text-center reveal-on-scroll">Documentation</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/README.md" target="_blank" class="group block p-6 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/[0.02] transition-all reveal-on-scroll" data-delay="100">
+                    <div class="flex items-center justify-between mb-4">
+                        <i data-lucide="book-open" class="text-blue-500 w-6 h-6"></i>
+                        <i data-lucide="arrow-right" class="text-zinc-600 group-hover:text-white transition-colors w-4 h-4"></i>
                     </div>
-                </div>
+                    <h3 class="text-lg font-medium text-white mb-1">README</h3>
+                    <p class="text-sm text-zinc-400">Complete user guide with examples and quick start.</p>
+                </a>
 
-                <div class="border-base-300 border-t px-8 py-4 text-center text-sm text-base-content/70">
-                    Built with Go. BSL 1.1 License.
+                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/rfc/0001-filesystem-native-postgres-protocol.md" target="_blank" class="group block p-6 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/[0.02] transition-all reveal-on-scroll" data-delay="200">
+                    <div class="flex items-center justify-between mb-4">
+                        <i data-lucide="file-text" class="text-blue-500 w-6 h-6"></i>
+                        <i data-lucide="arrow-right" class="text-zinc-600 group-hover:text-white transition-colors w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-1">RFC-0001: Technical Specification</h3>
+                    <p class="text-sm text-zinc-400">Architecture, implementation details, and design decisions.</p>
+                </a>
+
+                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/adr/0001-postgresql-wire-protocol-over-filesystem.md" target="_blank" class="group block p-6 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/[0.02] transition-all reveal-on-scroll" data-delay="300">
+                    <div class="flex items-center justify-between mb-4">
+                        <i data-lucide="layers" class="text-blue-500 w-6 h-6"></i>
+                        <i data-lucide="arrow-right" class="text-zinc-600 group-hover:text-white transition-colors w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-1">ADR-0001: Architecture Decision</h3>
+                    <p class="text-sm text-zinc-400">Why PostgreSQL wire protocol over filesystem storage.</p>
+                </a>
+
+                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/CONTRIBUTING.md" target="_blank" class="group block p-6 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/[0.02] transition-all reveal-on-scroll" data-delay="400">
+                    <div class="flex items-center justify-between mb-4">
+                        <i data-lucide="git-pull-request" class="text-blue-500 w-6 h-6"></i>
+                        <i data-lucide="arrow-right" class="text-zinc-600 group-hover:text-white transition-colors w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-1">Contributing Guide</h3>
+                    <p class="text-sm text-zinc-400">Development setup and contribution workflow.</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 bg-[#030303] pt-16 pb-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-16">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-4 h-4 bg-blue-600 rounded-sm"></div>
+                        <span class="font-semibold text-white">SmarterBase</span>
+                    </div>
+                    <p class="text-sm text-zinc-500 max-w-xs leading-relaxed">
+                        Iterate on your data model without migrations. PostgreSQL compatible.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-medium text-white text-sm mb-4">Resources</h4>
+                    <ul class="space-y-3 text-sm text-zinc-500">
+                        <li><a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="hover:text-white transition-colors">GitHub</a></li>
+                        <li><a href="https://github.com/adrianmcphee/smarterbase/blob/main/README.md" target="_blank" class="hover:text-white transition-colors">Documentation</a></li>
+                        <li><a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/rfc/0001-filesystem-native-postgres-protocol.md" target="_blank" class="hover:text-white transition-colors">RFC</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium text-white text-sm mb-4">Community</h4>
+                    <ul class="space-y-3 text-sm text-zinc-500">
+                        <li><a href="https://github.com/adrianmcphee/smarterbase/issues" target="_blank" class="hover:text-white transition-colors">Issues</a></li>
+                        <li><a href="https://github.com/adrianmcphee/smarterbase/pulls" target="_blank" class="hover:text-white transition-colors">Pull Requests</a></li>
+                        <li><a href="https://github.com/adrianmcphee/smarterbase/blob/main/CONTRIBUTING.md" target="_blank" class="hover:text-white transition-colors">Contributing</a></li>
+                    </ul>
                 </div>
             </div>
-        </footer>
+            <div class="border-t border-white/5 pt-8 text-center md:text-left">
+                <p class="text-xs text-zinc-600">© 2025 Adrian McPhee. Built with Go. BSL 1.1 License.</p>
+            </div>
+        </div>
+    </footer>
 
-        <script src="./app.js"></script>
-    </body>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Reveal on scroll animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        const delay = el.getAttribute('data-delay') || 0;
+                        setTimeout(() => {
+                            el.classList.remove('reveal-hidden');
+                            el.classList.add('reveal-visible');
+                        }, delay);
+                        observer.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+                el.classList.add('reveal-hidden');
+                el.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+                observer.observe(el);
+            });
+        });
+
+        // Main Terminal Animation
+        (function() {
+            const terminalScript = [
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'smarterbase --port 5433 --data ./data', speed: 40 },
+                { type: 'wait', ms: 300 },
+                { type: 'line', text: '' },
+                { type: 'line', text: '<span class="success glow">| SMARTERBASE |</span>' },
+                { type: 'line', text: '<span class="output">v1.0.0 - PostgreSQL-compatible file store</span>' },
+                { type: 'line', text: '<span class="output">Listening on port <span class="code-syntax-yellow">5433</span>...</span>' },
+                { type: 'wait', ms: 400 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'psql -h localhost -p 5433', speed: 35 },
+                { type: 'wait', ms: 200 },
+                { type: 'line', text: '<span class="output">Connected to smarterbase</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'smarterbase=# ', cls: 'info' },
+                { type: 'type', text: 'CREATE TABLE users (', speed: 30 },
+                { type: 'line', text: '<span class="command">    id TEXT PRIMARY KEY,</span>' },
+                { type: 'line', text: '<span class="command">    name TEXT,</span>' },
+                { type: 'line', text: '<span class="command">    email TEXT</span>' },
+                { type: 'line', text: '<span class="command">);</span>' },
+                { type: 'wait', ms: 200 },
+                { type: 'line', text: '<span class="output">CREATE TABLE</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'smarterbase=# ', cls: 'info' },
+                { type: 'type', text: 'INSERT INTO users VALUES', speed: 35 },
+                { type: 'line', text: '<span class="command">(\'u1\', \'Alice\', \'alice@example.com\'),</span>' },
+                { type: 'line', text: '<span class="command">(\'u2\', \'Bob\', \'bob@example.com\');</span>' },
+                { type: 'wait', ms: 200 },
+                { type: 'line', text: '<span class="output">INSERT 0 2</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'smarterbase=# ', cls: 'info' },
+                { type: 'type', text: '\\q', speed: 100 },
+                { type: 'wait', ms: 300 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'tree data/', speed: 50 },
+                { type: 'wait', ms: 200 },
+                { type: 'line', text: '<span class="info">data/</span>' },
+                { type: 'line', text: '<span class="output">├── <span class="info">_schema/</span></span>' },
+                { type: 'line', text: '<span class="output">│   └── users.json</span>' },
+                { type: 'line', text: '<span class="output">└── <span class="success">users.jsonl</span>  <span class="comment">← your data!</span></span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'cat data/users.jsonl', speed: 40 },
+                { type: 'wait', ms: 150 },
+                { type: 'line', text: '<span class="code-syntax-green">{"id":"u1","name":"Alice","email":"alice@example.com"}</span>' },
+                { type: 'line', text: '<span class="code-syntax-green">{"id":"u2","name":"Bob","email":"bob@example.com"}</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: '# Schema is just JSON. Edit it directly!', speed: 25, cls: 'comment' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '~/myproject $ ' },
+            ];
+
+            const container = document.getElementById('terminal-content');
+            const terminalBody = document.getElementById('main-terminal-body');
+            let currentLine = null;
+
+            async function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            function scrollToBottom() {
+                if (terminalBody) terminalBody.scrollTop = terminalBody.scrollHeight;
+            }
+
+            async function typeText(text, speed, cls) {
+                for (let i = 0; i < text.length; i++) {
+                    const span = document.createElement('span');
+                    span.className = cls || 'command';
+                    span.textContent = text[i];
+                    currentLine.appendChild(span);
+                    scrollToBottom();
+                    await sleep(speed + Math.random() * 20);
+                }
+            }
+
+            async function runTerminal() {
+                if (!container) return;
+                container.innerHTML = '';
+                if (terminalBody) terminalBody.scrollTop = 0;
+                currentLine = document.createElement('div');
+                container.appendChild(currentLine);
+
+                for (const step of terminalScript) {
+                    switch (step.type) {
+                        case 'prompt':
+                            const prompt = document.createElement('span');
+                            prompt.className = step.cls || 'prompt';
+                            prompt.textContent = step.text;
+                            currentLine.appendChild(prompt);
+                            scrollToBottom();
+                            break;
+                        case 'type':
+                            await typeText(step.text, step.speed, step.cls);
+                            break;
+                        case 'line':
+                            currentLine = document.createElement('div');
+                            currentLine.innerHTML = step.text || '&nbsp;';
+                            container.appendChild(currentLine);
+                            scrollToBottom();
+                            break;
+                        case 'wait':
+                            await sleep(step.ms);
+                            break;
+                    }
+                }
+                await sleep(5000);
+                runTerminal();
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    runTerminal();
+                    observer.disconnect();
+                }
+            });
+            if (container) observer.observe(container);
+        })();
+
+        // Driver Terminal Animation
+        (function() {
+            const driverScript = [
+                { type: 'line', text: '<span class="comment"># Python</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '>>> ' },
+                { type: 'type', text: 'import psycopg2', speed: 30 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '>>> ' },
+                { type: 'type', text: 'conn = psycopg2.connect("host=localhost port=5433")', speed: 25 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '>>> ' },
+                { type: 'type', text: 'cur.execute("SELECT * FROM users")', speed: 30 },
+                { type: 'line', text: '<span class="success">[(\'u1\', \'Alice\'), (\'u2\', \'Bob\')]</span>' },
+                { type: 'wait', ms: 800 },
+                { type: 'clear' },
+                { type: 'line', text: '<span class="comment">// Go</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'go > ' },
+                { type: 'type', text: 'db, _ := sql.Open("postgres", "host=localhost port=5433")', speed: 25 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'go > ' },
+                { type: 'type', text: 'rows, _ := db.Query("SELECT * FROM users")', speed: 30 },
+                { type: 'line', text: '<span class="success">&{rows: [{u1 Alice} {u2 Bob}]}</span>' },
+                { type: 'wait', ms: 800 },
+                { type: 'clear' },
+                { type: 'line', text: '<span class="comment"># Ruby</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'irb> ' },
+                { type: 'type', text: 'require \'pg\'', speed: 40 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'irb> ' },
+                { type: 'type', text: 'conn = PG.connect(host: \'localhost\', port: 5433)', speed: 25 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'irb> ' },
+                { type: 'type', text: 'conn.exec("SELECT * FROM users").values', speed: 30 },
+                { type: 'line', text: '<span class="success">=> [["u1", "Alice"], ["u2", "Bob"]]</span>' },
+                { type: 'wait', ms: 800 },
+                { type: 'clear' },
+                { type: 'line', text: '<span class="comment">// Node.js</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'node > ' },
+                { type: 'type', text: 'const { Pool } = require(\'pg\')', speed: 30 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'node > ' },
+                { type: 'type', text: 'const pool = new Pool({ host: \'localhost\', port: 5433 })', speed: 25 },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: 'node > ' },
+                { type: 'type', text: 'await pool.query(\'SELECT * FROM users\')', speed: 30 },
+                { type: 'line', text: '<span class="success">{ rows: [{ id: \'u1\', name: \'Alice\' }, ...] }</span>' },
+                { type: 'wait', ms: 800 },
+            ];
+
+            const container = document.getElementById('driver-terminal-content');
+            const terminalBody = document.getElementById('driver-terminal-body');
+            let currentLine = null;
+
+            async function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            async function typeText(text, speed) {
+                for (let i = 0; i < text.length; i++) {
+                    const span = document.createElement('span');
+                    span.className = 'command';
+                    span.textContent = text[i];
+                    currentLine.appendChild(span);
+                    await sleep(speed + Math.random() * 15);
+                }
+            }
+
+            async function runDriverTerminal() {
+                if (!container) return;
+                container.innerHTML = '';
+                currentLine = document.createElement('div');
+                container.appendChild(currentLine);
+
+                for (const step of driverScript) {
+                    switch (step.type) {
+                        case 'prompt':
+                            const prompt = document.createElement('span');
+                            prompt.className = 'info';
+                            prompt.textContent = step.text;
+                            currentLine.appendChild(prompt);
+                            break;
+                        case 'type':
+                            await typeText(step.text, step.speed);
+                            break;
+                        case 'line':
+                            currentLine = document.createElement('div');
+                            currentLine.innerHTML = step.text || '&nbsp;';
+                            container.appendChild(currentLine);
+                            break;
+                        case 'wait':
+                            await sleep(step.ms);
+                            break;
+                        case 'clear':
+                            container.innerHTML = '';
+                            currentLine = document.createElement('div');
+                            container.appendChild(currentLine);
+                            break;
+                    }
+                }
+                await sleep(3000);
+                runDriverTerminal();
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    runDriverTerminal();
+                    observer.disconnect();
+                }
+            });
+            if (container) observer.observe(container);
+        })();
+    </script>
+</body>
 </html>
