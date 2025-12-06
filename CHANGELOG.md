@@ -1,3 +1,9 @@
+## [4.0.5](https://github.com/adrianmcphee/smarterbase/compare/v4.0.4...v4.0.5) (2025-12-06)
+
+### Bug Fixes
+
+* use HTML entities for logo block characters ([b0d386e](https://github.com/adrianmcphee/smarterbase/commit/b0d386e01870e792bce94826cefb1fd530807249))
+
 ## [4.0.4](https://github.com/adrianmcphee/smarterbase/compare/v4.0.3...v4.0.4) (2025-12-06)
 
 ### Bug Fixes
