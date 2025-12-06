@@ -1,3 +1,37 @@
+## [4.0.0](https://github.com/adrianmcphee/smarterbase/compare/v3.6.0...v4.0.0) (2025-12-06)
+
+### ⚠ BREAKING CHANGES
+
+* SmarterBase is now a PostgreSQL wire protocol server,
+not a Go library for Redis+S3 storage.
+
+Removed:
+- All root-level Go library files (store, backend, redis, s3, etc.)
+- examples/ directory
+- simple/ package
+- DATASHEET.md
+- scripts/ directory
+
+Updated:
+- go.mod: minimal dependencies (pgproto3, pgx, sqlparser, uuid)
+- Makefile: simplified for CLI server
+- SECURITY.md: updated for file-based storage model
+- CONTRIBUTING.md: updated project structure
+
+What remains:
+- cmd/smarterbase/ - PostgreSQL-compatible server CLI
+- internal/ - protocol, executor, storage
+- e2e/ - end-to-end tests
+- docs/ - RFC, ADR, website
+
+### Documentation
+
+* redesign website with modern dark theme and animated terminals ([2b33f85](https://github.com/adrianmcphee/smarterbase/commit/2b33f851b449bb397b97c88b84e184149c7d4b04)), closes [#050505](https://github.com/adrianmcphee/smarterbase/issues/050505)
+
+### Code Refactoring
+
+* remove old Redis+S3 library, keep only PostgreSQL server ([560d4f0](https://github.com/adrianmcphee/smarterbase/commit/560d4f02faa9cab2f488e80af1f8cc4a172f8cb6))
+
 ## [3.6.0](https://github.com/adrianmcphee/smarterbase/compare/v3.5.1...v3.6.0) (2025-12-06)
 
 ### Features
