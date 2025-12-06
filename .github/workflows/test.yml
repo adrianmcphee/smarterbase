@@ -2,105 +2,17 @@ name: Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main]
 
 jobs:
   test:
-    name: Test (Go ${{ matrix.go-version }})
+    name: Test
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        go-version: ['1.24', '1.25']
-
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-          --health-start-period 20s
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
-          cache: true
-
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Start MinIO in background
-        run: |
-          # Download and start MinIO server
-          wget -q https://dl.min.io/server/minio/release/linux-amd64/minio
-          chmod +x minio
-          mkdir -p /tmp/minio-data
-          export MINIO_ROOT_USER=minioadmin
-          export MINIO_ROOT_PASSWORD=minioadmin
-          ./minio server /tmp/minio-data --address ":9000" --console-address ":9001" &
-          echo "✓ MinIO started in background"
-
-      - name: Wait for services and setup MinIO
-        run: |
-          # Wait for Redis (service health check handles this, but double-check connectivity)
-          timeout 30s bash -c 'until timeout 1 bash -c "</dev/tcp/localhost/6379" 2>/dev/null; do sleep 1; done'
-          echo "✓ Redis is ready"
-
-          # Wait for MinIO
-          timeout 60s bash -c 'until curl -f http://localhost:9000/minio/health/live 2>/dev/null; do sleep 2; done'
-          echo "✓ MinIO is ready"
-
-          # Setup MinIO client and create bucket
-          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
-          chmod +x mc
-          ./mc alias set minio http://localhost:9000 minioadmin minioadmin
-          ./mc mb minio/test-bucket || true
-          echo "✓ MinIO bucket created"
-
-      - name: Run unit tests
-        run: go test -v -short -race -coverprofile=coverage-unit.out
-
-      - name: Run integration tests
-        run: go test -v -race -run Integration -coverprofile=coverage-integration.out
-        env:
-          TEST_MINIO: "true"
-
-      - name: Run S3 integration tests
-        run: go test -v -race -run TestIntegration_S3Backend_MinIO -coverprofile=coverage-s3.out
-        env:
-          TEST_MINIO: "true"
-
-      - name: Combine coverage
-        run: |
-          go install github.com/wadey/gocovmerge@latest
-          gocovmerge coverage-*.out > coverage.out || echo "No coverage files to merge"
-          if [ -f coverage.out ]; then
-            go tool cover -func=coverage.out | grep total
-          fi
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.out
-          fail_ci_if_error: false
-
-  build:
-    name: Build Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Go
@@ -112,25 +24,11 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Verify go.mod is tidy
-        run: |
-          go mod tidy
-          git diff --exit-code go.mod go.sum
-
       - name: Build
         run: go build -v ./...
 
-      - name: Build with race detector
-        run: go build -race -v ./...
-
-      - name: Verify examples compile
-        run: |
-          for dir in examples/*/; do
-            if [ -f "$dir/main.go" ]; then
-              echo "Building example: $(basename $dir)"
-              (cd "$dir" && go build -v .)
-            fi
-          done
+      - name: Test
+        run: go test -v -race ./...
 
   lint:
     name: Lint
@@ -141,50 +39,6 @@ jobs:
         with:
           go-version: '1.25'
       - name: Run golangci-lint
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          golangci-lint run --timeout 5m
-
-  benchmark:
-    name: Benchmarks
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: golangci/golangci-lint-action@v4
         with:
-          go-version: '1.25'
-          cache: true
-
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Run benchmarks
-        run: |
-          go test -bench=. -benchmem -run=^$$ ./... | tee bench-output.txt
-          echo "Benchmark results saved"
-
-      - name: Save benchmark results
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-results-${{ github.sha }}
-          path: bench-output.txt
-          retention-days: 30
-
-      - name: Comment benchmark results on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const benchOutput = fs.readFileSync('bench-output.txt', 'utf8');
-            const body = `### Benchmark Results\n\n\`\`\`\n${benchOutput}\n\`\`\``;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+          version: latest

@@ -28,7 +28,7 @@ Each RFC follows this structure:
 
 | RFC | Title | Status | Date |
 |-----|-------|--------|------|
-| [0001](0001-filesystem-native-postgres-protocol.md) | Filesystem-Native Storage with PostgreSQL Wire Protocol | Draft | 2024-12-06 |
+| [0001](0001-filesystem-native-postgres-protocol.md) | Filesystem-Native Storage with PostgreSQL Wire Protocol | Accepted | 2024-12-06 |
 
 ## Process
 
