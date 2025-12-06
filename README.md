@@ -7,7 +7,7 @@ An intelligent development database that helps you define your data model, gener
 Perfect for **early development**, **prototypes**, **demos**, and **single-server production**.
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: BSL 1.1](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](./LICENSE)
 
 ---
 
@@ -408,4 +408,10 @@ Contributions welcome! Please ensure:
 
 ## License
 
-MIT License - See [LICENSE](./LICENSE) file for details
+Business Source License 1.1 - See [LICENSE](./LICENSE) for details.
+
+**Free to use** for internal/personal use, education, and building apps that connect to SmarterBase.
+
+**Commercial license required** for offering SmarterBase as a managed service or building competing products. Contact license@smarterbase.com.
+
+Converts to MIT License 4 years after each release.

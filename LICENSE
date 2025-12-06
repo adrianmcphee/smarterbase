@@ -1,21 +1,125 @@
-MIT License
+Business Source License 1.1
 
-Copyright (c) 2025 Adrian McPhee
+License Text:
+==============
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Copyright (c) 2025 Adrian McPhee. All rights reserved.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Parameters:
+-----------
+Licensor:             Adrian McPhee
+Licensed Work:        SmarterBase (all versions)
+                      The Licensed Work is (c) 2025 Adrian McPhee.
+Additional Use Grant: You may use the Licensed Work for any purpose, except:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+                      1. Offering SmarterBase, or any derivative work of SmarterBase,
+                         as a hosted or managed service (SaaS, DBaaS, or similar).
+
+                      2. Offering a commercial product or service that provides
+                         substantially the same functionality as SmarterBase.
+
+                      Notwithstanding the foregoing restrictions, the following
+                      uses are expressly permitted:
+
+                      • Internal use within an organization (including production use)
+                      • Use for personal, non-commercial projects
+                      • Use in applications that connect to SmarterBase as a client
+                      • Educational and research use
+                      • Contributing improvements back to the SmarterBase project
+
+Website:              https://smarterbase.com
+Source Code:          The Source Code is available at the project’s primary
+                      repository (as announced on the Website).
+Change Date:          Four (4) years after the date of the first public release of
+                      each version of the Licensed Work.
+Change License:       MIT License[](https://opensource.org/licenses/MIT)
+
+For the purpose of clarity, the “first public release” of a version
+means the date on which that version is first made available to the
+public under this Business Source License.
+
+Contact for Commercial Licensing: license@smarterbase.com
+
+--------------------------------------------------------------------------------
+
+Terms
+
+1. Grant of Copyright License. Licensor hereby grants you a worldwide,
+   royalty-free, non-exclusive, non-sublicensable, non-transferable license
+   to reproduce, modify, display, perform, and distribute the Licensed Work
+   (including any contributions you make that are accepted into the Licensed
+   Work) solely in accordance with the Additional Use Grant above and subject
+   to the conditions below.
+
+2. Grant of Patent License. Licensor hereby grants you a worldwide,
+   royalty-free, non-exclusive, non-transferable, non-sublicensable patent
+   license to make, have made, use, offer to sell, sell, import, and
+   otherwise transfer the Licensed Work, where such license applies only to
+   those patent claims licensable by Licensor that are necessarily infringed
+   by the Licensed Work alone. This patent license does not apply to
+   combinations of the Licensed Work with other material.
+
+3. Conditions
+
+   3.1. Notices. You must ensure that anyone who receives a copy of the
+        Licensed Work from you also receives a copy of this license and the
+        Additional Use Grant, and that the following notices remain intact:
+
+        • All copyright, patent, trademark, attribution notices, and notices
+          identifying the source of the work
+        • The present Business Source License text
+
+   3.2. Compliance with Use Restrictions. You may not use the Licensed Work
+        in any way that is prohibited by the Additional Use Grant.
+
+4. Automatic Licensing Upon Change Date
+
+   As of the Change Date for each version of the Licensed Work, the license
+   for that version (and all earlier versions) automatically changes to the
+   Change License (MIT License) with no restrictions beyond those contained
+   in the Change License itself. After the Change Date, you may continue to
+   use earlier versions under this Business Source License or under the
+   Change License, at your option.
+
+5. Commercial Licensing
+
+   If you require a commercial license that permits uses outside the
+   Additional Use Grant (e.g., offering SmarterBase or a derivative as a
+   hosted/managed service or building a competing commercial product),
+   please contact: license@smarterbase.com
+
+6. Termination
+
+   If you breach any term of this license, all licenses granted to you
+   hereunder terminate immediately. Sections 7 (Warranty Disclaimer) and
+   8 (Limitation of Liability) survive termination.
+
+7. Warranty Disclaimer
+
+   THE LICENSED WORK IS PROVIDED “AS IS” AND THE LICENSOR HEREBY DISCLAIMS
+   ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE,
+   INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+   LICENSOR DOES NOT WARRANT THAT THE LICENSED WORK WILL BE UNINTERRUPTED,
+   ERROR-FREE, OR COMPLETELY SECURE.
+
+8. Limitation of Liability
+
+   IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THE
+   LICENSED WORK, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+9. Versions of the License
+
+   Licensor may publish revised and/or new versions of this Business Source
+   License from time to time. Such new versions will be similar in spirit to
+   the present version but may differ in detail to address new problems or
+   concerns. Each version is given a distinguishing version number. The
+   Licensed Work is made available under the specific version of the license
+   that accompanies it.
+
+End of Business Source License 1.1
