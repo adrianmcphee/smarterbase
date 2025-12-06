@@ -412,6 +412,7 @@
                         (function() {
                             const driverScript = [
                                 { type: 'line', text: '<span class="comment"># Python</span>' },
+                                { type: 'line', text: '' },
                                 { type: 'prompt', text: '>>> ' },
                                 { type: 'type', text: 'import psycopg2', speed: 30 },
                                 { type: 'line', text: '' },
@@ -424,6 +425,7 @@
                                 { type: 'wait', ms: 800 },
                                 { type: 'clear' },
                                 { type: 'line', text: '<span class="comment">// Go</span>' },
+                                { type: 'line', text: '' },
                                 { type: 'prompt', text: 'go > ' },
                                 { type: 'type', text: 'db, _ := sql.Open("postgres", "host=localhost port=5433")', speed: 25 },
                                 { type: 'line', text: '' },
@@ -433,6 +435,7 @@
                                 { type: 'wait', ms: 800 },
                                 { type: 'clear' },
                                 { type: 'line', text: '<span class="comment"># Ruby</span>' },
+                                { type: 'line', text: '' },
                                 { type: 'prompt', text: 'irb> ' },
                                 { type: 'type', text: 'require \'pg\'', speed: 40 },
                                 { type: 'line', text: '' },
@@ -445,6 +448,7 @@
                                 { type: 'wait', ms: 800 },
                                 { type: 'clear' },
                                 { type: 'line', text: '<span class="comment">// Node.js</span>' },
+                                { type: 'line', text: '' },
                                 { type: 'prompt', text: 'node > ' },
                                 { type: 'type', text: 'const { Pool } = require(\'pg\')', speed: 30 },
                                 { type: 'line', text: '' },
