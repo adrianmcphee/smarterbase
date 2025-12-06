@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -14,7 +15,7 @@ import (
 // Row represents a single row of data
 type Row map[string]any
 
-// DataStore manages row data as JSON files
+// DataStore manages row data as JSONL files (one file per table)
 type DataStore struct {
 	dataDir string
 	schema  *SchemaStore
@@ -29,14 +30,13 @@ func NewDataStore(dataDir string, schema *SchemaStore) *DataStore {
 	}
 }
 
-// rowPath returns the path to a row's JSON file
-func (d *DataStore) rowPath(tableName, id string) string {
-	return filepath.Join(d.dataDir, tableName, id+".json")
+// tablePath returns the path to a table's JSONL file
+func (d *DataStore) tablePath(tableName string) string {
+	return filepath.Join(d.dataDir, tableName+".jsonl")
 }
 
 // GenerateUUIDv7 generates a UUIDv7 (time-ordered)
 func GenerateUUIDv7() string {
-	// UUIDv7: timestamp (48 bits) + version (4 bits) + random (12 bits) + variant (2 bits) + random (62 bits)
 	now := time.Now().UnixMilli()
 
 	var u [16]byte
@@ -61,6 +61,88 @@ func GenerateUUIDv7() string {
 
 	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
 		u[0:4], u[4:6], u[6:8], u[8:10], u[10:16])
+}
+
+// readAllRows reads all rows from a table's JSONL file
+func (d *DataStore) readAllRows(tableName string) ([]Row, error) {
+	path := d.tablePath(tableName)
+	file, err := os.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []Row{}, nil
+		}
+		return nil, err
+	}
+	defer file.Close()
+
+	var rows []Row
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+		var row Row
+		if err := json.Unmarshal([]byte(line), &row); err != nil {
+			continue // Skip invalid lines
+		}
+		rows = append(rows, row)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return rows, nil
+}
+
+// writeAllRows writes all rows to a table's JSONL file atomically
+func (d *DataStore) writeAllRows(tableName string, rows []Row) error {
+	path := d.tablePath(tableName)
+	tempPath := path + ".tmp"
+
+	file, err := os.Create(tempPath)
+	if err != nil {
+		return fmt.Errorf("create temp file: %w", err)
+	}
+
+	writer := bufio.NewWriter(file)
+	for _, row := range rows {
+		data, err := json.Marshal(row)
+		if err != nil {
+			file.Close()
+			os.Remove(tempPath)
+			return fmt.Errorf("marshal row: %w", err)
+		}
+		if _, err := writer.Write(data); err != nil {
+			file.Close()
+			os.Remove(tempPath)
+			return fmt.Errorf("write row: %w", err)
+		}
+		if _, err := writer.WriteString("\n"); err != nil {
+			file.Close()
+			os.Remove(tempPath)
+			return fmt.Errorf("write newline: %w", err)
+		}
+	}
+
+	if err := writer.Flush(); err != nil {
+		file.Close()
+		os.Remove(tempPath)
+		return fmt.Errorf("flush: %w", err)
+	}
+
+	if err := file.Close(); err != nil {
+		os.Remove(tempPath)
+		return fmt.Errorf("close: %w", err)
+	}
+
+	if err := os.Rename(tempPath, path); err != nil {
+		os.Remove(tempPath)
+		return fmt.Errorf("rename: %w", err)
+	}
+
+	return nil
 }
 
 // Insert inserts a new row into a table
@@ -93,22 +175,25 @@ func (d *DataStore) Insert(tableName string, row Row) (string, error) {
 		}
 	}
 
-	// Write row file atomically
-	data, err := json.MarshalIndent(row, "", "  ")
+	// Read existing rows
+	rows, err := d.readAllRows(tableName)
 	if err != nil {
-		return "", fmt.Errorf("marshal row: %w", err)
+		return "", err
 	}
 
-	rowPath := d.rowPath(tableName, id)
-	tempPath := rowPath + ".tmp"
-
-	if err := os.WriteFile(tempPath, data, 0644); err != nil {
-		return "", fmt.Errorf("write temp file: %w", err)
+	// Check for duplicate ID
+	for _, existing := range rows {
+		if existing["id"] == id {
+			return "", fmt.Errorf("row with id %s already exists in table %s", id, tableName)
+		}
 	}
 
-	if err := os.Rename(tempPath, rowPath); err != nil {
-		os.Remove(tempPath)
-		return "", fmt.Errorf("rename temp file: %w", err)
+	// Append new row
+	rows = append(rows, row)
+
+	// Write all rows
+	if err := d.writeAllRows(tableName, rows); err != nil {
+		return "", err
 	}
 
 	return id, nil
@@ -119,25 +204,22 @@ func (d *DataStore) Get(tableName, id string) (Row, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
-	// Verify table exists
 	if !d.schema.TableExists(tableName) {
 		return nil, fmt.Errorf("table %s does not exist", tableName)
 	}
 
-	data, err := os.ReadFile(d.rowPath(tableName, id))
+	rows, err := d.readAllRows(tableName)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("row %s not found in table %s", id, tableName)
+		return nil, err
+	}
+
+	for _, row := range rows {
+		if row["id"] == id {
+			return row, nil
 		}
-		return nil, err
 	}
 
-	var row Row
-	if err := json.Unmarshal(data, &row); err != nil {
-		return nil, err
-	}
-
-	return row, nil
+	return nil, fmt.Errorf("row %s not found in table %s", id, tableName)
 }
 
 // Update updates an existing row
@@ -145,24 +227,8 @@ func (d *DataStore) Update(tableName, id string, updates Row) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	// Verify table exists
 	table, err := d.schema.GetTable(tableName)
 	if err != nil {
-		return err
-	}
-
-	// Read existing row
-	rowPath := d.rowPath(tableName, id)
-	data, err := os.ReadFile(rowPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("row %s not found in table %s", id, tableName)
-		}
-		return err
-	}
-
-	var row Row
-	if err := json.Unmarshal(data, &row); err != nil {
 		return err
 	}
 
@@ -174,37 +240,38 @@ func (d *DataStore) Update(tableName, id string, updates Row) error {
 
 	for colName := range updates {
 		if colName == "id" {
-			continue // Can't update ID
+			continue
 		}
 		if _, exists := columnMap[colName]; !exists {
 			return fmt.Errorf("column %s does not exist in table %s", colName, tableName)
 		}
 	}
 
-	// Apply updates
-	for k, v := range updates {
-		if k != "id" {
-			row[k] = v
+	// Read all rows
+	rows, err := d.readAllRows(tableName)
+	if err != nil {
+		return err
+	}
+
+	// Find and update the row
+	found := false
+	for i, row := range rows {
+		if row["id"] == id {
+			for k, v := range updates {
+				if k != "id" {
+					rows[i][k] = v
+				}
+			}
+			found = true
+			break
 		}
 	}
 
-	// Write updated row atomically
-	data, err = json.MarshalIndent(row, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal row: %w", err)
+	if !found {
+		return fmt.Errorf("row %s not found in table %s", id, tableName)
 	}
 
-	tempPath := rowPath + ".tmp"
-	if err := os.WriteFile(tempPath, data, 0644); err != nil {
-		return fmt.Errorf("write temp file: %w", err)
-	}
-
-	if err := os.Rename(tempPath, rowPath); err != nil {
-		os.Remove(tempPath)
-		return fmt.Errorf("rename temp file: %w", err)
-	}
-
-	return nil
+	return d.writeAllRows(tableName, rows)
 }
 
 // Delete deletes a row by ID
@@ -212,61 +279,43 @@ func (d *DataStore) Delete(tableName, id string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	// Verify table exists
 	if !d.schema.TableExists(tableName) {
 		return fmt.Errorf("table %s does not exist", tableName)
 	}
 
-	rowPath := d.rowPath(tableName, id)
-	if err := os.Remove(rowPath); err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("row %s not found in table %s", id, tableName)
-		}
+	rows, err := d.readAllRows(tableName)
+	if err != nil {
 		return err
 	}
 
-	return nil
+	// Filter out the deleted row
+	newRows := make([]Row, 0, len(rows))
+	found := false
+	for _, row := range rows {
+		if row["id"] == id {
+			found = true
+			continue
+		}
+		newRows = append(newRows, row)
+	}
+
+	if !found {
+		return fmt.Errorf("row %s not found in table %s", id, tableName)
+	}
+
+	return d.writeAllRows(tableName, newRows)
 }
 
-// Scan returns all rows in a table (for simple SELECT *)
+// Scan returns all rows in a table
 func (d *DataStore) Scan(tableName string) ([]Row, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
-	// Verify table exists
 	if !d.schema.TableExists(tableName) {
 		return nil, fmt.Errorf("table %s does not exist", tableName)
 	}
 
-	tableDir := filepath.Join(d.dataDir, tableName)
-	entries, err := os.ReadDir(tableDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return []Row{}, nil
-		}
-		return nil, err
-	}
-
-	var rows []Row
-	for _, entry := range entries {
-		if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
-			continue
-		}
-
-		data, err := os.ReadFile(filepath.Join(tableDir, entry.Name()))
-		if err != nil {
-			continue // Skip unreadable files
-		}
-
-		var row Row
-		if err := json.Unmarshal(data, &row); err != nil {
-			continue // Skip invalid JSON
-		}
-
-		rows = append(rows, row)
-	}
-
-	return rows, nil
+	return d.readAllRows(tableName)
 }
 
 // Count returns the number of rows in a table
@@ -278,21 +327,10 @@ func (d *DataStore) Count(tableName string) (int, error) {
 		return 0, fmt.Errorf("table %s does not exist", tableName)
 	}
 
-	tableDir := filepath.Join(d.dataDir, tableName)
-	entries, err := os.ReadDir(tableDir)
+	rows, err := d.readAllRows(tableName)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return 0, nil
-		}
 		return 0, err
 	}
 
-	count := 0
-	for _, entry := range entries {
-		if !entry.IsDir() && filepath.Ext(entry.Name()) == ".json" {
-			count++
-		}
-	}
-
-	return count, nil
+	return len(rows), nil
 }

@@ -150,25 +150,51 @@
                         </div>
                     </div>
 
-                    <div class="bg-base-200 rounded-box p-6">
-                        <pre class="text-sm overflow-x-auto max-w-full"><code># Start the server
-smarterbase --port 5433 --data ./data
-
-# Connect with psql
-psql -h localhost -p 5433
-
-# Create tables with standard SQL
-CREATE TABLE users (id UUID PRIMARY KEY, email TEXT);
-</code></pre>
-                        <pre class="text-sm overflow-x-auto max-w-full mt-4"><code># Schema is just a JSON file
-cat data/_schema/users.json
-{"name": "users", "columns": [
-  {"name": "id", "type": "uuid", "primary_key": true},
-  {"name": "email", "type": "text"}
-]}</code></pre>
-                        <pre class="text-sm overflow-x-auto max-w-full mt-4"><code># Claude Code can edit it directly
-claude "add a role column to users"</code></pre>
+                    <div class="bg-base-200 rounded-box p-4 font-mono text-sm" id="terminal-demo">
+                        <div class="flex items-center gap-2 mb-3 border-b border-base-300 pb-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span class="text-base-content/50 ml-2 text-xs">terminal</span>
+                        </div>
+                        <div id="terminal-output" class="min-h-[280px] text-green-400">
+                            <div class="terminal-line" style="--delay: 0"><span class="text-base-content/50">$</span> smarterbase --port 5433 --data ./data</div>
+                            <div class="terminal-line" style="--delay: 1"><span class="text-blue-400">SmarterBase listening on port 5433</span></div>
+                            <div class="terminal-line" style="--delay: 2"></div>
+                            <div class="terminal-line" style="--delay: 3"><span class="text-base-content/50">$</span> psql -h localhost -p 5433 -c "CREATE TABLE users (id TEXT PRIMARY KEY, name TEXT, email TEXT);"</div>
+                            <div class="terminal-line" style="--delay: 4"><span class="text-yellow-400">CREATE TABLE users</span></div>
+                            <div class="terminal-line" style="--delay: 5"></div>
+                            <div class="terminal-line" style="--delay: 6"><span class="text-base-content/50">$</span> psql -h localhost -p 5433 -c "INSERT INTO users VALUES ('u1', 'Alice', 'alice@example.com');"</div>
+                            <div class="terminal-line" style="--delay: 7"><span class="text-yellow-400">INSERT 0 1</span></div>
+                            <div class="terminal-line" style="--delay: 8"></div>
+                            <div class="terminal-line" style="--delay: 9"><span class="text-base-content/50">$</span> ls data/</div>
+                            <div class="terminal-line" style="--delay: 10"><span class="text-cyan-400">_schema/</span>  <span class="text-white">users.jsonl</span></div>
+                            <div class="terminal-line" style="--delay: 11"></div>
+                            <div class="terminal-line" style="--delay: 12"><span class="text-base-content/50">$</span> cat data/users.jsonl</div>
+                            <div class="terminal-line" style="--delay: 13"><span class="text-white">{"id":"u1","name":"Alice","email":"alice@example.com"}</span></div>
+                            <div class="terminal-line" style="--delay: 14"></div>
+                            <div class="terminal-line" style="--delay: 15"><span class="text-base-content/50">$</span> cat data/_schema/users.json</div>
+                            <div class="terminal-line" style="--delay: 16"><span class="text-white">{"name":"users","columns":[{"name":"id",...},...]}</span></div>
+                            <div class="terminal-line blink" style="--delay: 17"><span class="text-base-content/50">$</span> <span class="cursor">_</span></div>
+                        </div>
                     </div>
+                    <style>
+                        .terminal-line {
+                            opacity: 0;
+                            animation: fadeIn 0.3s ease forwards;
+                            animation-delay: calc(var(--delay) * 0.4s);
+                        }
+                        @keyframes fadeIn {
+                            to { opacity: 1; }
+                        }
+                        .cursor {
+                            animation: blink 1s infinite;
+                        }
+                        @keyframes blink {
+                            0%, 50% { opacity: 1; }
+                            51%, 100% { opacity: 0; }
+                        }
+                    </style>
                 </div>
 
                 <div class="mt-12 lg:mt-32">
@@ -407,28 +433,28 @@ cat data/users/*.json        # all rows</code></pre>
             <div class="container">
                 <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
                     <div>
-                        <h2 class="text-3xl font-semibold sm:text-4xl">LLM-Friendly Storage</h2>
+                        <h2 class="text-3xl font-semibold sm:text-4xl">LLM-Friendly Storage (JSONL)</h2>
                         <p class="text-base-content/80 mt-4 sm:text-lg">
-                            Designed for AI-assisted development
+                            One file per table. One JSON object per line. Full context for AI.
                         </p>
 
                         <ul class="mt-8 space-y-4">
                             <li class="flex items-start gap-3">
                                 <i class="fa-solid fa-check text-primary mt-1"></i>
                                 <div>
-                                    <strong>Read schemas directly</strong> - <code>cat data/_schema/users.json</code>
+                                    <strong>Full table context</strong> - LLMs see your entire table in one <code>cat</code> command
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <i class="fa-solid fa-check text-primary mt-1"></i>
                                 <div>
-                                    <strong>See all data at once</strong> - <code>cat data/users/*.json</code>
+                                    <strong>Schema + data together</strong> - <code>cat data/_schema/users.json data/users.jsonl</code>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <i class="fa-solid fa-check text-primary mt-1"></i>
                                 <div>
-                                    <strong>Edit schemas</strong> - No migrations, just edit the JSON file
+                                    <strong>Easy editing</strong> - No migrations, just edit JSON files directly
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
@@ -437,29 +463,26 @@ cat data/users/*.json        # all rows</code></pre>
                                     <strong>Git-friendly</strong> - Track schema and data changes with version control
                                 </div>
                             </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>Standard format</strong> - JSONL is used by OpenAI, BigQuery, and many data tools
+                                </div>
+                            </li>
                         </ul>
-
-                        <div class="mt-8 p-4 bg-primary/10 rounded-box">
-                            <div class="flex items-center gap-2 mb-2">
-                                <i class="fa-solid fa-clock text-primary"></i>
-                                <strong>Coming soon: JSONL mode</strong>
-                            </div>
-                            <p class="text-sm text-base-content/70">
-                                Store entire tables as JSON Lines files for even better LLM context. One file per table, one JSON object per line.
-                            </p>
-                        </div>
                     </div>
 
                     <div class="bg-base-200 rounded-box p-6">
-                        <pre class="text-sm overflow-x-auto"><code># Current: One JSON file per row
-data/users/u1.json
-{"id":"u1","name":"Alice","email":"alice@example.com"}
+                        <pre class="text-sm overflow-x-auto"><code># Schema
+cat data/_schema/users.json
+{"name":"users","columns":[
+  {"name":"id","type":"text","primary_key":true},
+  {"name":"name","type":"text"},
+  {"name":"email","type":"text"}
+]}
 
-data/users/u2.json
-{"id":"u2","name":"Bob","email":"bob@example.com"}
-
-# Coming: JSONL mode (entire table in one file)
-data/users.jsonl
+# Data (JSONL - one row per line)
+cat data/users.jsonl
 {"id":"u1","name":"Alice","email":"alice@example.com"}
 {"id":"u2","name":"Bob","email":"bob@example.com"}
 

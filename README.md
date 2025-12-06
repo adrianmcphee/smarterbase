@@ -184,35 +184,29 @@ No query planner. No optimizer. Parse SQL, execute against files, return results
 ```
 ./data/
 ├── _schema/
-│   └── users.json
-├── users/
-│   ├── u1.json                 # {"id": "u1", "name": "Alice", ...}
-│   └── u2.json                 # {"id": "u2", "name": "Bob", ...}
-└── orders/
-    └── 019363f5-9c8d-7bcd-8000-3c4d5e6f7a8b.json
+│   └── users.json              # schema definition
+└── users.jsonl                 # all rows in one file
 ```
-
-Each row is a JSON file. UUIDv7 filenames sort chronologically.
 
 ---
 
-## LLM-Friendly Storage
+## LLM-Friendly Storage (JSONL)
 
-SmarterBase is designed for AI-assisted development. LLMs can:
-
-1. **Read schemas directly** - `cat data/_schema/users.json`
-2. **See all data at once** - `cat data/users/*.json`
-3. **Edit schemas** - No migrations, just edit the JSON
-
-**Coming soon: JSONL mode** for even better LLM context:
+SmarterBase uses **JSONL (JSON Lines)** format—one file per table, one JSON object per line:
 
 ```jsonl
-# data/users.jsonl - entire table in one file
+# data/users.jsonl
 {"id":"u1","name":"Alice","email":"alice@example.com"}
 {"id":"u2","name":"Bob","email":"bob@example.com"}
 ```
 
-JSONL (JSON Lines) lets LLMs see your entire table in one file—better context for understanding your data model.
+**Why this matters for AI-assisted development:**
+
+1. **Full table context** - LLMs see your entire table in one `cat` command
+2. **Schema + data together** - `cat data/_schema/users.json data/users.jsonl` gives complete picture
+3. **Easy editing** - No migrations, just edit JSON files directly
+4. **Git-friendly** - Track schema and data changes with version control
+5. **Standard format** - JSONL is used by OpenAI, BigQuery, and many data tools
 
 ---
 

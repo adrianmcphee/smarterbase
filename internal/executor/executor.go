@@ -74,6 +74,10 @@ func (e *Executor) executeDDL(stmt *sqlparser.DDL) (*Result, error) {
 
 // executeCreateTable handles CREATE TABLE statements
 func (e *Executor) executeCreateTable(stmt *sqlparser.DDL) (*Result, error) {
+	if stmt.TableSpec == nil {
+		return nil, fmt.Errorf("invalid CREATE TABLE statement: no table specification")
+	}
+
 	tableName := stmt.NewName.Name.String()
 
 	// Parse column definitions
