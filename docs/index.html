@@ -83,7 +83,7 @@
                     <li class="font-medium"><a href="#home">Home</a></li>
                     <li class="font-medium"><a href="#features">Features</a></li>
                     <li class="font-medium"><a href="#how-it-works">How It Works</a></li>
-                    <li class="font-medium"><a href="#use-cases">Use Cases</a></li>
+                    <li class="font-medium"><a href="#pricing">Pricing</a></li>
                     <li class="font-medium"><a href="#docs">Docs</a></li>
                 </ul>
             </div>
@@ -107,7 +107,7 @@
                         <li class="font-medium"><a href="#home">Home</a></li>
                         <li class="font-medium"><a href="#features">Features</a></li>
                         <li class="font-medium"><a href="#how-it-works">How It Works</a></li>
-                        <li class="font-medium"><a href="#use-cases">Use Cases</a></li>
+                        <li class="font-medium"><a href="#pricing">Pricing</a></li>
                         <li class="font-medium"><a href="#docs">Docs</a></li>
                     </ul>
                 </div>
@@ -594,6 +594,78 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
             </div>
         </section>
 
+        <section class="py-8 lg:py-20 bg-base-300/30" id="pricing">
+            <div class="container">
+                <div class="text-center">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Simple Pricing</h2>
+                    <p class="text-base-content/80 mt-2 sm:text-lg">
+                        Free local database. Pay only for AI features.
+                    </p>
+                </div>
+
+                <div class="mt-12 grid gap-8 lg:grid-cols-2 max-w-4xl mx-auto">
+                    <div class="card bg-base-100 border-2 border-base-300">
+                        <div class="card-body">
+                            <div class="badge badge-ghost mb-2">Free Forever</div>
+                            <h3 class="text-2xl font-bold">Local Database</h3>
+                            <p class="text-base-content/70 mt-2">PostgreSQL-compatible storage on your machine</p>
+                            <div class="mt-6 space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-success"></i>
+                                    <span>PostgreSQL wire protocol</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-success"></i>
+                                    <span>JSON file storage</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-success"></i>
+                                    <span>Export to PostgreSQL</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-success"></i>
+                                    <span>Unlimited tables & rows</span>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <span class="text-3xl font-bold">$0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 border-2 border-primary">
+                        <div class="card-body">
+                            <div class="badge badge-primary mb-2">Credits</div>
+                            <h3 class="text-2xl font-bold">AI Features</h3>
+                            <p class="text-base-content/70 mt-2">Schema design and synthetic data generation</p>
+                            <div class="mt-6 space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-brain text-primary"></i>
+                                    <span>AI schema design — <strong>10 credits</strong></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-brain text-primary"></i>
+                                    <span>Schema refinement — <strong>5 credits</strong></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-database text-primary"></i>
+                                    <span>Generate 100 rows — <strong>5 credits</strong></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-database text-primary"></i>
+                                    <span>Generate 1000 rows — <strong>25 credits</strong></span>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <span class="text-3xl font-bold">$5</span>
+                                <span class="text-base-content/70"> / 100 credits</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="py-8 lg:py-20 bg-base-200" id="quickstart">
             <div class="container">
                 <div class="text-center">
@@ -608,15 +680,13 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">1</div>
-                                <h3 class="text-xl font-medium">Install & Configure LLM</h3>
+                                <h3 class="text-xl font-medium">Install & Login</h3>
                             </div>
                             <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Install
 go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
 
-# Configure your LLM provider (pick one)
-export OPENAI_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
-export GEMINI_API_KEY="..."</code></pre>
+# Create account and get API key (free)
+smarterbase login</code></pre>
                         </div>
                     </div>
 
@@ -624,7 +694,7 @@ export GEMINI_API_KEY="..."</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">2</div>
-                                <h3 class="text-xl font-medium">Design Your Schema with AI</h3>
+                                <h3 class="text-xl font-medium">Design Your Schema with AI <span class="badge badge-sm">10 credits</span></h3>
                             </div>
                             <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>smarterbase design
 > Describe your project: E-commerce marketplace
@@ -637,12 +707,12 @@ export GEMINI_API_KEY="..."</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">3</div>
-                                <h3 class="text-xl font-medium">Generate Realistic Data & Start Server</h3>
+                                <h3 class="text-xl font-medium">Generate Data & Start Server <span class="badge badge-sm">5 credits</span> <span class="badge badge-ghost badge-sm">free</span></h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Generate realistic synthetic data
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Generate realistic synthetic data (uses credits)
 smarterbase generate --count 100
 
-# Start the server
+# Start the server (free, runs locally)
 smarterbase serve --port 5433 --data ./data</code></pre>
                         </div>
                     </div>
