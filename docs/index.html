@@ -2,8 +2,8 @@
 <html lang="en" class="group/html" data-theme="dark">
     <head>
         <meta charset="utf-8" />
-<title>SmarterBase - PostgreSQL Compatibility. Filesystem Simplicity.</title>
-<meta content="A PostgreSQL-compatible server that stores data as JSON files. Connect with any PostgreSQL driver. When you outgrow it, migrate to real PostgreSQL." name="description" />
+<title>SmarterBase - Iterate Fast. Lock In Your Schema Later.</title>
+<meta content="Discover your data model without migration debt. JSON files you can see and edit. Migrate to PostgreSQL when your schema stabilizes." name="description" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <link rel="shortcut icon" href="./images/favicon.ico" />
@@ -122,13 +122,13 @@
                 <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
                     <div>
                         <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
-                            PostgreSQL Compatibility.
-                            <span class="text-primary">Filesystem Simplicity.</span>
+                            Iterate Fast.
+                            <span class="text-primary">Lock In Your Schema Later.</span>
                         </h1>
                         <p class="text-base-content/80 mt-8 sm:text-lg">
-                            A PostgreSQL-compatible server that stores data as JSON files.
-                            Connect with <strong>any PostgreSQL driver</strong>. Your data lives in readable files on disk.
-                            When you outgrow it, migrate to real PostgreSQL.
+                            When you're building something new, you don't know what your data model will look like.
+                            SmarterBase lets you <strong>iterate freely with JSON files you can see and edit</strong>,
+                            then migrate to PostgreSQL when your schema stabilizes.
                         </p>
                         <div class="mt-8 inline-flex gap-3 sm:mt-16">
                             <a href="https://github.com/adrianmcphee/smarterbase" target="_blank">
@@ -168,18 +168,18 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
 
                 <div class="mt-12 lg:mt-32">
                     <h2 class="text-base-content/60 text-center text-xl font-medium">
-                        The Problem with Starting New Projects
+                        Databases Punish Iteration
                     </h2>
-                    <div class="mt-8 grid gap-6 lg:grid-cols-2">
+                    <div class="mt-8 grid gap-6 lg:grid-cols-3">
                         <div class="card border-error/30 border-2 bg-base-200">
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
                                     <span class="text-error text-2xl">1</span>
-                                    <h3 class="text-lg font-semibold">Run PostgreSQL</h3>
+                                    <h3 class="text-lg font-semibold">Migration Hell</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
-                                    <div>Docker, Homebrew, or managed service</div>
-                                    <div class="text-error">Overhead for a prototype</div>
+                                    <div>Every schema change = migration</div>
+                                    <div class="text-error">By launch: 47 migrations and a mess of ALTER TABLEs</div>
                                 </div>
                             </div>
                         </div>
@@ -187,11 +187,23 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
                                     <span class="text-error text-2xl">2</span>
-                                    <h3 class="text-lg font-semibold">Use SQLite</h3>
+                                    <h3 class="text-lg font-semibold">Opaque Data</h3>
+                                </div>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div>Can't just <code>cat</code> a record</div>
+                                    <div class="text-error">Need database tools to see your own data</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card border-error/30 border-2 bg-base-200">
+                            <div class="card-body">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-error text-2xl">3</span>
+                                    <h3 class="text-lg font-semibold">SQLite Lock-in</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
                                     <div>Different SQL dialect</div>
-                                    <div class="text-error">Migration to PostgreSQL means rewriting queries</div>
+                                    <div class="text-error">Moving to PostgreSQL means rewriting queries</div>
                                 </div>
                             </div>
                         </div>
@@ -203,7 +215,7 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                                     <span class="text-primary text-2xl">SmarterBase</span>
                                 </div>
                                 <div class="mt-4 text-lg">
-                                    <strong>Zero setup now. Seamless PostgreSQL migration later.</strong>
+                                    <strong>Iterate freely. See your data as files. Migrate to PostgreSQL when ready.</strong>
                                 </div>
                             </div>
                         </div>
@@ -217,34 +229,44 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                 <div class="text-center mb-12">
                     <h2 class="text-2xl font-semibold sm:text-3xl">Why SmarterBase Works</h2>
                 </div>
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+                    <div class="card bg-base-100 border border-primary/20">
+                        <div class="card-body text-center">
+                            <div class="flex justify-center mb-3">
+                                <i class="fa-solid fa-rotate text-4xl text-primary"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-primary">No Migrations</h3>
+                            <p class="text-sm text-base-content/70">Change your schema anytime. Just update your code.</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 border border-primary/20">
+                        <div class="card-body text-center">
+                            <div class="flex justify-center mb-3">
+                                <i class="fa-solid fa-eye text-4xl text-primary"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-primary">See Everything</h3>
+                            <p class="text-sm text-base-content/70"><code>cat</code>, <code>grep</code>, <code>git diff</code> your data</p>
+                        </div>
+                    </div>
+
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
                                 <i class="fa-solid fa-bolt text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">Local NVMe Speed</h3>
-                            <p class="text-sm text-base-content/70">10-100 microseconds vs 1-10ms network latency</p>
+                            <h3 class="text-xl font-bold text-primary">Lightning Fast</h3>
+                            <p class="text-sm text-base-content/70">NVMe + indexing = under 100μs lookups</p>
                         </div>
                     </div>
 
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-plug text-4xl text-primary"></i>
+                                <i class="fa-solid fa-cloud-arrow-up text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">Any PostgreSQL Driver</h3>
-                            <p class="text-sm text-base-content/70">Python, Ruby, Node.js, Go, PHP, Java</p>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-file-code text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">Human-Readable Data</h3>
-                            <p class="text-sm text-base-content/70">JSON files you can read, debug, and git commit</p>
+                            <h3 class="text-xl font-bold text-primary">Simple Backups</h3>
+                            <p class="text-sm text-base-content/70">Copy files. Sync to S3. Done.</p>
                         </div>
                     </div>
 
@@ -254,7 +276,7 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                                 <i class="fa-solid fa-arrow-right-arrow-left text-4xl text-primary"></i>
                             </div>
                             <h3 class="text-xl font-bold text-primary">Easy Migration</h3>
-                            <p class="text-sm text-base-content/70">Export to PostgreSQL in minutes</p>
+                            <p class="text-sm text-base-content/70">Export to PostgreSQL when ready</p>
                         </div>
                     </div>
                 </div>
@@ -473,19 +495,19 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                             <div class="mt-4 space-y-3">
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Prototypes</strong> - Zero setup, start building immediately</span>
+                                    <span><strong>Early-stage projects</strong> - Discover your data model without migration debt</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Small apps</strong> - Internal tools, personal projects</span>
+                                    <span><strong>Production (single server)</strong> - NVMe speeds + simple backups (just sync to S3)</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Development</strong> - Human-readable data files, git-friendly</span>
+                                    <span><strong>Development</strong> - See your data as files. Debug by reading JSON.</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Learning</strong> - Understand your data without database tools</span>
+                                    <span><strong>Internal tools</strong> - Fast enough, simple enough, no DBA required</span>
                                 </div>
                             </div>
                         </div>
@@ -497,7 +519,7 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                             <div class="mt-4 space-y-3">
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-xmark text-error"></i>
-                                    <span><strong>Production at scale</strong> - Use PostgreSQL</span>
+                                    <span><strong>Multi-server production</strong> - Use PostgreSQL</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-xmark text-error"></i>
@@ -505,11 +527,11 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-xmark text-error"></i>
-                                    <span><strong>Complex queries</strong> - Use PostgreSQL</span>
+                                    <span><strong>JOINs and aggregations</strong> - Use PostgreSQL</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-xmark text-error"></i>
-                                    <span><strong>Multiple servers</strong> - Use PostgreSQL</span>
+                                    <span><strong>More than ~1M rows/table</strong> - Use PostgreSQL</span>
                                 </div>
                             </div>
                         </div>
@@ -681,7 +703,7 @@ DATABASE_URL = "postgresql://prod-db:5432/myapp"</code></pre>
                         <div>
                             <p class="text-xl font-medium">SmarterBase</p>
                             <p class="mt-4 text-sm text-base-content/70">
-                                PostgreSQL compatibility. Filesystem simplicity.
+                                Iterate fast. Lock in your schema later.
                             </p>
                         </div>
 

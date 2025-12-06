@@ -1,8 +1,8 @@
 # SmarterBase
 
-**PostgreSQL compatibility. Filesystem simplicity.**
+**Iterate fast. Lock in your schema later.**
 
-A PostgreSQL-compatible server that stores data as JSON files. Connect with any PostgreSQL driver, but your data lives in readable files on disk. When you outgrow it, migrate to real PostgreSQL.
+When you're starting something new, you don't know what your data model will look like. Traditional databases force you to decide upfront, then accumulate migrations as you learn. SmarterBase lets you iterate freely with JSON files you can see and edit, then lock in your schema and migrate to PostgreSQL when you're ready.
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -11,16 +11,17 @@ A PostgreSQL-compatible server that stores data as JSON files. Connect with any 
 
 ## The Problem
 
-Starting a new project requires either:
+Building something new means discovering your data model as you go. But databases punish iteration:
 
-1. **Run PostgreSQL** - Docker, Homebrew, or managed service. Overhead for a prototype.
-2. **Use SQLite** - Different SQL dialect. Migration to PostgreSQL means rewriting queries.
+1. **PostgreSQL** - Every schema change needs a migration. By launch, you have 47 migrations and a mess of ALTER TABLEs.
+2. **SQLite** - Different SQL dialect. When you're ready for production, you're rewriting queries.
+3. **Both** - Your data is opaque. You can't just `cat` a record or `grep` for a value.
 
-Neither option gives you: **zero setup now, seamless PostgreSQL migration later**.
+What if you could iterate freely, see your data as files, and migrate to PostgreSQL only when your schema stabilizes?
 
 ## The Solution
 
-Speak PostgreSQL wire protocol, store data as JSON files.
+SmarterBase speaks PostgreSQL wire protocol but stores data as JSON files.
 
 ```
 Your App (any PostgreSQL driver)
@@ -33,7 +34,15 @@ Your App (any PostgreSQL driver)
    JSON files on disk
 ```
 
-Your app thinks it's talking to PostgreSQL. Your data lives in files you can read, debug, and git commit. When you need real PostgreSQL, export and switch.
+**Iterate freely:** Change your schema anytime. No migrations. Just update your code.
+
+**See everything:** Your data is JSON files. `cat`, `grep`, `git diff` your records. Debug by reading files.
+
+**Lightning fast:** Local NVMe + smart indexing means point lookups under 100μs. Fast enough for many production workloads.
+
+**Simple backups:** Copy a directory. Sync to S3. No `pg_dump`, no backup strategies.
+
+**Migrate when ready:** When your schema stabilizes, export to PostgreSQL and switch. Your queries already work.
 
 ---
 
@@ -311,10 +320,10 @@ SELECT * FROM information_schema.columns WHERE table_name = $1
 
 ### Use It For
 
-- **Prototypes** - Zero setup, start building immediately
-- **Small apps** - Internal tools, personal projects
-- **Development** - Human-readable data files, git-friendly
-- **Learning** - Understand your data without database tools
+- **Early-stage projects** - Discover your data model without migration debt. Iterate until it's right.
+- **Production (single server)** - NVMe speeds + simple backups. Copy files to S3 and you're done.
+- **Development** - See your data as files. `cat`, `grep`, `git diff`. Debug by reading JSON.
+- **Internal tools** - Fast enough, simple enough, no DBA required.
 
 ### Don't Use It For
 
