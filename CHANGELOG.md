@@ -1,3 +1,20 @@
+## [3.5.0](https://github.com/adrianmcphee/smarterbase/compare/v3.4.0...v3.5.0) (2025-12-06)
+
+### Features
+
+* add animated terminal demo with ASCII art logo ([305832f](https://github.com/adrianmcphee/smarterbase/commit/305832fc5baf25ec4f7a6907af1dcfa286463882))
+* add second terminal demo showing multi-language PostgreSQL drivers ([6b11496](https://github.com/adrianmcphee/smarterbase/commit/6b11496a58ff07b5b113f1581ee8b8d5245be5cf))
+
+### Bug Fixes
+
+* add newline after language comments in driver terminal ([0b8ba78](https://github.com/adrianmcphee/smarterbase/commit/0b8ba784ce162425de15d5854bffe294082585ec))
+* use simple ASCII box for logo (better font compatibility) ([9827823](https://github.com/adrianmcphee/smarterbase/commit/98278232311780dbe1ab47c45215f6050d795862))
+
+### Documentation
+
+* clarify migration debt pain point on website ([e076693](https://github.com/adrianmcphee/smarterbase/commit/e076693078f7965c94a12e322496408787bde78e))
+* update RFC and ADR to reflect JSONL storage implementation ([2f8f65e](https://github.com/adrianmcphee/smarterbase/commit/2f8f65e03ac782e690bfad018d5bc13ff830ed57))
+
 ## [3.4.0](https://github.com/adrianmcphee/smarterbase/compare/v3.3.0...v3.4.0) (2025-12-06)
 
 ### Features
