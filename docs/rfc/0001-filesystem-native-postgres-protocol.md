@@ -201,39 +201,56 @@ func (s *Server) execSelect(ctx context.Context, q *sqlparser.Select) ([]Row, er
 }
 ```
 
-### Storage
+### Storage (JSONL)
 
 ```go
-type Storage struct {
-    root  string
-    locks *StripedLocks
+type DataStore struct {
+    dataDir string
+    schema  *SchemaStore
+    mu      sync.RWMutex
 }
 
-func (s *Storage) Get(ctx context.Context, table, id string) (map[string]any, error) {
-    path := filepath.Join(s.root, table, id+".json")
-    data, err := os.ReadFile(path)
-    if os.IsNotExist(err) {
-        return nil, ErrNotFound
+// tablePath returns path to table's JSONL file
+func (d *DataStore) tablePath(tableName string) string {
+    return filepath.Join(d.dataDir, tableName+".jsonl")
+}
+
+// readAllRows reads all rows from a table's JSONL file
+func (d *DataStore) readAllRows(tableName string) ([]Row, error) {
+    path := d.tablePath(tableName)
+    file, _ := os.Open(path)
+    defer file.Close()
+
+    var rows []Row
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+        var row Row
+        json.Unmarshal(scanner.Bytes(), &row)
+        rows = append(rows, row)
     }
-    var doc map[string]any
-    json.Unmarshal(data, &doc)
-    return doc, nil
+    return rows, nil
 }
 
-func (s *Storage) Put(ctx context.Context, table, id string, doc map[string]any) error {
-    path := filepath.Join(s.root, table, id+".json")
-    os.MkdirAll(filepath.Dir(path), 0755)
-
-    data, _ := json.MarshalIndent(doc, "", "  ")
-
-    // Atomic write: temp file + rename
+// writeAllRows writes all rows atomically (temp file + rename)
+func (d *DataStore) writeAllRows(tableName string, rows []Row) error {
+    path := d.tablePath(tableName)
     tmp := path + ".tmp"
-    os.WriteFile(tmp, data, 0644)
-    return os.Rename(tmp, path)
+
+    file, _ := os.Create(tmp)
+    writer := bufio.NewWriter(file)
+    for _, row := range rows {
+        data, _ := json.Marshal(row)
+        writer.Write(data)
+        writer.WriteString("\n")
+    }
+    writer.Flush()
+    file.Close()
+
+    return os.Rename(tmp, path)  // Atomic!
 }
 ```
 
-Atomic writes via temp file + rename. Striped locking (32 stripes) for concurrent access.
+JSONL format: one file per table, one JSON object per line. LLM-friendly - full table context in one `cat`.
 
 ### Indexes
 
@@ -273,21 +290,18 @@ JSON indexes. Simple, readable, debuggable.
 ```
 ./data/
 ├── _schema/
-│   └── users.json
+│   └── users.json              # {"name":"users","columns":[...]}
 ├── _idx/
 │   └── users/
 │       ├── email.json          # {"alice@example.com": "019363e8-..."}
 │       └── role/
 │           ├── admin.json      # ["019363e8-...", "019363f2-..."]
 │           └── user.json       # ["019363f5-..."]
-├── users/
-│   ├── 019363e8-7a6b-7def-8000-1a2b3c4d5e6f.json
-│   └── 019363f2-8b7c-7abc-8000-2b3c4d5e6f7a.json
-└── orders/
-    └── 019363f5-9c8d-7bcd-8000-3c4d5e6f7a8b.json
+├── users.jsonl                 # All user rows, one JSON per line
+└── orders.jsonl                # All order rows, one JSON per line
 ```
 
-Files are named by UUIDv7. Because UUIDv7 is time-ordered, `ls` shows documents in creation order.
+Each table is stored as a JSONL (JSON Lines) file. Each line is one row as JSON. This is LLM-friendly - one `cat` shows the entire table.
 
 ## Consistency Model
 

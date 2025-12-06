@@ -22,7 +22,7 @@ Build a PostgreSQL wire protocol server that stores data as JSON files on the lo
 
 1. **PostgreSQL wire protocol** - Applications connect using standard pg drivers. No client libraries to build or maintain.
 
-2. **JSON file storage** - One file per row, human-readable, debuggable with `cat` and `grep`.
+2. **JSONL file storage** - One file per table (JSON Lines format), human-readable, debuggable with `cat` and `grep`.
 
 3. **JSON indexes** - Simple MapIndex (unique) and ListIndex (1:N) stored as JSON files.
 
