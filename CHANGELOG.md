@@ -1,3 +1,15 @@
+## [4.0.1](https://github.com/adrianmcphee/smarterbase/compare/v4.0.0...v4.0.1) (2025-12-06)
+
+### Bug Fixes
+
+* terminal animation comment/prompt line break and logo ([1388315](https://github.com/adrianmcphee/smarterbase/commit/13883158522c62f736a12c11c4afe7ee85a0f82d))
+
+### Documentation
+
+* add smarterbase.com to site URLs ([854c65d](https://github.com/adrianmcphee/smarterbase/commit/854c65df2bfde3a5fab50e75a5786eb1b6de537c))
+* reframe value prop around exploration and clean graduation ([1a6d308](https://github.com/adrianmcphee/smarterbase/commit/1a6d3081dcd4886923dadda2db28384aff2b8d2e))
+* update hero terminal to show schema editing workflow ([20316f5](https://github.com/adrianmcphee/smarterbase/commit/20316f508dbcc7f5eaeac4b1dc127c2b5063ed2a))
+
 # Changelog
 
 All notable changes to SmarterBase will be documented in this file.
