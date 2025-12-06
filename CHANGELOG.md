@@ -1,3 +1,9 @@
+## [3.4.0](https://github.com/adrianmcphee/smarterbase/compare/v3.3.0...v3.4.0) (2025-12-06)
+
+### Features
+
+* implement JSONL storage format for LLM-friendly data ([5a1c3d2](https://github.com/adrianmcphee/smarterbase/commit/5a1c3d29ca3e414603eb0de6fb8dfebfa7ef2093))
+
 ## [3.3.0](https://github.com/adrianmcphee/smarterbase/compare/v3.2.0...v3.3.0) (2025-12-06)
 
 ### Features
