@@ -31,8 +31,8 @@ SmarterBase is an AI-powered development database. Connect your LLM provider, de
 │                      smarterbase                             │
 │                                                              │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │
-│  │    AI    │  │ pgproto3 │  │ sqlparser│  │   storage   │  │
-│  │ (schema  │  │(protocol)│  │ (parse)  │  │ (files+idx) │  │
+│  │    AI    │  │ protocol │  │  parser  │  │   storage   │  │
+│  │ (schema  │  │ (pg wire)│  │  (SQL)   │  │ (files+idx) │  │
 │  │  + data) │  │          │  │          │  │             │  │
 │  └──────────┘  └──────────┘  └──────────┘  └─────────────┘  │
 └─────────────────────────────────────────────────────────────┘
@@ -178,16 +178,16 @@ Same code. Same queries. Different backend. Works with any PostgreSQL driver.
 │                  smarterbase                    │
 │                                                 │
 │  ┌───────────┐  ┌──────────┐  ┌─────────────┐   │
-│  │ pgproto3  │─▶│ sqlparser│─▶│   storage   │   │
-│  │ (protocol)│  │ (parse)  │  │ (files+idx) │   │
+│  │ protocol  │─▶│  parser  │─▶│   storage   │   │
+│  │ (pg wire) │  │  (SQL)   │  │ (files+idx) │   │
 │  └───────────┘  └──────────┘  └─────────────┘   │
 │                                                 │
 └─────────────────────────────────────────────────┘
 ```
 
 Three components:
-1. **Protocol** - `jackc/pgproto3` handles PostgreSQL wire protocol
-2. **Parser** - `vitess/sqlparser` parses SQL to AST
+1. **Protocol** - PostgreSQL wire protocol (any pg driver works)
+2. **Parser** - SQL to AST
 3. **Storage** - JSON files + JSON indexes
 
 No query planner. No optimizer. Parse SQL, execute against files, return results.
