@@ -1,10 +1,10 @@
 # SmarterBase
 
-**AI-powered development database. PostgreSQL compatibility. NVMe speed.**
+**Iterate on your data model without migrations.**
 
-An intelligent development database that helps you define your data model, generates realistic synthetic data, and speaks PostgreSQL wire protocol. Iterate freely with JSON files you can see and edit. When your schema stabilizes, export to PostgreSQL.
+A PostgreSQL-compatible database that stores data as JSON files. Change your schema anytime—just update your code. No migration files, no `ALTER TABLE`, no coordination.
 
-Perfect for **early development**, **prototypes**, **demos**, and **single-server production**.
+Perfect for **early development**, **prototypes**, and **AI-assisted coding** (Claude Code, Cursor, Copilot).
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](./LICENSE)
@@ -13,65 +13,58 @@ Perfect for **early development**, **prototypes**, **demos**, and **single-serve
 
 ## The Problem
 
-Early development is painful:
+Early development with databases is painful:
 
-1. **You don't know your data model yet** - But databases force you to decide upfront and accumulate migrations.
-2. **You need realistic test data** - But creating it manually is tedious and unrealistic.
+1. **Schema changes pile up as migration files** - Every `ALTER TABLE` becomes permanent baggage.
+2. **AI coding assistants can't easily fix schema mistakes** - They'd need to generate migrations, coordinate versions.
 3. **Your data is opaque** - You can't just `cat` a record or `grep` for a value.
 4. **SQLite isn't PostgreSQL** - Different dialect means rewriting queries later.
 
-What if an AI could help you design your schema, generate realistic data, and give you a PostgreSQL-compatible database that stores everything as visible JSON files?
+**What if your schema was just JSON files you could edit directly?**
 
 ## The Solution
 
-SmarterBase is an AI-powered development database. Connect your LLM provider, describe your domain, and get:
+SmarterBase stores schemas and data as JSON files. SQL commands modify these files directly.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      smarterbase                             │
 │                                                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │
-│  │    AI    │  │ protocol │  │  parser  │  │   storage   │  │
-│  │ (schema  │  │ (pg wire)│  │  (SQL)   │  │ (files+idx) │  │
-│  │  + data) │  │          │  │          │  │             │  │
-│  └──────────┘  └──────────┘  └──────────┘  └─────────────┘  │
+│  ┌──────────────┐  ┌──────────┐  ┌──────────────────────┐   │
+│  │   protocol   │  │  parser  │  │       storage        │   │
+│  │  (pg wire)   │─▶│  (SQL)   │─▶│   (JSON files)       │   │
+│  └──────────────┘  └──────────┘  └──────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**AI-assisted schema design:** Describe your domain, get schema suggestions.
+**Schema is just JSON:**
 
-```bash
-smarterbase design
-> Describe your project: B2B SaaS for project management
-> AI suggests: companies, users, projects, tasks, comments...
-> Refine interactively until your model feels right
+```sql
+CREATE TABLE users (id UUID PRIMARY KEY, email TEXT, name TEXT);
 ```
 
-**Realistic synthetic data:** AI generates data that makes sense for your domain.
-
-```bash
-smarterbase generate --count 100
-> Generating realistic B2B SaaS data...
-> Companies: Acme Corp, TechStart Inc, GlobalSoft...
-> Users: realistic names, emails, roles per company...
-> Projects: believable names, descriptions, statuses...
+Creates `data/_schema/users.json`:
+```json
+{"name": "users", "columns": [
+  {"name": "id", "type": "uuid", "primary_key": true},
+  {"name": "email", "type": "text"},
+  {"name": "name", "type": "text"}
+]}
 ```
 
-**Reusable data generators:** Not just one-time data - generators you can run anytime.
+**Change schema anytime:** Edit the JSON directly, or use SQL. No migrations.
 
-**PostgreSQL wire protocol:** Your app connects with any PostgreSQL driver. Real queries, real testing.
+```bash
+# Claude Code can just edit the schema file
+claude "add a role column to users"
+# → edits data/_schema/users.json directly
+```
 
-**See everything:** Your data is JSON files. `cat`, `grep`, `git diff` your records.
+**PostgreSQL wire protocol:** Any pg driver works. Same code runs against PostgreSQL later.
 
-**Fast:** Local NVMe means point lookups under 100μs.
+**See everything:** `cat`, `grep`, `git diff` your data.
 
-| Operation | Typical Latency |
-|-----------|-----------------|
-| Local NVMe read | 10-100 μs |
-| Redis over network | 500-2000 μs |
-| PostgreSQL over network | 1-10 ms |
-
-**Migrate when ready:** Export schema + data generators to PostgreSQL. Your queries already work.
+**Migrate when ready:** Export to PostgreSQL. Your queries already work.
 
 ---
 
@@ -81,22 +74,18 @@ smarterbase generate --count 100
 # Install
 go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
 
-# Configure your LLM provider (pick one)
-export OPENAI_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
-export GEMINI_API_KEY="..."
-
-# Design your schema with AI assistance
-smarterbase design
-> Describe your project: E-commerce marketplace
-> AI suggests tables: users, products, orders, reviews...
-> Refine until it feels right
-
-# Generate realistic synthetic data
-smarterbase generate --count 100
-
 # Start the server
-smarterbase serve --port 5433 --data ./data
+smarterbase --port 5433 --data ./data
+```
+
+```bash
+# Connect with psql
+psql -h localhost -p 5433
+
+# Create tables with standard SQL
+CREATE TABLE users (id UUID PRIMARY KEY, email TEXT, name TEXT);
+INSERT INTO users (id, email, name) VALUES (gen_random_uuid7(), 'alice@example.com', 'Alice');
+SELECT * FROM users;
 ```
 
 Connect from any language:
@@ -126,18 +115,16 @@ db, _ := sql.Open("postgres", "host=localhost port=5433 dbname=myapp sslmode=dis
 
 ## Why This Works
 
-### Local NVMe is fast
+**AI coding assistants love editable files.** Claude Code, Cursor, Copilot—they can all edit JSON files directly. No need to generate migration SQL, coordinate versions, or run migration commands.
+
+**Local NVMe is fast.** For `SELECT * FROM users WHERE id = $1`, reading a JSON file is faster than a network round-trip:
 
 | Operation | Latency |
 |-----------|---------|
 | Local NVMe read | 10-100 μs |
 | PostgreSQL (network) | 1-10 ms |
 
-For `SELECT * FROM users WHERE id = $1`, reading a JSON file from NVMe is faster than a network round-trip to PostgreSQL.
-
-### PostgreSQL protocol means zero app changes
-
-Same code. Same queries. Different backend. Works with any PostgreSQL driver.
+**PostgreSQL protocol means zero app changes.** Same code, same queries. When you're ready for production, just change your connection string.
 
 ---
 
@@ -198,20 +185,34 @@ No query planner. No optimizer. Parse SQL, execute against files, return results
 ./data/
 ├── _schema/
 │   └── users.json
-├── _idx/
-│   └── users/
-│       ├── email.json          # {"alice@example.com": "019363e8-..."}
-│       └── role/
-│           ├── admin.json      # ["019363e8-...", "019363f2-..."]
-│           └── user.json       # ["019363f5-..."]
 ├── users/
-│   ├── 019363e8-7a6b-7def-8000-1a2b3c4d5e6f.json
-│   └── 019363f2-8b7c-7abc-8000-2b3c4d5e6f7a.json
+│   ├── u1.json                 # {"id": "u1", "name": "Alice", ...}
+│   └── u2.json                 # {"id": "u2", "name": "Bob", ...}
 └── orders/
     └── 019363f5-9c8d-7bcd-8000-3c4d5e6f7a8b.json
 ```
 
-Files are named by UUIDv7. Because UUIDv7 is time-ordered, `ls` shows documents in creation order.
+Each row is a JSON file. UUIDv7 filenames sort chronologically.
+
+---
+
+## LLM-Friendly Storage
+
+SmarterBase is designed for AI-assisted development. LLMs can:
+
+1. **Read schemas directly** - `cat data/_schema/users.json`
+2. **See all data at once** - `cat data/users/*.json`
+3. **Edit schemas** - No migrations, just edit the JSON
+
+**Coming soon: JSONL mode** for even better LLM context:
+
+```jsonl
+# data/users.jsonl - entire table in one file
+{"id":"u1","name":"Alice","email":"alice@example.com"}
+{"id":"u2","name":"Bob","email":"bob@example.com"}
+```
+
+JSONL (JSON Lines) lets LLMs see your entire table in one file—better context for understanding your data model.
 
 ---
 
@@ -280,14 +281,8 @@ UUIDv7 values transfer directly - PostgreSQL's UUID type accepts them as-is.
 ## CLI
 
 ```bash
-# AI-assisted schema design
-smarterbase design
-
-# Generate realistic synthetic data
-smarterbase generate --count 100
-
 # Start server
-smarterbase serve --port 5433 --data ./data
+smarterbase --port 5433 --data ./data
 
 # Export to PostgreSQL format
 smarterbase export > dump.sql
@@ -305,17 +300,12 @@ smarterbase rebuild-indexes
 port: 5433
 data: ./data
 password: ""  # empty = no auth
-
-# LLM provider (pick one)
-llm:
-  provider: anthropic  # or: openai, gemini
-  # API key from environment: ANTHROPIC_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY
 ```
 
-Or use environment variables:
+Or use command-line flags:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."  # or OPENAI_API_KEY or GEMINI_API_KEY
+smarterbase --port 5433 --data ./data
 ```
 
 ---
@@ -375,9 +365,9 @@ SELECT * FROM information_schema.columns WHERE table_name = $1
 
 ### Use It For
 
-- **Early development** - Explore your data model without touching production. No migration debt.
+- **AI-assisted coding** - Claude Code, Cursor, Copilot can edit schema JSON directly. No migrations.
+- **Early development** - Explore your data model. Change it freely. No migration debt.
 - **Prototypes & demos** - Self-contained, no database setup, just run the binary.
-- **Single-server production** - The pattern works. NVMe is fast. Backups are just file copies.
 - **Learning** - See your data as JSON files. Understand what's happening.
 
 ### Graduate to PostgreSQL When You Need

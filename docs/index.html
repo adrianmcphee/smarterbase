@@ -2,8 +2,8 @@
 <html lang="en" class="group/html" data-theme="dark">
     <head>
         <meta charset="utf-8" />
-<title>SmarterBase - AI-Powered Development Database. PostgreSQL Compatibility. NVMe Speed.</title>
-<meta content="AI-powered development database. Define your data model with AI assistance, generate realistic synthetic data, and speak PostgreSQL wire protocol. Perfect for early development, prototypes, and demos." name="description" />
+<title>SmarterBase - Iterate on Your Data Model Without Migrations</title>
+<meta content="PostgreSQL-compatible database that stores data as JSON files. Change your schema anytime—just edit the file. Perfect for AI-assisted coding with Claude Code, Cursor, and Copilot." name="description" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <link rel="shortcut icon" href="./images/favicon.ico" />
@@ -83,7 +83,7 @@
                     <li class="font-medium"><a href="#home">Home</a></li>
                     <li class="font-medium"><a href="#features">Features</a></li>
                     <li class="font-medium"><a href="#how-it-works">How It Works</a></li>
-                    <li class="font-medium"><a href="#pricing">Pricing</a></li>
+                    <li class="font-medium"><a href="#llm-friendly">LLM-Friendly</a></li>
                     <li class="font-medium"><a href="#docs">Docs</a></li>
                 </ul>
             </div>
@@ -107,7 +107,7 @@
                         <li class="font-medium"><a href="#home">Home</a></li>
                         <li class="font-medium"><a href="#features">Features</a></li>
                         <li class="font-medium"><a href="#how-it-works">How It Works</a></li>
-                        <li class="font-medium"><a href="#pricing">Pricing</a></li>
+                        <li class="font-medium"><a href="#llm-friendly">LLM-Friendly</a></li>
                         <li class="font-medium"><a href="#docs">Docs</a></li>
                     </ul>
                 </div>
@@ -122,16 +122,15 @@
                 <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
                     <div>
                         <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
-                            AI-Powered.
-                            <span class="text-primary">PostgreSQL Compatible.</span>
+                            Iterate on your data model.
+                            <span class="text-primary">Without migrations.</span>
                         </h1>
                         <p class="text-base-content/80 mt-8 sm:text-lg">
-                            An intelligent development database that <strong>helps you define your data model</strong>,
-                            <strong>generates realistic synthetic data</strong>, and speaks PostgreSQL wire protocol.
-                            Iterate freely with JSON files you can see and edit.
+                            A PostgreSQL-compatible database that stores data as <strong>JSON files</strong>.
+                            Change your schema anytime—just edit the file. No migration files, no <code>ALTER TABLE</code>, no coordination.
                         </p>
                         <p class="text-base-content/60 mt-4 sm:text-base">
-                            Perfect for <strong>early development</strong>, <strong>prototypes</strong>, <strong>demos</strong>, and <strong>single-server production</strong>.
+                            Perfect for <strong>AI-assisted coding</strong> (Claude Code, Cursor, Copilot), <strong>early development</strong>, and <strong>prototypes</strong>.
                         </p>
                         <div class="mt-8 inline-flex gap-3 sm:mt-12">
                             <a href="https://github.com/adrianmcphee/smarterbase" target="_blank">
@@ -152,39 +151,40 @@
                     </div>
 
                     <div class="bg-base-200 rounded-box p-6">
-                        <pre class="text-sm overflow-x-auto max-w-full"><code># Configure your LLM provider
-export ANTHROPIC_API_KEY="sk-ant-..."
+                        <pre class="text-sm overflow-x-auto max-w-full"><code># Start the server
+smarterbase --port 5433 --data ./data
 
-# Design your schema with AI
-smarterbase design
-> Describe your project: B2B SaaS
-> AI suggests: companies, users, projects...
+# Connect with psql
+psql -h localhost -p 5433
 
-# Generate realistic synthetic data
-smarterbase generate --count 100
-
-# Start the server
-smarterbase serve --port 5433
+# Create tables with standard SQL
+CREATE TABLE users (id UUID PRIMARY KEY, email TEXT);
 </code></pre>
-                        <pre class="text-sm overflow-x-auto max-w-full mt-4"><code class="language-python"># Connect with any PostgreSQL driver
-DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
+                        <pre class="text-sm overflow-x-auto max-w-full mt-4"><code># Schema is just a JSON file
+cat data/_schema/users.json
+{"name": "users", "columns": [
+  {"name": "id", "type": "uuid", "primary_key": true},
+  {"name": "email", "type": "text"}
+]}</code></pre>
+                        <pre class="text-sm overflow-x-auto max-w-full mt-4"><code># Claude Code can edit it directly
+claude "add a role column to users"</code></pre>
                     </div>
                 </div>
 
                 <div class="mt-12 lg:mt-32">
                     <h2 class="text-base-content/60 text-center text-xl font-medium">
-                        Early Development is Painful
+                        Migrations Slow You Down
                     </h2>
                     <div class="mt-8 grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
                         <div class="card border-error/30 border-2 bg-base-200">
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
                                     <span class="text-error text-2xl">1</span>
-                                    <h3 class="text-lg font-semibold">Unknown Data Model</h3>
+                                    <h3 class="text-lg font-semibold">Migration Debt</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
-                                    <div>You don't know your schema yet</div>
-                                    <div class="text-error">Databases force you to decide upfront</div>
+                                    <div>Every <code>ALTER TABLE</code> creates a file</div>
+                                    <div class="text-error">100+ migrations in early dev</div>
                                 </div>
                             </div>
                         </div>
@@ -192,11 +192,11 @@ DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
                                     <span class="text-error text-2xl">2</span>
-                                    <h3 class="text-lg font-semibold">No Test Data</h3>
+                                    <h3 class="text-lg font-semibold">AI Can't Help</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
-                                    <div>You need realistic data</div>
-                                    <div class="text-error">Creating it manually is tedious</div>
+                                    <div>Claude can't "just fix the schema"</div>
+                                    <div class="text-error">Has to generate migration SQL</div>
                                 </div>
                             </div>
                         </div>
@@ -232,7 +232,7 @@ DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
                                     <span class="text-primary text-2xl">SmarterBase</span>
                                 </div>
                                 <div class="mt-4 text-lg">
-                                    <strong>AI designs your schema. AI generates realistic data. Migrate to PostgreSQL when ready.</strong>
+                                    <strong>Schema is JSON. Edit it directly. No migrations. Export to PostgreSQL when ready.</strong>
                                 </div>
                             </div>
                         </div>
@@ -250,10 +250,20 @@ DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-brain text-4xl text-primary"></i>
+                                <i class="fa-solid fa-rotate text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">AI Schema Design</h3>
-                            <p class="text-sm text-base-content/70">Describe your domain. AI suggests tables and relationships.</p>
+                            <h3 class="text-xl font-bold text-primary">No Migrations</h3>
+                            <p class="text-sm text-base-content/70">Schema is JSON. Edit it directly. No migration files.</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 border border-primary/20">
+                        <div class="card-body text-center">
+                            <div class="flex justify-center mb-3">
+                                <i class="fa-solid fa-robot text-4xl text-primary"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-primary">AI-Friendly</h3>
+                            <p class="text-sm text-base-content/70">Claude Code, Cursor, Copilot can edit schema JSON directly.</p>
                         </div>
                     </div>
 
@@ -262,18 +272,8 @@ DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
                             <div class="flex justify-center mb-3">
                                 <i class="fa-solid fa-database text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">Realistic Data</h3>
-                            <p class="text-sm text-base-content/70">AI generates synthetic data that makes sense for your domain.</p>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-rotate text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">No Migrations</h3>
-                            <p class="text-sm text-base-content/70">Change your schema anytime. Just update your code.</p>
+                            <h3 class="text-xl font-bold text-primary">PostgreSQL Compatible</h3>
+                            <p class="text-sm text-base-content/70">Wire protocol works with any pg driver. Same queries.</p>
                         </div>
                     </div>
 
@@ -320,7 +320,7 @@ DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
                 <div class="flex flex-col items-center">
                     <h2 class="text-3xl font-semibold sm:text-4xl">How It Works</h2>
                     <p class="text-base-content/80 mt-4 sm:text-lg">
-                        AI-powered schema design + PostgreSQL wire protocol + filesystem storage
+                        PostgreSQL wire protocol + SQL parser + JSON file storage
                     </p>
                 </div>
 
@@ -329,11 +329,10 @@ DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
                         <pre class="text-sm overflow-x-auto"><code>┌─────────────────────────────────────────────────────────────┐
 │                      smarterbase                             │
 │                                                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │
-│  │    AI    │  │ pgproto3 │  │ sqlparser│  │   storage   │  │
-│  │ (schema  │  │(protocol)│  │ (parse)  │  │ (files+idx) │  │
-│  │  + data) │  │          │  │          │  │             │  │
-│  └──────────┘  └──────────┘  └──────────┘  └─────────────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐   │
+│  │   protocol   │  │    parser    │  │     storage      │   │
+│  │  (pg wire)   │─▶│    (SQL)     │─▶│  (JSON files)    │   │
+│  └──────────────┘  └──────────────┘  └──────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 
 Your App (any PostgreSQL driver)
@@ -346,36 +345,18 @@ Your App (any PostgreSQL driver)
    JSON files on disk
 
 ./data/
-|-- _schema/
-|   \-- users.json
-|-- _idx/
-|   \-- users/
-|       |-- email.json      # {"alice@example.com": "019363e8-..."}
-|       \-- role/
-|           |-- admin.json  # ["019363e8-...", "019363f2-..."]
-|           \-- user.json   # ["019363f5-..."]
-|-- users/
-|   |-- 019363e8-7a6b-7def-8000-1a2b3c4d5e6f.json
-|   \-- 019363f2-8b7c-7abc-8000-2b3c4d5e6f7a.json
-\-- orders/
-    \-- 019363f5-9c8d-7bcd-8000-3c4d5e6f7a8b.json</code></pre>
+├── _schema/
+│   └── users.json           # {"columns": [...]}
+└── users/
+    ├── u1.json              # {"id":"u1","name":"Alice",...}
+    └── u2.json              # {"id":"u2","name":"Bob",...}
+
+# LLMs can see everything
+cat data/_schema/users.json  # schema
+cat data/users/*.json        # all rows</code></pre>
                     </div>
 
-                    <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                        <div class="card card-border">
-                            <div class="card-body">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                        <i class="fa-solid fa-brain text-2xl text-primary"></i>
-                                    </div>
-                                    <h3 class="text-lg font-medium">AI</h3>
-                                </div>
-                                <p class="mt-2">
-                                    LLM provider (OpenAI, Anthropic, Gemini) designs schema and generates data.
-                                </p>
-                            </div>
-                        </div>
-
+                    <div class="mt-12 grid gap-8 md:grid-cols-3">
                         <div class="card card-border">
                             <div class="card-body">
                                 <div class="flex items-center gap-4">
@@ -413,10 +394,76 @@ Your App (any PostgreSQL driver)
                                     <h3 class="text-lg font-medium">Storage</h3>
                                 </div>
                                 <p class="mt-2">
-                                    JSON files + JSON indexes. Atomic writes via temp file + rename.
+                                    JSON files + JSON indexes. Atomic writes.
                                 </p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-8 lg:py-20 bg-base-300/30" id="llm-friendly">
+            <div class="container">
+                <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
+                    <div>
+                        <h2 class="text-3xl font-semibold sm:text-4xl">LLM-Friendly Storage</h2>
+                        <p class="text-base-content/80 mt-4 sm:text-lg">
+                            Designed for AI-assisted development
+                        </p>
+
+                        <ul class="mt-8 space-y-4">
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>Read schemas directly</strong> - <code>cat data/_schema/users.json</code>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>See all data at once</strong> - <code>cat data/users/*.json</code>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>Edit schemas</strong> - No migrations, just edit the JSON file
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>Git-friendly</strong> - Track schema and data changes with version control
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div class="mt-8 p-4 bg-primary/10 rounded-box">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-clock text-primary"></i>
+                                <strong>Coming soon: JSONL mode</strong>
+                            </div>
+                            <p class="text-sm text-base-content/70">
+                                Store entire tables as JSON Lines files for even better LLM context. One file per table, one JSON object per line.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-base-200 rounded-box p-6">
+                        <pre class="text-sm overflow-x-auto"><code># Current: One JSON file per row
+data/users/u1.json
+{"id":"u1","name":"Alice","email":"alice@example.com"}
+
+data/users/u2.json
+{"id":"u2","name":"Bob","email":"bob@example.com"}
+
+# Coming: JSONL mode (entire table in one file)
+data/users.jsonl
+{"id":"u1","name":"Alice","email":"alice@example.com"}
+{"id":"u2","name":"Bob","email":"bob@example.com"}
+
+# LLMs see your whole data model at once!</code></pre>
                     </div>
                 </div>
             </div>
@@ -546,15 +593,15 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                             <div class="mt-4 space-y-3">
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
+                                    <span><strong>AI-assisted coding</strong> - Claude Code, Cursor, Copilot can edit schema directly</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-primary"></i>
                                     <span><strong>Early development</strong> - Explore your data model without migration debt</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
                                     <span><strong>Prototypes & demos</strong> - Self-contained, no database setup required</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Single-server production</strong> - The pattern works. NVMe is fast.</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
@@ -597,18 +644,18 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
         <section class="py-8 lg:py-20 bg-base-300/30" id="pricing">
             <div class="container">
                 <div class="text-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">Simple Pricing</h2>
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Open Source</h2>
                     <p class="text-base-content/80 mt-2 sm:text-lg">
-                        Free local database. Pay only for AI features.
+                        Free to use. BSL 1.1 license (converts to MIT after 4 years).
                     </p>
                 </div>
 
-                <div class="mt-12 grid gap-8 lg:grid-cols-2 max-w-4xl mx-auto">
-                    <div class="card bg-base-100 border-2 border-base-300">
+                <div class="mt-12 max-w-2xl mx-auto">
+                    <div class="card bg-base-100 border-2 border-primary">
                         <div class="card-body">
-                            <div class="badge badge-ghost mb-2">Free Forever</div>
-                            <h3 class="text-2xl font-bold">Local Database</h3>
-                            <p class="text-base-content/70 mt-2">PostgreSQL-compatible storage on your machine</p>
+                            <div class="badge badge-primary mb-2">Free Forever</div>
+                            <h3 class="text-2xl font-bold">SmarterBase</h3>
+                            <p class="text-base-content/70 mt-2">PostgreSQL-compatible file store</p>
                             <div class="mt-6 space-y-3">
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-success"></i>
@@ -617,6 +664,10 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-success"></i>
                                     <span>JSON file storage</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-success"></i>
+                                    <span>Schema as editable JSON</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-success"></i>
@@ -629,36 +680,6 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                             </div>
                             <div class="mt-6">
                                 <span class="text-3xl font-bold">$0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100 border-2 border-primary">
-                        <div class="card-body">
-                            <div class="badge badge-primary mb-2">Credits</div>
-                            <h3 class="text-2xl font-bold">AI Features</h3>
-                            <p class="text-base-content/70 mt-2">Schema design and synthetic data generation</p>
-                            <div class="mt-6 space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-brain text-primary"></i>
-                                    <span>AI schema design — <strong>10 credits</strong></span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-brain text-primary"></i>
-                                    <span>Schema refinement — <strong>5 credits</strong></span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-database text-primary"></i>
-                                    <span>Generate 100 rows — <strong>5 credits</strong></span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-database text-primary"></i>
-                                    <span>Generate 1000 rows — <strong>25 credits</strong></span>
-                                </div>
-                            </div>
-                            <div class="mt-6">
-                                <span class="text-3xl font-bold">$5</span>
-                                <span class="text-base-content/70"> / 100 credits</span>
                             </div>
                         </div>
                     </div>
@@ -680,13 +701,13 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">1</div>
-                                <h3 class="text-xl font-medium">Install & Login</h3>
+                                <h3 class="text-xl font-medium">Install & Start</h3>
                             </div>
                             <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Install
 go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
 
-# Create account and get API key (free)
-smarterbase login</code></pre>
+# Start the server
+smarterbase --port 5433 --data ./data</code></pre>
                         </div>
                     </div>
 
@@ -694,12 +715,14 @@ smarterbase login</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">2</div>
-                                <h3 class="text-xl font-medium">Design Your Schema with AI <span class="badge badge-sm">10 credits</span></h3>
+                                <h3 class="text-xl font-medium">Create Tables with SQL</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>smarterbase design
-> Describe your project: E-commerce marketplace
-> AI suggests tables: users, products, orders, reviews...
-> Refine until it feels right</code></pre>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Connect with psql
+psql -h localhost -p 5433
+
+# Create tables
+CREATE TABLE users (id UUID PRIMARY KEY, email TEXT, name TEXT);
+INSERT INTO users VALUES (gen_random_uuid7(), 'alice@example.com', 'Alice');</code></pre>
                         </div>
                     </div>
 
@@ -707,13 +730,14 @@ smarterbase login</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">3</div>
-                                <h3 class="text-xl font-medium">Generate Data & Start Server <span class="badge badge-sm">5 credits</span> <span class="badge badge-ghost badge-sm">free</span></h3>
+                                <h3 class="text-xl font-medium">Edit Schema Directly (No Migrations!)</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Generate realistic synthetic data (uses credits)
-smarterbase generate --count 100
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Schema is just JSON
+cat data/_schema/users.json
 
-# Start the server (free, runs locally)
-smarterbase serve --port 5433 --data ./data</code></pre>
+# Edit it with your favorite AI tool
+claude "add a role column to users"
+# → edits data/_schema/users.json directly</code></pre>
                         </div>
                     </div>
 
@@ -728,10 +752,6 @@ DATABASE_URL = "postgresql://localhost:5433/myapp"
 
 # Node.js / Prisma / TypeORM
 const pool = new Pool({ host: 'localhost', port: 5433 });
-
-# Ruby / Rails / ActiveRecord
-host: localhost
-port: 5433
 
 # Go / GORM / sqlx
 db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
@@ -846,7 +866,7 @@ DATABASE_URL = "postgresql://prod-db:5432/myapp"</code></pre>
                         <div>
                             <p class="text-xl font-medium">SmarterBase</p>
                             <p class="mt-4 text-sm text-base-content/70">
-                                AI-powered development database. PostgreSQL compatibility. NVMe speed.
+                                Iterate on your data model without migrations. PostgreSQL compatible.
                             </p>
                         </div>
 
@@ -879,7 +899,7 @@ DATABASE_URL = "postgresql://prod-db:5432/myapp"</code></pre>
                 </div>
 
                 <div class="border-base-300 border-t px-8 py-4 text-center text-sm text-base-content/70">
-                    Built with Go. MIT License.
+                    Built with Go. BSL 1.1 License.
                 </div>
             </div>
         </footer>
