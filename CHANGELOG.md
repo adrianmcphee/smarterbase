@@ -1,3 +1,13 @@
+## [3.2.0](https://github.com/adrianmcphee/smarterbase/compare/v3.1.0...v3.2.0) (2025-12-06)
+
+### Features
+
+* add pricing section and credit costs to website ([4c89590](https://github.com/adrianmcphee/smarterbase/commit/4c89590f7ac11d7b45b42e6e1f52596d0d01f624))
+
+### Documentation
+
+* remove library implementation details from user-facing content ([0647f85](https://github.com/adrianmcphee/smarterbase/commit/0647f85ec06ccbf4a3ea67d7fe449cac1c8c51ed))
+
 ## [3.1.0](https://github.com/adrianmcphee/smarterbase/compare/v3.0.0...v3.1.0) (2025-12-06)
 
 ### Features
