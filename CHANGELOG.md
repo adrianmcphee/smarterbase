@@ -1,3 +1,9 @@
+## [4.0.4](https://github.com/adrianmcphee/smarterbase/compare/v4.0.3...v4.0.4) (2025-12-06)
+
+### Bug Fixes
+
+* use more visible terracotta color for logo ([33e1307](https://github.com/adrianmcphee/smarterbase/commit/33e1307ab59834697f3c30dcd18380de63daff65))
+
 ## [4.0.3](https://github.com/adrianmcphee/smarterbase/compare/v4.0.2...v4.0.3) (2025-12-06)
 
 ### Bug Fixes
