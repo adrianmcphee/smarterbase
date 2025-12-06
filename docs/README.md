@@ -22,7 +22,9 @@ To enable GitHub Pages:
 4. Select branch: `main` and folder: `/docs`
 5. Save
 
-The site will be available at: https://adrianmcphee.github.io/smarterbase/
+The site is available at:
+- https://smarterbase.com
+- https://adrianmcphee.github.io/smarterbase/
 
 ## Files
 
