@@ -45,6 +45,7 @@
         .code-syntax-purple { color: #c084fc; }
         .code-syntax-gray { color: #71717a; }
         .code-syntax-yellow { color: #facc15; }
+        .code-syntax-orange { color: #f97316; }
 
         .reveal-hidden {
             opacity: 0;
@@ -781,56 +782,47 @@
         (function() {
             const terminalScript = [
                 { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: 'smarterbase --port 5433 --data ./data', speed: 40 },
-                { type: 'wait', ms: 300 },
+                { type: 'type', text: 'smarterbase --port 5433 --data ./data &', speed: 40 },
+                { type: 'wait', ms: 200 },
+                { type: 'line', text: '<span class="success glow">| SMARTERBASE |</span> <span class="output">Listening on :5433</span>' },
                 { type: 'line', text: '' },
-                { type: 'line', text: '<span class="success glow">| SMARTERBASE |</span>' },
-                { type: 'line', text: '<span class="output">v1.0.0 - PostgreSQL-compatible file store</span>' },
-                { type: 'line', text: '<span class="output">Listening on port <span class="code-syntax-yellow">5433</span>...</span>' },
-                { type: 'wait', ms: 400 },
-                { type: 'line', text: '' },
+                { type: 'comment', text: '# Create a table with SQL' },
                 { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: 'psql -h localhost -p 5433', speed: 35 },
-                { type: 'wait', ms: 200 },
-                { type: 'line', text: '<span class="output">Connected to smarterbase</span>' },
-                { type: 'line', text: '' },
-                { type: 'prompt', text: 'smarterbase=# ', cls: 'info' },
-                { type: 'type', text: 'CREATE TABLE users (', speed: 30 },
-                { type: 'line', text: '<span class="command">    id TEXT PRIMARY KEY,</span>' },
-                { type: 'line', text: '<span class="command">    name TEXT,</span>' },
-                { type: 'line', text: '<span class="command">    email TEXT</span>' },
-                { type: 'line', text: '<span class="command">);</span>' },
-                { type: 'wait', ms: 200 },
+                { type: 'type', text: 'psql -h localhost -p 5433 -c "CREATE TABLE users (id TEXT PRIMARY KEY, name TEXT);"', speed: 25 },
+                { type: 'wait', ms: 150 },
                 { type: 'line', text: '<span class="output">CREATE TABLE</span>' },
                 { type: 'line', text: '' },
-                { type: 'prompt', text: 'smarterbase=# ', cls: 'info' },
-                { type: 'type', text: 'INSERT INTO users VALUES', speed: 35 },
-                { type: 'line', text: '<span class="command">(\'u1\', \'Alice\', \'alice@example.com\'),</span>' },
-                { type: 'line', text: '<span class="command">(\'u2\', \'Bob\', \'bob@example.com\');</span>' },
-                { type: 'wait', ms: 200 },
-                { type: 'line', text: '<span class="output">INSERT 0 2</span>' },
-                { type: 'line', text: '' },
-                { type: 'prompt', text: 'smarterbase=# ', cls: 'info' },
-                { type: 'type', text: '\\q', speed: 100 },
-                { type: 'wait', ms: 300 },
-                { type: 'line', text: '' },
+                { type: 'comment', text: '# Ask Claude Code to add an email column' },
                 { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: 'tree data/', speed: 50 },
+                { type: 'type', text: 'claude "add an email column to users"', speed: 30 },
                 { type: 'wait', ms: 200 },
-                { type: 'line', text: '<span class="info">data/</span>' },
-                { type: 'line', text: '<span class="output">├── <span class="info">_schema/</span></span>' },
-                { type: 'line', text: '<span class="output">│   └── users.json</span>' },
-                { type: 'line', text: '<span class="output">└── <span class="success">users.jsonl</span>  <span class="comment">← your data!</span></span>' },
-                { type: 'line', text: '' },
-                { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: 'cat data/users.jsonl', speed: 40 },
+                { type: 'line', text: '<span class="code-syntax-orange">▗ ▗   ▖ ▖</span>  <span class="code-syntax-blue">Claude Code</span>' },
+                { type: 'line', text: '           <span class="output">~/myproject</span>' },
+                { type: 'line', text: '<span class="code-syntax-orange">  ▘▘ ▝▝</span>' },
+                { type: 'wait', ms: 200 },
+                { type: 'line', text: '<span class="output">I\'ll add an email column to the users table.</span>' },
                 { type: 'wait', ms: 150 },
-                { type: 'line', text: '<span class="code-syntax-green">{"id":"u1","name":"Alice","email":"alice@example.com"}</span>' },
-                { type: 'line', text: '<span class="code-syntax-green">{"id":"u2","name":"Bob","email":"bob@example.com"}</span>' },
+                { type: 'line', text: '<span class="success">✓ Edit data/_schema/users.json</span>' },
                 { type: 'line', text: '' },
+                { type: 'comment', text: '# Ask Claude to create test data' },
                 { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: '# Schema is just JSON. Edit it directly!', speed: 25, cls: 'comment' },
+                { type: 'type', text: 'claude "add 2 test users with emails"', speed: 30 },
+                { type: 'wait', ms: 200 },
+                { type: 'line', text: '<span class="output">Adding test records to users table...</span>' },
+                { type: 'wait', ms: 150 },
+                { type: 'line', text: '<span class="success">✓ Edit data/users.jsonl</span>' },
                 { type: 'line', text: '' },
+                { type: 'comment', text: '# Query with SQL - it just works!' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'psql -h localhost -p 5433 -c "SELECT * FROM users;"', speed: 25 },
+                { type: 'wait', ms: 200 },
+                { type: 'line', text: '<span class="output"> id  |  name  |       email</span>' },
+                { type: 'line', text: '<span class="output">-----+--------+---------------------</span>' },
+                { type: 'line', text: '<span class="success"> u1  | Alice  | alice@example.com</span>' },
+                { type: 'line', text: '<span class="success"> u2  | Bob    | bob@example.com</span>' },
+                { type: 'line', text: '<span class="output">(2 rows)</span>' },
+                { type: 'line', text: '' },
+                { type: 'comment', text: '# No migrations. AI edits JSON. SQL queries work.' },
                 { type: 'prompt', text: '~/myproject $ ' },
             ];
 
@@ -879,6 +871,13 @@
                         case 'line':
                             currentLine = document.createElement('div');
                             currentLine.innerHTML = step.text || '&nbsp;';
+                            container.appendChild(currentLine);
+                            scrollToBottom();
+                            break;
+                        case 'comment':
+                            currentLine = document.createElement('div');
+                            currentLine.className = 'comment';
+                            currentLine.textContent = step.text;
                             container.appendChild(currentLine);
                             scrollToBottom();
                             break;
