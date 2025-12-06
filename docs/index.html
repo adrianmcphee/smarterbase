@@ -2,8 +2,8 @@
 <html lang="en" class="group/html" data-theme="dark">
     <head>
         <meta charset="utf-8" />
-<title>SmarterBase - Iterate Fast in Early Development. NVMe Speed.</title>
-<meta content="Don't pollute production while exploring your data model. PostgreSQL-compatible queries over JSON files with NVMe speed. Perfect for early development, prototypes, and demos." name="description" />
+<title>SmarterBase - AI-Powered Development Database. PostgreSQL Compatibility. NVMe Speed.</title>
+<meta content="AI-powered development database. Define your data model with AI assistance, generate realistic synthetic data, and speak PostgreSQL wire protocol. Perfect for early development, prototypes, and demos." name="description" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <link rel="shortcut icon" href="./images/favicon.ico" />
@@ -122,13 +122,13 @@
                 <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
                     <div>
                         <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
-                            Iterate Fast.
-                            <span class="text-primary">NVMe Speed.</span>
+                            AI-Powered.
+                            <span class="text-primary">PostgreSQL Compatible.</span>
                         </h1>
                         <p class="text-base-content/80 mt-8 sm:text-lg">
-                            Don't pollute your production database while exploring your data model.
-                            SmarterBase gives you <strong>PostgreSQL-compatible queries over JSON files</strong>
-                            on local disk.
+                            An intelligent development database that <strong>helps you define your data model</strong>,
+                            <strong>generates realistic synthetic data</strong>, and speaks PostgreSQL wire protocol.
+                            Iterate freely with JSON files you can see and edit.
                         </p>
                         <p class="text-base-content/60 mt-4 sm:text-base">
                             Perfect for <strong>early development</strong>, <strong>prototypes</strong>, <strong>demos</strong>, and <strong>single-server production</strong>.
@@ -152,37 +152,39 @@
                     </div>
 
                     <div class="bg-base-200 rounded-box p-6">
-                        <pre class="text-sm overflow-x-auto max-w-full"><code># Start the server
-smarterbase serve --port 5433 --data ./data
+                        <pre class="text-sm overflow-x-auto max-w-full"><code># Configure your LLM provider
+export ANTHROPIC_API_KEY="sk-ant-..."
 
-# Connect from any language
+# Design your schema with AI
+smarterbase design
+> Describe your project: B2B SaaS
+> AI suggests: companies, users, projects...
+
+# Generate realistic synthetic data
+smarterbase generate --count 100
+
+# Start the server
+smarterbase serve --port 5433
 </code></pre>
-                        <pre class="text-sm overflow-x-auto max-w-full mt-4"><code class="language-python"># Python / SQLAlchemy
+                        <pre class="text-sm overflow-x-auto max-w-full mt-4"><code class="language-python"># Connect with any PostgreSQL driver
 DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
-                        <pre class="text-sm overflow-x-auto max-w-full mt-2"><code class="language-javascript">// Node.js
-const pool = new Pool({ host: 'localhost', port: 5433 });</code></pre>
-                        <pre class="text-sm overflow-x-auto max-w-full mt-2"><code class="language-ruby"># Ruby / Rails
-host: localhost
-port: 5433</code></pre>
-                        <pre class="text-sm overflow-x-auto max-w-full mt-2"><code class="language-go">// Go
-db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                     </div>
                 </div>
 
                 <div class="mt-12 lg:mt-32">
                     <h2 class="text-base-content/60 text-center text-xl font-medium">
-                        Databases Punish Iteration
+                        Early Development is Painful
                     </h2>
-                    <div class="mt-8 grid gap-6 lg:grid-cols-3">
+                    <div class="mt-8 grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
                         <div class="card border-error/30 border-2 bg-base-200">
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
                                     <span class="text-error text-2xl">1</span>
-                                    <h3 class="text-lg font-semibold">Migration Hell</h3>
+                                    <h3 class="text-lg font-semibold">Unknown Data Model</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
-                                    <div>Every schema change = migration</div>
-                                    <div class="text-error">By launch: 47 migrations and a mess of ALTER TABLEs</div>
+                                    <div>You don't know your schema yet</div>
+                                    <div class="text-error">Databases force you to decide upfront</div>
                                 </div>
                             </div>
                         </div>
@@ -190,11 +192,11 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
                                     <span class="text-error text-2xl">2</span>
-                                    <h3 class="text-lg font-semibold">Opaque Data</h3>
+                                    <h3 class="text-lg font-semibold">No Test Data</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
-                                    <div>Can't just <code>cat</code> a record</div>
-                                    <div class="text-error">Need database tools to see your own data</div>
+                                    <div>You need realistic data</div>
+                                    <div class="text-error">Creating it manually is tedious</div>
                                 </div>
                             </div>
                         </div>
@@ -202,11 +204,23 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
                                     <span class="text-error text-2xl">3</span>
+                                    <h3 class="text-lg font-semibold">Opaque Data</h3>
+                                </div>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div>Can't just <code>cat</code> a record</div>
+                                    <div class="text-error">Need tools to see your own data</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card border-error/30 border-2 bg-base-200">
+                            <div class="card-body">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-error text-2xl">4</span>
                                     <h3 class="text-lg font-semibold">SQLite Lock-in</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
                                     <div>Different SQL dialect</div>
-                                    <div class="text-error">Moving to PostgreSQL means rewriting queries</div>
+                                    <div class="text-error">PostgreSQL migration means rewrites</div>
                                 </div>
                             </div>
                         </div>
@@ -218,7 +232,7 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                                     <span class="text-primary text-2xl">SmarterBase</span>
                                 </div>
                                 <div class="mt-4 text-lg">
-                                    <strong>Iterate freely. See your data as files. Migrate to PostgreSQL when ready.</strong>
+                                    <strong>AI designs your schema. AI generates realistic data. Migrate to PostgreSQL when ready.</strong>
                                 </div>
                             </div>
                         </div>
@@ -232,7 +246,27 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                 <div class="text-center mb-12">
                     <h2 class="text-2xl font-semibold sm:text-3xl">Why SmarterBase Works</h2>
                 </div>
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div class="card bg-base-100 border border-primary/20">
+                        <div class="card-body text-center">
+                            <div class="flex justify-center mb-3">
+                                <i class="fa-solid fa-brain text-4xl text-primary"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-primary">AI Schema Design</h3>
+                            <p class="text-sm text-base-content/70">Describe your domain. AI suggests tables and relationships.</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 border border-primary/20">
+                        <div class="card-body text-center">
+                            <div class="flex justify-center mb-3">
+                                <i class="fa-solid fa-database text-4xl text-primary"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-primary">Realistic Data</h3>
+                            <p class="text-sm text-base-content/70">AI generates synthetic data that makes sense for your domain.</p>
+                        </div>
+                    </div>
+
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
@@ -259,17 +293,7 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                                 <i class="fa-solid fa-bolt text-4xl text-primary"></i>
                             </div>
                             <h3 class="text-xl font-bold text-primary">NVMe Speed</h3>
-                            <p class="text-sm text-base-content/70">10-100μs vs 1-10ms over network</p>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-cloud-arrow-up text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">Simple Backups</h3>
-                            <p class="text-sm text-base-content/70">Copy files. Sync to S3. Done.</p>
+                            <p class="text-sm text-base-content/70">10-100μs local reads. Faster than network databases.</p>
                         </div>
                     </div>
 
@@ -279,7 +303,7 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                                 <i class="fa-solid fa-arrow-right-arrow-left text-4xl text-primary"></i>
                             </div>
                             <h3 class="text-xl font-bold text-primary">Easy Migration</h3>
-                            <p class="text-sm text-base-content/70">Export to PostgreSQL when ready</p>
+                            <p class="text-sm text-base-content/70">Export to PostgreSQL when ready. Your queries work.</p>
                         </div>
                     </div>
                 </div>
@@ -296,13 +320,23 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                 <div class="flex flex-col items-center">
                     <h2 class="text-3xl font-semibold sm:text-4xl">How It Works</h2>
                     <p class="text-base-content/80 mt-4 sm:text-lg">
-                        PostgreSQL wire protocol over filesystem storage
+                        AI-powered schema design + PostgreSQL wire protocol + filesystem storage
                     </p>
                 </div>
 
                 <div class="mt-8 lg:mt-16">
                     <div class="bg-base-200 rounded-box p-6 max-w-3xl mx-auto">
-                        <pre class="text-sm overflow-x-auto"><code>Your App (any PostgreSQL driver)
+                        <pre class="text-sm overflow-x-auto"><code>┌─────────────────────────────────────────────────────────────┐
+│                      smarterbase                             │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │
+│  │    AI    │  │ pgproto3 │  │ sqlparser│  │   storage   │  │
+│  │ (schema  │  │(protocol)│  │ (parse)  │  │ (files+idx) │  │
+│  │  + data) │  │          │  │          │  │             │  │
+│  └──────────┘  └──────────┘  └──────────┘  └─────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+
+Your App (any PostgreSQL driver)
         |
         | PostgreSQL wire protocol
         v
@@ -327,7 +361,21 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
     \-- 019363f5-9c8d-7bcd-8000-3c4d5e6f7a8b.json</code></pre>
                     </div>
 
-                    <div class="mt-12 grid gap-8 lg:grid-cols-3">
+                    <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+                        <div class="card card-border">
+                            <div class="card-body">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                        <i class="fa-solid fa-brain text-2xl text-primary"></i>
+                                    </div>
+                                    <h3 class="text-lg font-medium">AI</h3>
+                                </div>
+                                <p class="mt-2">
+                                    LLM provider (OpenAI, Anthropic, Gemini) designs schema and generates data.
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="card card-border">
                             <div class="card-body">
                                 <div class="flex items-center gap-4">
@@ -560,9 +608,15 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">1</div>
-                                <h3 class="text-xl font-medium">Install</h3>
+                                <h3 class="text-xl font-medium">Install & Configure LLM</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest</code></pre>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Install
+go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
+
+# Configure your LLM provider (pick one)
+export OPENAI_API_KEY="sk-..."
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GEMINI_API_KEY="..."</code></pre>
                         </div>
                     </div>
 
@@ -570,9 +624,12 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">2</div>
-                                <h3 class="text-xl font-medium">Start Server</h3>
+                                <h3 class="text-xl font-medium">Design Your Schema with AI</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>smarterbase serve --port 5433 --data ./data</code></pre>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>smarterbase design
+> Describe your project: E-commerce marketplace
+> AI suggests tables: users, products, orders, reviews...
+> Refine until it feels right</code></pre>
                         </div>
                     </div>
 
@@ -580,9 +637,23 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">3</div>
-                                <h3 class="text-xl font-medium">Connect from Your Language</h3>
+                                <h3 class="text-xl font-medium">Generate Realistic Data & Start Server</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Python / SQLAlchemy / Django / Alembic
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Generate realistic synthetic data
+smarterbase generate --count 100
+
+# Start the server
+smarterbase serve --port 5433 --data ./data</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100">
+                        <div class="card-body">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="badge badge-primary">4</div>
+                                <h3 class="text-xl font-medium">Connect from Any Language</h3>
+                            </div>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Python / SQLAlchemy / Django
 DATABASE_URL = "postgresql://localhost:5433/myapp"
 
 # Node.js / Prisma / TypeORM
@@ -593,18 +664,14 @@ host: localhost
 port: 5433
 
 # Go / GORM / sqlx
-db, _ := sql.Open("postgres", "host=localhost port=5433 dbname=myapp sslmode=disable")
-
-# PHP / Laravel / Doctrine
-DB_HOST=localhost
-DB_PORT=5433</code></pre>
+db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                         </div>
                     </div>
 
                     <div class="card bg-base-100">
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
-                                <div class="badge badge-primary">4</div>
+                                <div class="badge badge-primary">5</div>
                                 <h3 class="text-xl font-medium">Migrate to PostgreSQL (When Ready)</h3>
                             </div>
                             <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Export your data
@@ -709,7 +776,7 @@ DATABASE_URL = "postgresql://prod-db:5432/myapp"</code></pre>
                         <div>
                             <p class="text-xl font-medium">SmarterBase</p>
                             <p class="mt-4 text-sm text-base-content/70">
-                                Iterate fast. Lock in your schema later.
+                                AI-powered development database. PostgreSQL compatibility. NVMe speed.
                             </p>
                         </div>
 
@@ -742,7 +809,7 @@ DATABASE_URL = "postgresql://prod-db:5432/myapp"</code></pre>
                 </div>
 
                 <div class="border-base-300 border-t px-8 py-4 text-center text-sm text-base-content/70">
-                    Built with Go. PostgreSQL wire protocol via jackc/pgproto3. SQL parsing via vitess/sqlparser.
+                    Built with Go. AI via OpenAI/Anthropic/Gemini. PostgreSQL protocol via jackc/pgproto3. SQL parsing via vitess/sqlparser.
                 </div>
             </div>
         </footer>

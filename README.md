@@ -1,8 +1,8 @@
 # SmarterBase
 
-**Iterate fast in early development. PostgreSQL compatibility. NVMe speed.**
+**AI-powered development database. PostgreSQL compatibility. NVMe speed.**
 
-Don't pollute your production database while exploring your data model. SmarterBase gives you PostgreSQL-compatible queries over JSON files on local disk. When your schema stabilizes, export to PostgreSQL.
+An intelligent development database that helps you define your data model, generates realistic synthetic data, and speaks PostgreSQL wire protocol. Iterate freely with JSON files you can see and edit. When your schema stabilizes, export to PostgreSQL.
 
 Perfect for **early development**, **prototypes**, **demos**, and **single-server production**.
 
@@ -13,32 +13,55 @@ Perfect for **early development**, **prototypes**, **demos**, and **single-serve
 
 ## The Problem
 
-Early development shouldn't touch your production database. But your options aren't great:
+Early development is painful:
 
-1. **PostgreSQL locally** - Every schema change needs a migration. You're accumulating tech debt before you even know your data model.
-2. **SQLite** - Different SQL dialect. When you're ready for production, you're rewriting queries.
-3. **Both** - Your data is opaque. You can't just `cat` a record or `grep` for a value.
+1. **You don't know your data model yet** - But databases force you to decide upfront and accumulate migrations.
+2. **You need realistic test data** - But creating it manually is tedious and unrealistic.
+3. **Your data is opaque** - You can't just `cat` a record or `grep` for a value.
+4. **SQLite isn't PostgreSQL** - Different dialect means rewriting queries later.
 
-What if you could iterate freely, see your data as files, and migrate to PostgreSQL only when your schema stabilizes?
+What if an AI could help you design your schema, generate realistic data, and give you a PostgreSQL-compatible database that stores everything as visible JSON files?
 
 ## The Solution
 
-SmarterBase speaks PostgreSQL wire protocol but stores data as JSON files.
+SmarterBase is an AI-powered development database. Connect your LLM provider, describe your domain, and get:
 
 ```
-Your App (any PostgreSQL driver)
-        │
-        │ PostgreSQL wire protocol
-        ▼
-   smarterbase
-        │
-        ▼
-   JSON files on disk
+┌─────────────────────────────────────────────────────────────┐
+│                      smarterbase                             │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │
+│  │    AI    │  │ pgproto3 │  │ sqlparser│  │   storage   │  │
+│  │ (schema  │  │(protocol)│  │ (parse)  │  │ (files+idx) │  │
+│  │  + data) │  │          │  │          │  │             │  │
+│  └──────────┘  └──────────┘  └──────────┘  └─────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Iterate freely:** Change your schema anytime. No migrations. Just update your code.
+**AI-assisted schema design:** Describe your domain, get schema suggestions.
 
-**See everything:** Your data is JSON files. `cat`, `grep`, `git diff` your records. Debug by reading files.
+```bash
+smarterbase design
+> Describe your project: B2B SaaS for project management
+> AI suggests: companies, users, projects, tasks, comments...
+> Refine interactively until your model feels right
+```
+
+**Realistic synthetic data:** AI generates data that makes sense for your domain.
+
+```bash
+smarterbase generate --count 100
+> Generating realistic B2B SaaS data...
+> Companies: Acme Corp, TechStart Inc, GlobalSoft...
+> Users: realistic names, emails, roles per company...
+> Projects: believable names, descriptions, statuses...
+```
+
+**Reusable data generators:** Not just one-time data - generators you can run anytime.
+
+**PostgreSQL wire protocol:** Your app connects with any PostgreSQL driver. Real queries, real testing.
+
+**See everything:** Your data is JSON files. `cat`, `grep`, `git diff` your records.
 
 **Fast:** Local NVMe means point lookups under 100μs.
 
@@ -48,9 +71,7 @@ Your App (any PostgreSQL driver)
 | Redis over network | 500-2000 μs |
 | PostgreSQL over network | 1-10 ms |
 
-**Simple backups:** Copy a directory. Sync to S3. No `pg_dump`, no backup strategies.
-
-**Migrate when ready:** When your schema stabilizes, export to PostgreSQL and switch. Your queries already work.
+**Migrate when ready:** Export schema + data generators to PostgreSQL. Your queries already work.
 
 ---
 
@@ -60,7 +81,21 @@ Your App (any PostgreSQL driver)
 # Install
 go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
 
-# Start server
+# Configure your LLM provider (pick one)
+export OPENAI_API_KEY="sk-..."
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GEMINI_API_KEY="..."
+
+# Design your schema with AI assistance
+smarterbase design
+> Describe your project: E-commerce marketplace
+> AI suggests tables: users, products, orders, reviews...
+> Refine until it feels right
+
+# Generate realistic synthetic data
+smarterbase generate --count 100
+
+# Start the server
 smarterbase serve --port 5433 --data ./data
 ```
 
@@ -245,10 +280,13 @@ UUIDv7 values transfer directly - PostgreSQL's UUID type accepts them as-is.
 ## CLI
 
 ```bash
-# Start server
-smarterbase serve
+# AI-assisted schema design
+smarterbase design
 
-# With options
+# Generate realistic synthetic data
+smarterbase generate --count 100
+
+# Start server
 smarterbase serve --port 5433 --data ./data
 
 # Export to PostgreSQL format
@@ -267,9 +305,18 @@ smarterbase rebuild-indexes
 port: 5433
 data: ./data
 password: ""  # empty = no auth
+
+# LLM provider (pick one)
+llm:
+  provider: anthropic  # or: openai, gemini
+  # API key from environment: ANTHROPIC_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY
 ```
 
-Defaults work. Config is optional.
+Or use environment variables:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."  # or OPENAI_API_KEY or GEMINI_API_KEY
+```
 
 ---
 
