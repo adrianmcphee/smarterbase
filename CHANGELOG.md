@@ -1,3 +1,9 @@
+## [3.3.0](https://github.com/adrianmcphee/smarterbase/compare/v3.2.0...v3.3.0) (2025-12-06)
+
+### Features
+
+* implement working SQL executor with LLM-friendly storage ([14581f7](https://github.com/adrianmcphee/smarterbase/commit/14581f746d9807dacb9b25076aa2f91cd8eab0a0))
+
 ## [3.2.0](https://github.com/adrianmcphee/smarterbase/compare/v3.1.0...v3.2.0) (2025-12-06)
 
 ### Features
