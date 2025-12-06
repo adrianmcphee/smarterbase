@@ -1,3 +1,9 @@
+## [3.6.0](https://github.com/adrianmcphee/smarterbase/compare/v3.5.1...v3.6.0) (2025-12-06)
+
+### Features
+
+* add fixed height terminals with auto-scroll ([015c305](https://github.com/adrianmcphee/smarterbase/commit/015c305fb2a4743e3661480150d358318aed65bc))
+
 ## [3.5.1](https://github.com/adrianmcphee/smarterbase/compare/v3.5.0...v3.5.1) (2025-12-06)
 
 ### Bug Fixes
