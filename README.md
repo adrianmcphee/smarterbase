@@ -1,10 +1,10 @@
 # SmarterBase
 
-**Iterate on your data model without migrations.**
+**Explore freely. Graduate cleanly.**
 
-A PostgreSQL-compatible database that stores data as JSON files. Change your schema anytime—just update your code. No migration files, no `ALTER TABLE`, no coordination.
+A PostgreSQL-compatible database that stores data as JSON files. AI assistants edit your schema directly. When you're ready for PostgreSQL, export just your final schema—not 100 exploratory migrations.
 
-Perfect for **early development**, **prototypes**, and **AI-assisted coding** (Claude Code, Cursor, Copilot).
+Built for **Claude Code**, **Cursor**, **Copilot**, and the AI-assisted development workflow.
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL_1.1-blue.svg)](./LICENSE)
@@ -13,28 +13,48 @@ Perfect for **early development**, **prototypes**, and **AI-assisted coding** (C
 
 ## The Problem
 
-Early development with databases is painful:
+Early development is exploration. You don't know your schema yet.
 
-1. **Schema changes pile up as migration files** - Every `ALTER TABLE` becomes permanent baggage.
-2. **AI coding assistants can't easily fix schema mistakes** - They'd need to generate migrations, coordinate versions.
-3. **Your data is opaque** - You can't just `cat` a record or `grep` for a value.
-4. **SQLite isn't PostgreSQL** - Different dialect means rewriting queries later.
+But traditional databases treat every change as permanent:
 
-**What if your schema was just JSON files you could edit directly?**
+1. **Each experiment becomes a migration file** — AI helps you iterate 10x faster, which means 10x more migrations. Your "figuring it out" phase becomes 100+ ALTER TABLEs everyone replays forever.
+2. **AI assistants can't help effectively** — Claude Code could fix your schema in seconds—if it didn't have to generate migration SQL and coordinate versions.
+3. **Your data is opaque** — You can't just `cat` a record or `grep` for a value without special tools.
+4. **SQLite doesn't match production** — Different SQL dialect means rewriting queries when you graduate to PostgreSQL.
+
+**What if exploration had no permanent cost?**
 
 ## The Solution
 
-SmarterBase stores schemas and data as JSON files. SQL commands modify these files directly.
+SmarterBase separates exploration from production.
+
+During development, your schema is JSON files. AI assistants edit them directly. No migrations accumulate.
+
+When you're ready, export to PostgreSQL—with a clean schema, not your exploratory history.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      smarterbase                             │
-│                                                              │
-│  ┌──────────────┐  ┌──────────┐  ┌──────────────────────┐   │
-│  │   protocol   │  │  parser  │  │       storage        │   │
-│  │  (pg wire)   │─▶│  (SQL)   │─▶│   (JSON files)       │   │
-│  └──────────────┘  └──────────┘  └──────────────────────┘   │
+│  EXPLORE (SmarterBase)             GRADUATE (PostgreSQL)    │
+│                                                             │
+│  • Schema is JSON files    ───▶    • Export final schema    │
+│  • AI edits directly               • Clean starting point   │
+│  • No migrations needed            • No migration history   │
+│  • Iterate freely                  • Queries already work   │
 └─────────────────────────────────────────────────────────────┘
+```
+
+**How AI assistants use SmarterBase:**
+
+```bash
+# Claude Code sees your entire data model
+cat data/_schema/users.json data/users.jsonl
+
+# Claude Code changes your schema directly
+claude "add a role column to users"
+# → edits data/_schema/users.json (no migration generated)
+
+# Made a mistake? Just revert
+git checkout data/_schema/users.json
 ```
 
 **Schema is just JSON:**
@@ -52,19 +72,9 @@ Creates `data/_schema/users.json`:
 ]}
 ```
 
-**Change schema anytime:** Edit the JSON directly, or use SQL. No migrations.
-
-```bash
-# Claude Code can just edit the schema file
-claude "add a role column to users"
-# → edits data/_schema/users.json directly
-```
-
-**PostgreSQL wire protocol:** Any pg driver works. Same code runs against PostgreSQL later.
+**PostgreSQL wire protocol:** Any pg driver works. Same code runs against PostgreSQL when you graduate.
 
 **See everything:** `cat`, `grep`, `git diff` your data.
-
-**Migrate when ready:** Export to PostgreSQL. Your queries already work.
 
 ---
 
@@ -357,12 +367,34 @@ SELECT * FROM information_schema.columns WHERE table_name = $1
 
 ## When to Use SmarterBase
 
-### Use It For
+### The Exploration Phase
 
-- **AI-assisted coding** - Claude Code, Cursor, Copilot can edit schema JSON directly. No migrations.
-- **Early development** - Explore your data model. Change it freely. No migration debt.
-- **Prototypes & demos** - Self-contained, no database setup, just run the binary.
-- **Learning** - See your data as JSON files. Understand what's happening.
+Use SmarterBase when you're still figuring out your data model:
+
+| You're doing this... | SmarterBase helps because... |
+|---------------------|------------------------------|
+| AI-assisted development | Claude/Cursor/Copilot edit schema JSON directly |
+| Rapid prototyping | Schema changes are instant, no migration files |
+| Learning & experimenting | See your data as JSON files, understand what's happening |
+| Building demos | Self-contained, no database setup required |
+
+### The Graduation
+
+When your schema stabilizes and you need production features:
+
+```bash
+# Export your final schema (not 100 migrations)
+smarterbase export > schema.sql
+
+# Load into PostgreSQL
+psql myapp < schema.sql
+
+# Update connection string. Done.
+# Your queries already work—same PostgreSQL dialect.
+```
+
+**What you bring:** Your final schema.
+**What you leave behind:** Migration history, ALTER TABLE archaeology, experimental baggage.
 
 ### Graduate to PostgreSQL When You Need
 
@@ -370,8 +402,6 @@ SELECT * FROM information_schema.columns WHERE table_name = $1
 - **JOINs and aggregations** - Complex queries
 - **Multi-server deployments** - Replication, clustering
 - **More than ~1M rows/table** - Query planner benefits kick in
-
-Export to PostgreSQL anytime. Your queries already work.
 
 ---
 
