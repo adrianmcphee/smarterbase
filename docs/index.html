@@ -46,6 +46,7 @@
         .code-syntax-gray { color: #71717a; }
         .code-syntax-yellow { color: #facc15; }
         .code-syntax-orange { color: #f97316; }
+        .claude-logo { color: #c4a69d; }
 
         .reveal-hidden {
             opacity: 0;
@@ -796,9 +797,14 @@
                 { type: 'prompt', text: '~/myproject $ ' },
                 { type: 'type', text: 'claude "add an email column to users"', speed: 30 },
                 { type: 'wait', ms: 200 },
-                { type: 'line', text: '  <span class="code-syntax-orange">▗ ▗ ▗</span>  <span class="code-syntax-blue">Claude Code</span>' },
+                { type: 'line', text: '<span class="claude-logo">    ▄███▄</span>' },
+                { type: 'line', text: '<span class="claude-logo">   ██   ██</span>' },
+                { type: 'line', text: '<span class="claude-logo">   ██ ▄ ██</span>' },
+                { type: 'line', text: '<span class="claude-logo">    █████</span>' },
+                { type: 'line', text: '<span class="claude-logo">    ██ ██</span>' },
+                { type: 'line', text: '' },
+                { type: 'line', text: '  <span class="output">Opus 4.5 · Claude Max</span>' },
                 { type: 'line', text: '  <span class="output">~/myproject</span>' },
-                { type: 'line', text: '  <span class="code-syntax-orange">▘▘ ▝▝</span>' },
                 { type: 'wait', ms: 200 },
                 { type: 'line', text: '<span class="output">I\'ll add an email column to the users table.</span>' },
                 { type: 'wait', ms: 150 },
