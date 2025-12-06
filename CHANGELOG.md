@@ -1,3 +1,14 @@
+## [3.1.0](https://github.com/adrianmcphee/smarterbase/compare/v3.0.0...v3.1.0) (2025-12-06)
+
+### Features
+
+* add schema design and synthetic data generation features ([9f799e0](https://github.com/adrianmcphee/smarterbase/commit/9f799e0cddaaae23677e12b3cd6d92931a421058))
+
+### Documentation
+
+* improve value proposition - iterate fast, lock in schema later ([0f7c00f](https://github.com/adrianmcphee/smarterbase/commit/0f7c00f382b1cca376b14390f0217ab076a9d2c8))
+* refine value prop - early dev, prototypes, single-server production ([6a24112](https://github.com/adrianmcphee/smarterbase/commit/6a241124223a81cb38ed8ee1c4340ee323f0b279))
+
 ## [3.0.0](https://github.com/adrianmcphee/smarterbase/compare/v2.2.3...v3.0.0) (2025-12-06)
 
 ### ⚠ BREAKING CHANGES
