@@ -391,6 +391,136 @@
                     </div>
                 </div>
 
+                <!-- Second terminal: Language drivers -->
+                <div class="mt-8 lg:mt-12">
+                    <h3 class="text-center text-base-content/60 text-lg mb-4">Works with any PostgreSQL driver</h3>
+                    <div class="terminal-window rounded-lg overflow-hidden shadow-xl max-w-3xl mx-auto" id="terminal-drivers">
+                        <div class="terminal-header px-4 py-2 flex items-center gap-3">
+                            <div class="flex gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <span class="text-gray-400 text-xs">Any Language</span>
+                            </div>
+                        </div>
+                        <div class="terminal-body p-4 pl-6 text-xs sm:text-sm leading-relaxed overflow-x-auto" style="min-height: 280px;">
+                            <div class="terminal-text" id="driver-terminal-content"></div>
+                        </div>
+                        <script>
+                        (function() {
+                            const driverScript = [
+                                { type: 'line', text: '<span class="comment"># Python</span>' },
+                                { type: 'prompt', text: '>>> ' },
+                                { type: 'type', text: 'import psycopg2', speed: 30 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: '>>> ' },
+                                { type: 'type', text: 'conn = psycopg2.connect("host=localhost port=5433")', speed: 25 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: '>>> ' },
+                                { type: 'type', text: 'cur.execute("SELECT * FROM users")', speed: 30 },
+                                { type: 'line', text: '<span class="success">[(\'u1\', \'Alice\'), (\'u2\', \'Bob\')]</span>' },
+                                { type: 'wait', ms: 800 },
+                                { type: 'clear' },
+                                { type: 'line', text: '<span class="comment">// Go</span>' },
+                                { type: 'prompt', text: 'go > ' },
+                                { type: 'type', text: 'db, _ := sql.Open("postgres", "host=localhost port=5433")', speed: 25 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: 'go > ' },
+                                { type: 'type', text: 'rows, _ := db.Query("SELECT * FROM users")', speed: 30 },
+                                { type: 'line', text: '<span class="success">&{rows: [{u1 Alice} {u2 Bob}]}</span>' },
+                                { type: 'wait', ms: 800 },
+                                { type: 'clear' },
+                                { type: 'line', text: '<span class="comment"># Ruby</span>' },
+                                { type: 'prompt', text: 'irb> ' },
+                                { type: 'type', text: 'require \'pg\'', speed: 40 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: 'irb> ' },
+                                { type: 'type', text: 'conn = PG.connect(host: \'localhost\', port: 5433)', speed: 25 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: 'irb> ' },
+                                { type: 'type', text: 'conn.exec("SELECT * FROM users").values', speed: 30 },
+                                { type: 'line', text: '<span class="success">=> [["u1", "Alice"], ["u2", "Bob"]]</span>' },
+                                { type: 'wait', ms: 800 },
+                                { type: 'clear' },
+                                { type: 'line', text: '<span class="comment">// Node.js</span>' },
+                                { type: 'prompt', text: 'node > ' },
+                                { type: 'type', text: 'const { Pool } = require(\'pg\')', speed: 30 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: 'node > ' },
+                                { type: 'type', text: 'const pool = new Pool({ host: \'localhost\', port: 5433 })', speed: 25 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: 'node > ' },
+                                { type: 'type', text: 'await pool.query(\'SELECT * FROM users\')', speed: 30 },
+                                { type: 'line', text: '<span class="success">{ rows: [{ id: \'u1\', name: \'Alice\' }, ...] }</span>' },
+                                { type: 'wait', ms: 800 },
+                            ];
+
+                            const container = document.getElementById('driver-terminal-content');
+                            let currentLine = null;
+
+                            async function sleep(ms) {
+                                return new Promise(resolve => setTimeout(resolve, ms));
+                            }
+
+                            async function typeText(text, speed) {
+                                for (let i = 0; i < text.length; i++) {
+                                    const span = document.createElement('span');
+                                    span.className = 'command';
+                                    span.textContent = text[i];
+                                    currentLine.appendChild(span);
+                                    await sleep(speed + Math.random() * 15);
+                                }
+                            }
+
+                            async function runDriverTerminal() {
+                                container.innerHTML = '';
+                                currentLine = document.createElement('div');
+                                container.appendChild(currentLine);
+
+                                for (const step of driverScript) {
+                                    switch (step.type) {
+                                        case 'prompt':
+                                            const prompt = document.createElement('span');
+                                            prompt.className = 'highlight';
+                                            prompt.textContent = step.text;
+                                            currentLine.appendChild(prompt);
+                                            break;
+                                        case 'type':
+                                            await typeText(step.text, step.speed);
+                                            break;
+                                        case 'line':
+                                            currentLine = document.createElement('div');
+                                            currentLine.innerHTML = step.text || '&nbsp;';
+                                            container.appendChild(currentLine);
+                                            break;
+                                        case 'wait':
+                                            await sleep(step.ms);
+                                            break;
+                                        case 'clear':
+                                            container.innerHTML = '';
+                                            currentLine = document.createElement('div');
+                                            container.appendChild(currentLine);
+                                            break;
+                                    }
+                                }
+                                await sleep(3000);
+                                runDriverTerminal();
+                            }
+
+                            const observer = new IntersectionObserver((entries) => {
+                                if (entries[0].isIntersecting) {
+                                    runDriverTerminal();
+                                    observer.disconnect();
+                                }
+                            });
+                            observer.observe(container);
+                        })();
+                        </script>
+                    </div>
+                </div>
+
                 <div class="mt-12 lg:mt-32">
                     <h2 class="text-base-content/60 text-center text-xl font-medium">
                         Migrations Slow You Down
