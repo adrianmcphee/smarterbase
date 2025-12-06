@@ -150,51 +150,246 @@
                         </div>
                     </div>
 
-                    <div class="bg-base-200 rounded-box p-4 font-mono text-sm" id="terminal-demo">
-                        <div class="flex items-center gap-2 mb-3 border-b border-base-300 pb-2">
-                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                            <span class="text-base-content/50 ml-2 text-xs">terminal</span>
+                    <div class="terminal-window rounded-lg overflow-hidden shadow-2xl" id="terminal-demo">
+                        <style>
+                            @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+                            .terminal-window {
+                                font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+                                background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+                                border: 1px solid #2d2d44;
+                            }
+
+                            .terminal-header {
+                                background: linear-gradient(180deg, #2d2d44 0%, #1f1f33 100%);
+                                border-bottom: 1px solid #3d3d55;
+                            }
+
+                            .terminal-body {
+                                background: #0d1117;
+                                position: relative;
+                                overflow: hidden;
+                            }
+
+                            .terminal-body::before {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                bottom: 0;
+                                background: repeating-linear-gradient(
+                                    0deg,
+                                    rgba(0, 0, 0, 0.1) 0px,
+                                    rgba(0, 0, 0, 0.1) 1px,
+                                    transparent 1px,
+                                    transparent 2px
+                                );
+                                pointer-events: none;
+                                opacity: 0.3;
+                            }
+
+                            .terminal-text {
+                                text-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+                            }
+
+                            .prompt { color: #7ee787; }
+                            .command { color: #f0f6fc; font-weight: 500; }
+                            .output { color: #8b949e; }
+                            .success { color: #3fb950; }
+                            .info { color: #58a6ff; }
+                            .highlight { color: #ffa657; }
+                            .json-key { color: #79c0ff; }
+                            .json-string { color: #a5d6ff; }
+                            .comment { color: #6e7681; font-style: italic; }
+
+                            .cursor {
+                                display: inline-block;
+                                width: 8px;
+                                height: 16px;
+                                background: #7ee787;
+                                animation: blink 1s step-end infinite;
+                                vertical-align: text-bottom;
+                                margin-left: 2px;
+                            }
+
+                            @keyframes blink {
+                                50% { opacity: 0; }
+                            }
+
+                            .typing-line {
+                                overflow: hidden;
+                                white-space: nowrap;
+                            }
+
+                            .glow {
+                                animation: glow 2s ease-in-out infinite alternate;
+                            }
+
+                            @keyframes glow {
+                                from { text-shadow: 0 0 5px rgba(0, 255, 136, 0.3); }
+                                to { text-shadow: 0 0 10px rgba(0, 255, 136, 0.5), 0 0 20px rgba(0, 255, 136, 0.2); }
+                            }
+                        </style>
+
+                        <div class="terminal-header px-4 py-2.5 flex items-center gap-3">
+                            <div class="flex gap-2">
+                                <div class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-sm"></div>
+                                <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm"></div>
+                                <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm"></div>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <span class="text-gray-400 text-xs tracking-wide">smarterbase@localhost ~ zsh</span>
+                            </div>
+                            <div class="w-16"></div>
                         </div>
-                        <div id="terminal-output" class="min-h-[280px] text-green-400">
-                            <div class="terminal-line" style="--delay: 0"><span class="text-base-content/50">$</span> smarterbase --port 5433 --data ./data</div>
-                            <div class="terminal-line" style="--delay: 1"><span class="text-blue-400">SmarterBase listening on port 5433</span></div>
-                            <div class="terminal-line" style="--delay: 2"></div>
-                            <div class="terminal-line" style="--delay: 3"><span class="text-base-content/50">$</span> psql -h localhost -p 5433 -c "CREATE TABLE users (id TEXT PRIMARY KEY, name TEXT, email TEXT);"</div>
-                            <div class="terminal-line" style="--delay: 4"><span class="text-yellow-400">CREATE TABLE users</span></div>
-                            <div class="terminal-line" style="--delay: 5"></div>
-                            <div class="terminal-line" style="--delay: 6"><span class="text-base-content/50">$</span> psql -h localhost -p 5433 -c "INSERT INTO users VALUES ('u1', 'Alice', 'alice@example.com');"</div>
-                            <div class="terminal-line" style="--delay: 7"><span class="text-yellow-400">INSERT 0 1</span></div>
-                            <div class="terminal-line" style="--delay: 8"></div>
-                            <div class="terminal-line" style="--delay: 9"><span class="text-base-content/50">$</span> ls data/</div>
-                            <div class="terminal-line" style="--delay: 10"><span class="text-cyan-400">_schema/</span>  <span class="text-white">users.jsonl</span></div>
-                            <div class="terminal-line" style="--delay: 11"></div>
-                            <div class="terminal-line" style="--delay: 12"><span class="text-base-content/50">$</span> cat data/users.jsonl</div>
-                            <div class="terminal-line" style="--delay: 13"><span class="text-white">{"id":"u1","name":"Alice","email":"alice@example.com"}</span></div>
-                            <div class="terminal-line" style="--delay: 14"></div>
-                            <div class="terminal-line" style="--delay: 15"><span class="text-base-content/50">$</span> cat data/_schema/users.json</div>
-                            <div class="terminal-line" style="--delay: 16"><span class="text-white">{"name":"users","columns":[{"name":"id",...},...]}</span></div>
-                            <div class="terminal-line blink" style="--delay: 17"><span class="text-base-content/50">$</span> <span class="cursor">_</span></div>
+
+                        <div class="terminal-body p-4 sm:p-5 text-xs sm:text-sm leading-relaxed overflow-x-auto" style="min-height: 400px;">
+                            <div class="terminal-text" id="terminal-content"></div>
+                            <span class="cursor" id="terminal-cursor"></span>
                         </div>
+
+                        <script>
+                        (function() {
+                            const terminalScript = [
+                                { type: 'prompt', text: '~/myproject $ ' },
+                                { type: 'type', text: 'smarterbase --port 5433 --data ./data', speed: 40 },
+                                { type: 'wait', ms: 300 },
+                                { type: 'line', text: '' },
+                                { type: 'line', text: '<span class="info">  ___                _           ___                </span>' },
+                                { type: 'line', text: '<span class="info"> / __|_ __  __ _ _ _| |_ ___ _ _| _ ) __ _ ___ ___  </span>' },
+                                { type: 'line', text: '<span class="info"> \\__ \\ \'  \\/ _` | \'_|  _/ -_) \'_| _ \\/ _` (_-</ -_) </span>' },
+                                { type: 'line', text: '<span class="info"> |___/_|_|_\\__,_|_|  \\__\\___|_| |___/\\__,_/__/\\___| </span>' },
+                                { type: 'line', text: '' },
+                                { type: 'line', text: '<span class="output">  <span class="success">v1.0.0</span> - PostgreSQL-compatible file store</span>' },
+                                { type: 'line', text: '<span class="output">  Listening on port <span class="highlight">5433</span>...</span>' },
+                                { type: 'wait', ms: 400 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: '~/myproject $ ' },
+                                { type: 'type', text: 'psql -h localhost -p 5433', speed: 35 },
+                                { type: 'wait', ms: 200 },
+                                { type: 'line', text: '<span class="output">Connected to smarterbase</span>' },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: 'smarterbase=# ', cls: 'highlight' },
+                                { type: 'type', text: 'CREATE TABLE users (', speed: 30 },
+                                { type: 'line', text: '<span class="command">    id TEXT PRIMARY KEY,</span>' },
+                                { type: 'line', text: '<span class="command">    name TEXT,</span>' },
+                                { type: 'line', text: '<span class="command">    email TEXT</span>' },
+                                { type: 'line', text: '<span class="command">);</span>' },
+                                { type: 'wait', ms: 200 },
+                                { type: 'line', text: '<span class="success">CREATE TABLE</span>' },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: 'smarterbase=# ', cls: 'highlight' },
+                                { type: 'type', text: 'INSERT INTO users VALUES', speed: 35 },
+                                { type: 'line', text: '<span class="command">  (\'u1\', \'Alice\', \'alice@example.com\'),</span>' },
+                                { type: 'line', text: '<span class="command">  (\'u2\', \'Bob\', \'bob@example.com\');</span>' },
+                                { type: 'wait', ms: 200 },
+                                { type: 'line', text: '<span class="success">INSERT 0 2</span>' },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: 'smarterbase=# ', cls: 'highlight' },
+                                { type: 'type', text: '\\q', speed: 100 },
+                                { type: 'wait', ms: 300 },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: '~/myproject $ ' },
+                                { type: 'type', text: 'tree data/', speed: 50 },
+                                { type: 'wait', ms: 200 },
+                                { type: 'line', text: '<span class="info">data/</span>' },
+                                { type: 'line', text: '<span class="output">├── <span class="info">_schema/</span></span>' },
+                                { type: 'line', text: '<span class="output">│   └── users.json</span>' },
+                                { type: 'line', text: '<span class="output">└── <span class="success">users.jsonl</span>  <span class="comment">← your data!</span></span>' },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: '~/myproject $ ' },
+                                { type: 'type', text: 'cat data/users.jsonl', speed: 40 },
+                                { type: 'wait', ms: 150 },
+                                { type: 'line', text: '<span class="json-string">{"id":"u1","name":"Alice","email":"alice@example.com"}</span>' },
+                                { type: 'line', text: '<span class="json-string">{"id":"u2","name":"Bob","email":"bob@example.com"}</span>' },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: '~/myproject $ ' },
+                                { type: 'type', text: 'cat data/_schema/users.json | jq', speed: 35 },
+                                { type: 'wait', ms: 150 },
+                                { type: 'line', text: '{' },
+                                { type: 'line', text: '  <span class="json-key">"name"</span>: <span class="json-string">"users"</span>,' },
+                                { type: 'line', text: '  <span class="json-key">"columns"</span>: [' },
+                                { type: 'line', text: '    {<span class="json-key">"name"</span>: <span class="json-string">"id"</span>, <span class="json-key">"primary_key"</span>: <span class="success">true</span>},' },
+                                { type: 'line', text: '    {<span class="json-key">"name"</span>: <span class="json-string">"name"</span>, <span class="json-key">"type"</span>: <span class="json-string">"text"</span>},' },
+                                { type: 'line', text: '    {<span class="json-key">"name"</span>: <span class="json-string">"email"</span>, <span class="json-key">"type"</span>: <span class="json-string">"text"</span>}' },
+                                { type: 'line', text: '  ]' },
+                                { type: 'line', text: '}' },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: '~/myproject $ ' },
+                                { type: 'type', text: '# Schema is just JSON. Edit it directly!', speed: 25, cls: 'comment' },
+                                { type: 'line', text: '' },
+                                { type: 'prompt', text: '~/myproject $ ' },
+                            ];
+
+                            const container = document.getElementById('terminal-content');
+                            const cursor = document.getElementById('terminal-cursor');
+                            let currentLine = null;
+
+                            async function sleep(ms) {
+                                return new Promise(resolve => setTimeout(resolve, ms));
+                            }
+
+                            async function typeText(text, speed, cls) {
+                                for (let i = 0; i < text.length; i++) {
+                                    const span = document.createElement('span');
+                                    span.className = cls || 'command';
+                                    span.textContent = text[i];
+                                    currentLine.appendChild(span);
+                                    await sleep(speed + Math.random() * 20);
+                                }
+                            }
+
+                            async function runTerminal() {
+                                container.innerHTML = '';
+                                currentLine = document.createElement('div');
+                                container.appendChild(currentLine);
+
+                                for (const step of terminalScript) {
+                                    switch (step.type) {
+                                        case 'prompt':
+                                            const prompt = document.createElement('span');
+                                            prompt.className = step.cls || 'prompt';
+                                            prompt.textContent = step.text;
+                                            currentLine.appendChild(prompt);
+                                            break;
+
+                                        case 'type':
+                                            await typeText(step.text, step.speed, step.cls);
+                                            break;
+
+                                        case 'line':
+                                            currentLine = document.createElement('div');
+                                            if (step.text) {
+                                                currentLine.innerHTML = step.text;
+                                            } else {
+                                                currentLine.innerHTML = '&nbsp;';
+                                            }
+                                            container.appendChild(currentLine);
+                                            break;
+
+                                        case 'wait':
+                                            await sleep(step.ms);
+                                            break;
+                                    }
+                                }
+
+                                // Wait 5 seconds then loop
+                                await sleep(5000);
+                                runTerminal();
+                            }
+
+                            // Start when visible
+                            const observer = new IntersectionObserver((entries) => {
+                                if (entries[0].isIntersecting) {
+                                    runTerminal();
+                                    observer.disconnect();
+                                }
+                            });
+                            observer.observe(container);
+                        })();
+                        </script>
                     </div>
-                    <style>
-                        .terminal-line {
-                            opacity: 0;
-                            animation: fadeIn 0.3s ease forwards;
-                            animation-delay: calc(var(--delay) * 0.4s);
-                        }
-                        @keyframes fadeIn {
-                            to { opacity: 1; }
-                        }
-                        .cursor {
-                            animation: blink 1s infinite;
-                        }
-                        @keyframes blink {
-                            0%, 50% { opacity: 1; }
-                            51%, 100% { opacity: 0; }
-                        }
-                    </style>
                 </div>
 
                 <div class="mt-12 lg:mt-32">
