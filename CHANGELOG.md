@@ -1,3 +1,9 @@
+## [3.5.1](https://github.com/adrianmcphee/smarterbase/compare/v3.5.0...v3.5.1) (2025-12-06)
+
+### Bug Fixes
+
+* increase left padding in main terminal ([a30a6bf](https://github.com/adrianmcphee/smarterbase/commit/a30a6bf59e30a38e4e3707eb199c1bb0a4b310bf))
+
 ## [3.5.0](https://github.com/adrianmcphee/smarterbase/compare/v3.4.0...v3.5.0) (2025-12-06)
 
 ### Features
