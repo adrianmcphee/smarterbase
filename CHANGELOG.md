@@ -1,3 +1,43 @@
+## [3.0.0](https://github.com/adrianmcphee/smarterbase/compare/v2.2.3...v3.0.0) (2025-12-06)
+
+### ⚠ BREAKING CHANGES
+
+* Complete architecture pivot from Redis+S3 to filesystem-native storage with PostgreSQL wire protocol.
+
+New architecture:
+- PostgreSQL wire protocol via jackc/pgproto3
+- SQL parsing via vitess/sqlparser
+- JSON file storage with atomic writes (temp file + rename)
+- JSON indexes (MapIndex for unique, ListIndex for 1:N)
+- UUIDv7 primary keys (time-ordered, PostgreSQL-native)
+
+Language-agnostic - works with any PostgreSQL driver:
+- Python: SQLAlchemy, Django, Alembic
+- Ruby: ActiveRecord, Rails
+- Node.js: Prisma, Knex, TypeORM
+- Go: GORM, sqlx
+- PHP: Laravel Eloquent, Doctrine
+
+Scope:
+- Single-table CRUD (SELECT, INSERT, UPDATE, DELETE)
+- WHERE with =, <, >, IN, LIKE
+- ORDER BY, LIMIT, OFFSET
+- CREATE TABLE, CREATE INDEX
+- Export to PostgreSQL for migration
+
+Out of scope (use PostgreSQL):
+- Transactions, JOINs, aggregations, subqueries, replication
+
+Documentation changes:
+- New RFC-0001: Filesystem-Native Storage with PostgreSQL Wire Protocol
+- New ADR-0001: PostgreSQL Wire Protocol Over Filesystem Storage
+- Removed old Redis+S3 ADRs (0001-0011)
+- Rewrote README.md and website for new architecture
+
+### Features
+
+* pivot to PostgreSQL wire protocol over filesystem storage ([48f57b3](https://github.com/adrianmcphee/smarterbase/commit/48f57b37e0e857eaf6140d4999d9f27d3ee20e8d))
+
 ## [2.2.3](https://github.com/adrianmcphee/smarterbase/compare/v2.2.2...v2.2.3) (2025-11-23)
 
 ### Bug Fixes
