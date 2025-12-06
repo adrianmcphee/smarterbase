@@ -1,3 +1,9 @@
+## [4.0.2](https://github.com/adrianmcphee/smarterbase/compare/v4.0.1...v4.0.2) (2025-12-06)
+
+### Bug Fixes
+
+* update terminal logo to pixel art style ([c69871d](https://github.com/adrianmcphee/smarterbase/commit/c69871d338900211ac184ee45171fd6756c159b5))
+
 ## [4.0.1](https://github.com/adrianmcphee/smarterbase/compare/v4.0.0...v4.0.1) (2025-12-06)
 
 ### Bug Fixes
