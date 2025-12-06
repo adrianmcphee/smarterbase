@@ -244,7 +244,7 @@
                             <div class="w-16"></div>
                         </div>
 
-                        <div class="terminal-body p-4 sm:p-6 pl-8 sm:pl-12 text-xs sm:text-sm leading-relaxed overflow-x-auto" style="min-height: 400px;">
+                        <div class="terminal-body p-4 sm:p-6 pl-8 sm:pl-12 text-xs sm:text-sm leading-relaxed overflow-x-auto overflow-y-auto" style="height: 420px;" id="main-terminal-body">
                             <div class="terminal-text" id="terminal-content"></div>
                             <span class="cursor" id="terminal-cursor"></span>
                         </div>
@@ -322,11 +322,16 @@
                             ];
 
                             const container = document.getElementById('terminal-content');
+                            const terminalBody = document.getElementById('main-terminal-body');
                             const cursor = document.getElementById('terminal-cursor');
                             let currentLine = null;
 
                             async function sleep(ms) {
                                 return new Promise(resolve => setTimeout(resolve, ms));
+                            }
+
+                            function scrollToBottom() {
+                                terminalBody.scrollTop = terminalBody.scrollHeight;
                             }
 
                             async function typeText(text, speed, cls) {
@@ -335,12 +340,14 @@
                                     span.className = cls || 'command';
                                     span.textContent = text[i];
                                     currentLine.appendChild(span);
+                                    scrollToBottom();
                                     await sleep(speed + Math.random() * 20);
                                 }
                             }
 
                             async function runTerminal() {
                                 container.innerHTML = '';
+                                terminalBody.scrollTop = 0;
                                 currentLine = document.createElement('div');
                                 container.appendChild(currentLine);
 
@@ -351,6 +358,7 @@
                                             prompt.className = step.cls || 'prompt';
                                             prompt.textContent = step.text;
                                             currentLine.appendChild(prompt);
+                                            scrollToBottom();
                                             break;
 
                                         case 'type':
@@ -365,6 +373,7 @@
                                                 currentLine.innerHTML = '&nbsp;';
                                             }
                                             container.appendChild(currentLine);
+                                            scrollToBottom();
                                             break;
 
                                         case 'wait':
@@ -405,7 +414,7 @@
                                 <span class="text-gray-400 text-xs">Any Language</span>
                             </div>
                         </div>
-                        <div class="terminal-body p-4 pl-6 text-xs sm:text-sm leading-relaxed overflow-x-auto" style="min-height: 280px;">
+                        <div class="terminal-body p-4 pl-8 text-xs sm:text-sm leading-relaxed overflow-x-auto overflow-y-auto" style="height: 220px;" id="driver-terminal-body">
                             <div class="terminal-text" id="driver-terminal-content"></div>
                         </div>
                         <script>
