@@ -1,3 +1,9 @@
+## [4.0.3](https://github.com/adrianmcphee/smarterbase/compare/v4.0.2...v4.0.3) (2025-12-06)
+
+### Bug Fixes
+
+* use correct quadrant block characters for logo ([c07acbe](https://github.com/adrianmcphee/smarterbase/commit/c07acbe17fc1732af82e2e72a28a0b1f18ab3b80))
+
 ## [4.0.2](https://github.com/adrianmcphee/smarterbase/compare/v4.0.1...v4.0.2) (2025-12-06)
 
 ### Bug Fixes
