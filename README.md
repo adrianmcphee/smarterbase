@@ -1,19 +1,21 @@
 # SmarterBase
 
-**Iterate fast. Lock in your schema later.**
+**Iterate fast in early development. PostgreSQL compatibility. NVMe speed.**
 
-When you're starting something new, you don't know what your data model will look like. Traditional databases force you to decide upfront, then accumulate migrations as you learn. SmarterBase lets you iterate freely with JSON files you can see and edit, then lock in your schema and migrate to PostgreSQL when you're ready.
+Don't pollute your production database while exploring your data model. SmarterBase gives you PostgreSQL-compatible queries over JSON files on local disk. When your schema stabilizes, export to PostgreSQL.
 
-[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
+Perfect for **early development**, **prototypes**, **demos**, and **single-server production**.
+
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## The Problem
 
-Building something new means discovering your data model as you go. But databases punish iteration:
+Early development shouldn't touch your production database. But your options aren't great:
 
-1. **PostgreSQL** - Every schema change needs a migration. By launch, you have 47 migrations and a mess of ALTER TABLEs.
+1. **PostgreSQL locally** - Every schema change needs a migration. You're accumulating tech debt before you even know your data model.
 2. **SQLite** - Different SQL dialect. When you're ready for production, you're rewriting queries.
 3. **Both** - Your data is opaque. You can't just `cat` a record or `grep` for a value.
 
@@ -38,7 +40,13 @@ Your App (any PostgreSQL driver)
 
 **See everything:** Your data is JSON files. `cat`, `grep`, `git diff` your records. Debug by reading files.
 
-**Lightning fast:** Local NVMe + smart indexing means point lookups under 100μs. Fast enough for many production workloads.
+**Fast:** Local NVMe means point lookups under 100μs.
+
+| Operation | Typical Latency |
+|-----------|-----------------|
+| Local NVMe read | 10-100 μs |
+| Redis over network | 500-2000 μs |
+| PostgreSQL over network | 1-10 ms |
 
 **Simple backups:** Copy a directory. Sync to S3. No `pg_dump`, no backup strategies.
 
@@ -320,17 +328,19 @@ SELECT * FROM information_schema.columns WHERE table_name = $1
 
 ### Use It For
 
-- **Early-stage projects** - Discover your data model without migration debt. Iterate until it's right.
-- **Production (single server)** - NVMe speeds + simple backups. Copy files to S3 and you're done.
-- **Development** - See your data as files. `cat`, `grep`, `git diff`. Debug by reading JSON.
-- **Internal tools** - Fast enough, simple enough, no DBA required.
+- **Early development** - Explore your data model without touching production. No migration debt.
+- **Prototypes & demos** - Self-contained, no database setup, just run the binary.
+- **Single-server production** - The pattern works. NVMe is fast. Backups are just file copies.
+- **Learning** - See your data as JSON files. Understand what's happening.
 
-### Don't Use It For
+### Graduate to PostgreSQL When You Need
 
-- **Production at scale** - Use PostgreSQL
-- **Transactions** - Use PostgreSQL
-- **Complex queries** - Use PostgreSQL
-- **Multiple servers** - Use PostgreSQL
+- **Transactions** - ACID guarantees across multiple operations
+- **JOINs and aggregations** - Complex queries
+- **Multi-server deployments** - Replication, clustering
+- **More than ~1M rows/table** - Query planner benefits kick in
+
+Export to PostgreSQL anytime. Your queries already work.
 
 ---
 

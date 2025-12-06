@@ -2,8 +2,8 @@
 <html lang="en" class="group/html" data-theme="dark">
     <head>
         <meta charset="utf-8" />
-<title>SmarterBase - Iterate Fast. Lock In Your Schema Later.</title>
-<meta content="Discover your data model without migration debt. JSON files you can see and edit. Migrate to PostgreSQL when your schema stabilizes." name="description" />
+<title>SmarterBase - Iterate Fast in Early Development. NVMe Speed.</title>
+<meta content="Don't pollute production while exploring your data model. PostgreSQL-compatible queries over JSON files with NVMe speed. Perfect for early development, prototypes, and demos." name="description" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <link rel="shortcut icon" href="./images/favicon.ico" />
@@ -123,14 +123,17 @@
                     <div>
                         <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
                             Iterate Fast.
-                            <span class="text-primary">Lock In Your Schema Later.</span>
+                            <span class="text-primary">NVMe Speed.</span>
                         </h1>
                         <p class="text-base-content/80 mt-8 sm:text-lg">
-                            When you're building something new, you don't know what your data model will look like.
-                            SmarterBase lets you <strong>iterate freely with JSON files you can see and edit</strong>,
-                            then migrate to PostgreSQL when your schema stabilizes.
+                            Don't pollute your production database while exploring your data model.
+                            SmarterBase gives you <strong>PostgreSQL-compatible queries over JSON files</strong>
+                            on local disk.
                         </p>
-                        <div class="mt-8 inline-flex gap-3 sm:mt-16">
+                        <p class="text-base-content/60 mt-4 sm:text-base">
+                            Perfect for <strong>early development</strong>, <strong>prototypes</strong>, <strong>demos</strong>, and <strong>single-server production</strong>.
+                        </p>
+                        <div class="mt-8 inline-flex gap-3 sm:mt-12">
                             <a href="https://github.com/adrianmcphee/smarterbase" target="_blank">
                                 <button class="btn btn-primary">
                                     <i class="fa-brands fa-github"></i>
@@ -142,7 +145,7 @@
                             </a>
                         </div>
                         <div class="mt-8 flex items-center gap-3">
-                            <div class="badge badge-outline">Go 1.21+</div>
+                            <div class="badge badge-outline">Go 1.25+</div>
                             <div class="badge badge-outline">MIT License</div>
                             <div class="badge badge-outline">Any PostgreSQL Driver</div>
                         </div>
@@ -255,8 +258,8 @@ db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                             <div class="flex justify-center mb-3">
                                 <i class="fa-solid fa-bolt text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">Lightning Fast</h3>
-                            <p class="text-sm text-base-content/70">NVMe + indexing = under 100μs lookups</p>
+                            <h3 class="text-xl font-bold text-primary">NVMe Speed</h3>
+                            <p class="text-sm text-base-content/70">10-100μs vs 1-10ms over network</p>
                         </div>
                     </div>
 
@@ -495,45 +498,48 @@ BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
                             <div class="mt-4 space-y-3">
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Early-stage projects</strong> - Discover your data model without migration debt</span>
+                                    <span><strong>Early development</strong> - Explore your data model without migration debt</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Production (single server)</strong> - NVMe speeds + simple backups (just sync to S3)</span>
+                                    <span><strong>Prototypes & demos</strong> - Self-contained, no database setup required</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Development</strong> - See your data as files. Debug by reading JSON.</span>
+                                    <span><strong>Single-server production</strong> - The pattern works. NVMe is fast.</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-check text-primary"></i>
-                                    <span><strong>Internal tools</strong> - Fast enough, simple enough, no DBA required</span>
+                                    <span><strong>Learning</strong> - See your data as JSON files</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card border-error/30 border-2 bg-base-200">
+                    <div class="card border-warning/30 border-2 bg-base-200">
                         <div class="card-body">
-                            <h3 class="text-lg font-semibold text-error">Don't Use It For</h3>
+                            <h3 class="text-lg font-semibold text-warning">Graduate to PostgreSQL When You Need</h3>
                             <div class="mt-4 space-y-3">
                                 <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-xmark text-error"></i>
-                                    <span><strong>Multi-server production</strong> - Use PostgreSQL</span>
+                                    <i class="fa-solid fa-arrow-right text-warning"></i>
+                                    <span><strong>Transactions</strong> - ACID guarantees across operations</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-xmark text-error"></i>
-                                    <span><strong>Transactions</strong> - Use PostgreSQL</span>
+                                    <i class="fa-solid fa-arrow-right text-warning"></i>
+                                    <span><strong>JOINs and aggregations</strong> - Complex queries</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-xmark text-error"></i>
-                                    <span><strong>JOINs and aggregations</strong> - Use PostgreSQL</span>
+                                    <i class="fa-solid fa-arrow-right text-warning"></i>
+                                    <span><strong>Multi-server</strong> - Replication, clustering</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-xmark text-error"></i>
-                                    <span><strong>More than ~1M rows/table</strong> - Use PostgreSQL</span>
+                                    <i class="fa-solid fa-arrow-right text-warning"></i>
+                                    <span><strong>Scale</strong> - More than ~1M rows/table</span>
                                 </div>
                             </div>
+                            <p class="mt-4 text-sm text-base-content/70">
+                                Export to PostgreSQL anytime. Your queries already work.
+                            </p>
                         </div>
                     </div>
                 </div>
