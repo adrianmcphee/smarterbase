@@ -2,38 +2,13 @@
 
 This directory contains Architecture Decision Records (ADRs) for SmarterBase.
 
-## What is an ADR?
-
-An Architecture Decision Record (ADR) captures an important architectural decision made along with its context and consequences. ADRs help teams understand:
-- **Why** a decision was made
-- **What alternatives** were considered
-- **What consequences** resulted from the decision
-
-## Format
-
-Each ADR follows this structure:
-- **Title**: Short descriptive name
-- **Status**: Proposed, Accepted, Deprecated, Superseded
-- **Context**: The issue motivating this decision
-- **Decision**: The change we're proposing or have agreed to
-- **Consequences**: The results of applying this decision (positive, negative, neutral)
-
 ## Index
 
 | ADR | Title | Status | Date |
 |-----|-------|--------|------|
-| [0001](0001-schema-versioning-and-migrations.md) | Schema Versioning and Migrations | Accepted | 2025-10-12 |
-| [0002](0002-redis-configuration-ergonomics.md) | Redis Configuration Ergonomics | Accepted | 2025-10-13 |
-| [0003](0003-simple-api-layer.md) | Simple API Layer for Improved Developer Experience | Accepted | 2025-10-14 |
-| [0004](0004-simple-api-versioning.md) | Simple API Versioning Discoverability | Accepted | 2025-10-14 |
-| [0005](0005-core-api-helpers-guidance.md) | Core API Helpers - When and How to Use | Accepted | 2025-10-14 |
-| [0006](0006-collection-api.md) | Pragmatic Helper Functions to Reduce Boilerplate | Accepted | 2025-01-18 |
-| [0007](0007-type-safe-migrations.md) | Type-Safe Schema Migrations | Accepted | 2025-10-28 |
-| [0008](0008-ergonomic-indexing-and-cascades.md) | Ergonomic Indexing and Cascade Deletes | Accepted | 2025-01-16 |
-| [0009](0009-redis-only-indexing.md) | Redis-Only Indexing Architecture | Accepted | 2025-01-16 |
-| [0010](0010-managed-redis-tls-sni.md) | Automatic TLS and SNI for Managed Redis | Accepted | 2025-11-23 |
+| [0001](0001-postgresql-wire-protocol-over-filesystem.md) | PostgreSQL Wire Protocol Over Filesystem Storage | Accepted | 2024-12-06 |
 
 ## References
 
+- [RFC-0001: Filesystem-Native Storage with PostgreSQL Wire Protocol](../rfc/0001-filesystem-native-postgres-protocol.md)
 - [ADR documentation](https://adr.github.io/)
-- [Why ADRs matter](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)

@@ -1,1669 +1,345 @@
 # SmarterBase
 
-## Skip the Database. Use Redis + S3 Instead.
+**PostgreSQL compatibility. Filesystem simplicity.**
 
-**You already have Redis and S3. Use them as your database.**
+A PostgreSQL-compatible server that stores data as JSON files. Connect with any PostgreSQL driver, but your data lives in readable files on disk. When you outgrow it, migrate to real PostgreSQL.
 
-SmarterBase turns **Redis** (fast indexes) + **S3** (durable storage) into a queryable, transactional document store. No PostgreSQL, no MySQL, no MongoDB. No ALTER TABLE statements, no backup strategies, no database operations.
-
-**85% cost savings. Schema evolution built-in.**
-
-[![Go Version](https://img.shields.io/badge/Go-1.18+-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![Tests](https://github.com/adrianmcphee/smarterbase/workflows/Tests/badge.svg)](https://github.com/adrianmcphee/smarterbase/actions/workflows/test.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/adrianmcphee/smarterbase)](https://goreportcard.com/report/github.com/adrianmcphee/smarterbase)
-[![codecov](https://codecov.io/gh/adrianmcphee/smarterbase/branch/main/graph/badge.svg)](https://codecov.io/gh/adrianmcphee/smarterbase)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## The Core Value Proposition
+## The Problem
 
-### Instead of This:
+Starting a new project requires either:
+
+1. **Run PostgreSQL** - Docker, Homebrew, or managed service. Overhead for a prototype.
+2. **Use SQLite** - Different SQL dialect. Migration to PostgreSQL means rewriting queries.
+
+Neither option gives you: **zero setup now, seamless PostgreSQL migration later**.
+
+## The Solution
+
+Speak PostgreSQL wire protocol, store data as JSON files.
+
 ```
-Your App → RDS PostgreSQL ($271/month + DBA time)
-  ❌ Schema migrations to plan
-  ❌ Database servers to patch
-  ❌ Backup strategies to test
-  ❌ Connection pools to tune
-  ❌ Queries to optimize
-  ❌ Scaling decisions to make
+Your App (any PostgreSQL driver)
+        │
+        │ PostgreSQL wire protocol
+        ▼
+   smarterbase
+        │
+        ▼
+   JSON files on disk
 ```
 
-### Do This:
-```
-Your App → SmarterBase → Redis (indexes) + S3 (storage)
-                         $13/month    $23/month
-
-  ✅ Redis you already have (for caching)
-  ✅ S3 you already have (for files)
-  ✅ SmarterBase coordinates them
-  ✅ Zero database operations
-  ✅ Total: $36/month (85% savings)
-```
+Your app thinks it's talking to PostgreSQL. Your data lives in files you can read, debug, and git commit. When you need real PostgreSQL, export and switch.
 
 ---
-
-## How Redis + S3 Becomes a Database
-
-### What SmarterBase Does:
-
-1. **Writes:** Store JSON document to S3 → Update Redis indexes automatically
-2. **Reads by ID:** Fetch from S3 (simple GET request)
-3. **Reads by index:** Query Redis for ID → Fetch from S3
-4. **Locking:** Use Redis distributed locks for race-free updates
-5. **Health:** Monitor index drift, auto-repair from S3
-
-### Key Insight:
-
-- **Redis = Speed** (O(1) index lookups, distributed locks)
-- **S3 = Truth** (11 9s durability, source of truth for everything)
-- **SmarterBase = Glue** (keeps them in sync automatically)
-
-**Redis can fail?** No problem - rebuild indexes from S3.
-**S3 can fail?** AWS problem (99.99% SLA) - better than most databases.
-
-## What You Get
-
-### Database Features (Without the Database)
-- ✅ **Secondary indexes** - O(1) lookups via Redis Sets
-- ✅ **Query interface** - Filter, sort, paginate JSON documents
-- ✅ **Transactions** - Optimistic locking with rollback
-- ✅ **Distributed locking** - Redis-based coordination across servers
-- ✅ **Batch operations** - Parallel bulk reads/writes
-- ✅ **Full observability** - Prometheus metrics + structured logging
-
-### Redis Integration (The Performance Layer)
-- ✅ **Automatic index updates** - Write to S3 → Redis indexes updated
-- ✅ **Multi-value indexes** - `user_id → [order1, order2, ...]` (Redis Sets)
-- ✅ **Index health monitoring** - Detect drift, auto-repair from S3
-- ✅ **Distributed locks** - Eliminate S3 race conditions
-- ✅ **Graceful degradation** - Redis down? Rebuild from S3
-
-### S3 Integration (The Durability Layer)
-- ✅ **11 9s durability** - AWS multi-AZ replication
-- ✅ **Infinite scale** - No capacity planning needed
-- ✅ **Zero backups** - S3 handles durability automatically
-- ✅ **Schema-less** - JSON structure, no migrations ever
-- ✅ **JSONL support** - Append-only event logs
-
-### What You Skip
-- ❌ No database servers to run
-- ❌ No schema migrations to plan
-- ❌ No backup strategies to implement
-- ❌ No connection pools to tune
-- ❌ No query performance to optimize
-- ❌ No DBA expertise required
-
-## Installation
-
-```bash
-go get github.com/adrianmcphee/smarterbase/v2
-```
-
----
-
-## Two APIs: Choose Your Style
-
-SmarterBase provides two APIs for different use cases:
-
-### Simple API - For Rapid Development
-
-```go
-import "github.com/adrianmcphee/smarterbase/v2/simple"
-
-type User struct {
-    ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index"`
-    Role  string `json:"role" sb:"index"`
-}
-
-// Zero config - auto-detects from environment
-db := simple.MustConnect()
-users := simple.NewCollection[User](db)
-
-// Create with auto-ID
-user, _ := users.Create(ctx, &User{Email: "alice@example.com", Role: "admin"})
-
-// Query by any indexed field - O(1)
-admins, _ := users.Find(ctx, "role", "admin")
-```
-
-**Use Simple API when:**
-- Building prototypes or demos
-- You want automatic index management from struct tags
-- Convention over configuration suits your needs
-- See [examples/simple/](./examples/simple/) for complete examples
-
-### Core API - For Full Control
-
-```go
-import "github.com/adrianmcphee/smarterbase/v2"
-
-// Explicit configuration
-backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "bucket", redisClient)
-store := smarterbase.NewStore(backend)
-
-// Manual index registration
-redisIndexer.RegisterMultiValueIndex("users", "role", extractFunc)
-
-// Explicit operations
-user := &User{ID: smarterbase.NewID(), Email: "alice@example.com"}
-store.PutJSON(ctx, "users/"+user.ID, user)
-```
-
-**Use Core API when:**
-- You need fine-grained control
-- Building a library on top of SmarterBase
-- Explicit configuration is preferred
-- See examples below and [DATASHEET.md](./DATASHEET.md)
-
-**Both APIs work together** - Simple API is built on Core API and provides escape hatches when you need more control.
-
----
-
-## 🛠️ Core API Helpers - Best Practices
-
-The Core API provides three main helpers. Here's when to use each:
-
-### BatchGet[T] - Use Always ✅
-
-**Always use** `BatchGet[T]` when loading multiple entities:
-
-```go
-// ✅ GOOD: Type-safe, 1 line, clear intent
-users, err := smarterbase.BatchGet[User](ctx, store, userIDs)
-
-// ❌ BAD: 7 lines of boilerplate, error-prone
-users := make([]*User, 0, len(userIDs))
-for _, id := range userIDs {
-    var user User
-    if err := store.GetJSON(ctx, id, &user); err == nil {
-        users = append(users, &user)
-    }
-}
-```
-
-### KeyBuilder - Use Selectively 🤔
-
-**Use KeyBuilder** only for complex keys:
-
-```go
-// ✅ GOOD: Complex nested keys benefit from KeyBuilder
-type TenantKeys struct {
-    tenantID string
-}
-func (k *TenantKeys) UserKey(uid string) string {
-    return fmt.Sprintf("tenants/%s/users/%s.json", k.tenantID, uid)
-}
-
-// ❌ UNNECESSARY: Simple keys are clearer with fmt.Sprintf
-userKB := KeyBuilder{Prefix: "users", Suffix: ".json"}
-key := userKB.Key(userID)  // Indirection adds no value
-
-// ✅ BETTER: Direct and obvious
-key := fmt.Sprintf("users/%s.json", userID)
-```
-
-**Rule of thumb:** If your key is `"prefix/%s.suffix"`, use `fmt.Sprintf()`. If it has multiple variables or environment logic, consider `KeyBuilder`.
-
-### RedisOptions() - Use Correctly ⚠️
-
-**Choose the right function** for your config pattern:
-
-```go
-// ✅ GOOD: Pure environment-based config
-redisClient := redis.NewClient(smarterbase.RedisOptions())
-
-// ✅ GOOD: Mixed config (app values with env fallback)
-opts := smarterbase.RedisOptionsWithOverrides(
-    cfg.RedisAddr,     // Use app config if present, else REDIS_ADDR env
-    cfg.RedisPassword, // Use app config if present, else REDIS_PASSWORD env
-    10,                // App-specific pool size
-    5,                 // App-specific min idle
-)
-redisClient := redis.NewClient(opts)
-
-// ❌ BAD: Call helper then override everything (pointless)
-opts := smarterbase.RedisOptions()
-opts.Addr = myAddr      // Why call helper if you override?
-opts.Password = myPass  // Just construct redis.Options directly!
-```
-
-**See [ADR-0005](./docs/adr/0005-core-api-helpers-guidance.md) for detailed guidance and examples.**
-
-### New: Boilerplate Reduction Helpers ✨
-
-**ADR-0006** introduces three focused helper functions that eliminate repetitive patterns:
-
-#### QueryWithFallback[T] - Redis → Scan Fallback
-
-Eliminates 40 lines of boilerplate for the common "try Redis index, fall back to scan" pattern:
-
-```go
-// ✅ NEW: One line handles Redis → fallback → profiling
-admins, err := smarterbase.QueryWithFallback[User](
-    ctx, store, redisIndexer,
-    "users", "role", "admin",          // Redis index lookup
-    "users/",                           // Fallback scan prefix
-    func(u *User) bool { return u.Role == "admin" },  // Fallback filter
-)
-
-// ❌ OLD: 40 lines of manual Redis query + fallback + profiling
-// (see examples/before-after/query-fallback.go for comparison)
-```
-
-**Automatically profiles** the query and records whether Redis or fallback was used.
-
-#### UpdateWithIndexes - Coordinated Index Updates
-
-Prevents the common bug where developers forget to update indexes:
-
-```go
-// ✅ NEW: Atomic update with index coordination
-err := smarterbase.UpdateWithIndexes(
-    ctx, store, redisIndexer,
-    "users/user-123.json", user,
-    []smarterbase.IndexUpdate{
-        {EntityType: "users", IndexField: "email", OldValue: oldEmail, NewValue: newEmail},
-    },
-)
-
-// ❌ OLD: Easy to forget index updates
-store.PutJSON(ctx, key, user)
-// Oops, forgot to update Redis index! → Stale index bugs
-```
-
-#### BatchGetWithFilter[T] - Filtered Batch Loading
-
-Simplifies loading and filtering multiple items:
-
-```go
-// ✅ NEW: Load and filter in one call
-primaryProps, err := smarterbase.BatchGetWithFilter[Property](
-    ctx, store, keys,
-    func(p *Property) bool { return p.IsPrimary },
-)
-
-// ❌ OLD: Manual loop with filtering
-results := make([]*Property, 0)
-for _, key := range keys {
-    var prop Property
-    if err := store.GetJSON(ctx, key, &prop); err == nil {
-        if prop.IsPrimary {
-            results = append(results, &prop)
-        }
-    }
-}
-```
-
-**See [ADR-0006](./docs/adr/0006-collection-api.md) for full rationale and usage examples.**
-
-### New: Auto-Indexing & Cascade Deletes ✨
-
-**ADR-0008** introduces ergonomic improvements that eliminate 97% of indexing boilerplate:
-
-#### Auto-Indexing with Struct Tags
-
-Define indexes declaratively on your domain models using struct tags:
-
-```go
-// Define indexes directly on your model
-type User struct {
-    ID             string `json:"id"`
-    Email          string `json:"email" sb:"index"`
-    PlatformUserID string `json:"platform_user_id" sb:"index"`
-    ReferralCode   string `json:"referral_code,omitempty" sb:"index,optional"`
-}
-
-type Session struct {
-    Token  string `json:"token" sb:"index"`
-    UserID string `json:"user_id" sb:"index"` // 1:N relationship
-}
-
-// Auto-register all indexes from struct tags
-smarterbase.AutoRegisterIndexes(redisIndexer, "users", &User{})
-smarterbase.AutoRegisterIndexes(redisIndexer, "sessions", &Session{})
-```
-
-**Eliminates 570-760 lines** of manual `RegisterIndex()` boilerplate (97% reduction).
-
-#### Declarative Cascade Deletes
-
-Register cascade relationships once, execute automatically:
-
-```go
-// Create cascade-aware index manager
-im := smarterbase.NewCascadeIndexManager(base, redisIndexer)
-
-// Register cascade relationships declaratively
-im.RegisterCascadeChain("properties", []smarterbase.CascadeSpec{
-    {ChildEntityType: "areas", ForeignKeyField: "property_id", DeleteFunc: s.DeleteArea},
-})
-
-im.RegisterCascadeChain("areas", []smarterbase.CascadeSpec{
-    {ChildEntityType: "photos", ForeignKeyField: "area_id", DeleteFunc: s.DeletePhoto},
-    {ChildEntityType: "voicenotes", ForeignKeyField: "area_id", DeleteFunc: s.DeleteVoiceNote},
-})
-
-// Delete becomes one line - cascades automatically
-func (s *Store) DeleteProperty(ctx context.Context, propertyID string) error {
-    return s.im.DeleteWithCascade(ctx, "properties", s.propertyKey(propertyID), propertyID)
-}
-```
-
-**Features:**
-- Uses Redis indexes for O(1) child lookups
-- Recursive - children cascade to their own children automatically
-- Transaction-like - fails entire operation if any delete fails
-
-**Eliminates ~100 lines** of manual cascade loops (90% reduction).
-
-**See [ADR-0008](./docs/adr/0008-ergonomic-indexing-and-cascades.md) for full documentation and examples.**
-
----
-
-## ⚠️ Critical Gotchas (Read This First!)
-
-Before using SmarterBase in production, understand these important limitations:
-
-### 1. **S3 Race Conditions: Use S3BackendWithRedisLock in Production**
-
-**Problem:** Plain `S3Backend` has a race window in `PutIfMatch` operations:
-```go
-// ❌ UNSAFE for multi-writer production use
-backend := smarterbase.NewS3Backend(s3Client, "my-bucket")
-// Race condition: HeadObject → another process writes → PutObject overwrites
-```
-
-**Solution:** Always use `S3BackendWithRedisLock` for production:
-```go
-// ✅ SAFE for multi-writer production use
-backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
-// Distributed locks prevent race conditions
-```
-
-Plain `S3Backend` is **only safe for single-writer scenarios** (e.g., batch jobs, development).
-
----
-
-### 2. **Transactions Are NOT ACID**
-
-**Problem:** `WithTransaction()` does **NOT** provide isolation:
-```go
-// ⚠️ WARNING: Another process can modify data during this transaction
-store.WithTransaction(ctx, func(tx *smarterbase.OptimisticTransaction) error {
-    var account Account
-    tx.Get(ctx, "accounts/123", &account)
-    // ← RACE: Another process can modify account here!
-    account.Balance += 100
-    tx.Put("accounts/123", account) // May conflict with concurrent update
-    return nil
-})
-```
-
-**Solution:** Use `WithAtomicUpdate()` with distributed locks for critical operations:
-```go
-// ✅ SAFE: True isolation with distributed lock
-lock := smarterbase.NewDistributedLock(redisClient, "smarterbase")
-smarterbase.WithAtomicUpdate(ctx, store, lock, "accounts/123", 10*time.Second,
-    func(ctx context.Context) error {
-        // No other process can modify this account during this function
-        var account Account
-        store.GetJSON(ctx, "accounts/123", &account)
-        account.Balance += 100
-        store.PutJSON(ctx, "accounts/123", &account)
-        return nil
-    })
-```
-
-**Use `WithAtomicUpdate()` for:**
-- Financial transactions (balances, payments)
-- Inventory updates
-- Any read-modify-write that must be atomic
-
-**Use `WithTransaction()` only for:**
-- Non-critical updates where conflicts are acceptable
-- Low-contention scenarios
-
----
-
-### 3. **Query.All() Loads Everything Into Memory**
-
-**Problem:** Can cause OOM on large datasets:
-```go
-// ❌ Loads all users into memory at once
-var users []*User
-store.Query("users/").All(ctx, &users) // OOM risk if millions of users
-```
-
-**Solution:** Use streaming or pagination:
-```go
-// ✅ Process one at a time (memory efficient)
-store.Query("users/").Each(ctx, func(key string, data []byte) error {
-    var user User
-    json.Unmarshal(data, &user)
-    processUser(&user)
-    return nil
-})
-
-// ✅ Or use pagination
-store.Query("users/").Offset(0).Limit(100).All(ctx, &users)
-```
-
----
-
-### 4. **Index Drift Can Happen**
-
-**Problem:** Redis indexes can become stale due to:
-- Network partitions during writes
-- Application crashes mid-update
-- Redis failures
-
-**Solution:** Enable index health monitoring (auto-repair by default):
-```go
-// Self-healing index monitoring with opinionated defaults
-monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer)
-monitor.Start(ctx)
-
-// Monitor automatically:
-// - Checks every 5 minutes
-// - Repairs drift >5%
-// - Logs and emits metrics
-```
-
----
-
-### 5. **S3 Has 50-100ms Base Latency**
-
-SmarterBase is **not suitable** for sub-millisecond response requirements. Add caching for hot data:
-```go
-// Add Redis or in-memory cache for frequently accessed data
-cache.Get("users/123") // Check cache first
-if notFound {
-    store.GetJSON(ctx, "users/123", &user) // Fallback to S3
-    cache.Set("users/123", user)
-}
-```
-
----
-
-## Architecture: How "No Database" Works
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Your Application                      │
-│            (No database drivers needed!)                │
-└────────────────┬───────────────────┬────────────────────┘
-                 │                   │
-         ┌───────▼────────┐  ┌──────▼─────────┐
-         │  Redis/Valkey  │  │  S3 / GCS      │
-         │  (Indexes)     │  │  (Storage)     │
-         │                │  │                │
-         │  • Fast O(1)   │  │  • Durable     │
-         │    lookups     │  │    (11 9s)     │
-         │  • Ephemeral   │  │  • Serverless  │
-         │    (rebuild)   │  │  • Managed     │
-         └────────────────┘  └────────────────┘
-```
-
-**How it works:**
-1. **Write:** Store JSON to S3, update Redis indexes automatically
-2. **Read by ID:** Fetch directly from S3 (or cache)
-3. **Read by index:** Query Redis for ID, then fetch from S3
-4. **Redis fails?** Rebuild indexes from S3 (source of truth)
-5. **S3 fails?** AWS guarantees 99.99% availability (better than most DBs)
-
-**Why this beats a traditional database:**
-- No schema migrations (JSON is schema-less)
-- No backup strategies (S3 = 11 9s durability)
-- No connection pooling (HTTP-based)
-- No query optimization (simple key-value + indexes)
-- No scaling decisions (S3 scales infinitely)
-- 85% cost savings
 
 ## Quick Start
 
-### Basic Operations (No Database Required!)
+```bash
+# Install
+go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
+
+# Start server
+smarterbase serve --port 5433 --data ./data
+```
+
+Connect from any language:
+
+```python
+# Python / SQLAlchemy
+DATABASE_URL = "postgresql://localhost:5433/myapp"
+```
+
+```javascript
+// Node.js
+const pool = new Pool({ host: 'localhost', port: 5433 });
+```
+
+```ruby
+# Ruby / Rails
+host: localhost
+port: 5433
+```
 
 ```go
-package main
+// Go
+db, _ := sql.Open("postgres", "host=localhost port=5433 dbname=myapp sslmode=disable")
+```
 
-import (
-    "context"
-    "github.com/adrianmcphee/smarterbase/v2"
+---
+
+## Why This Works
+
+### Local NVMe is fast
+
+| Operation | Latency |
+|-----------|---------|
+| Local NVMe read | 10-100 μs |
+| PostgreSQL (network) | 1-10 ms |
+
+For `SELECT * FROM users WHERE id = $1`, reading a JSON file from NVMe is faster than a network round-trip to PostgreSQL.
+
+### PostgreSQL protocol means zero app changes
+
+Same code. Same queries. Different backend. Works with any PostgreSQL driver.
+
+---
+
+## Features
+
+### In Scope
+
+| Feature | Description |
+|---------|-------------|
+| Single-table CRUD | SELECT, INSERT, UPDATE, DELETE |
+| WHERE clauses | =, <, >, IN, LIKE |
+| ORDER BY, LIMIT, OFFSET | Pagination |
+| CREATE TABLE, CREATE INDEX | Schema definition |
+| UUIDv7 primary keys | Time-ordered, PostgreSQL-native |
+| JSON file storage | Human-readable, debuggable |
+| Export to PostgreSQL | The escape hatch |
+
+### Out of Scope
+
+| Feature | Rationale |
+|---------|-----------|
+| Transactions | Requires WAL. Use PostgreSQL. |
+| JOINs | Query each table, join in app |
+| Aggregations | COUNT/SUM in app code |
+| Subqueries | Complexity for rare use case |
+| Replication | Single server only |
+
+**The rule:** If it requires building database internals (query planner, WAL, MVCC), it's out of scope.
+
+---
+
+## How It Works
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                  smarterbase                    │
+│                                                 │
+│  ┌───────────┐  ┌──────────┐  ┌─────────────┐   │
+│  │ pgproto3  │─▶│ sqlparser│─▶│   storage   │   │
+│  │ (protocol)│  │ (parse)  │  │ (files+idx) │   │
+│  └───────────┘  └──────────┘  └─────────────┘   │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+
+Three components:
+1. **Protocol** - `jackc/pgproto3` handles PostgreSQL wire protocol
+2. **Parser** - `vitess/sqlparser` parses SQL to AST
+3. **Storage** - JSON files + JSON indexes
+
+No query planner. No optimizer. Parse SQL, execute against files, return results.
+
+### Directory Structure
+
+```
+./data/
+├── _schema/
+│   └── users.json
+├── _idx/
+│   └── users/
+│       ├── email.json          # {"alice@example.com": "019363e8-..."}
+│       └── role/
+│           ├── admin.json      # ["019363e8-...", "019363f2-..."]
+│           └── user.json       # ["019363f5-..."]
+├── users/
+│   ├── 019363e8-7a6b-7def-8000-1a2b3c4d5e6f.json
+│   └── 019363f2-8b7c-7abc-8000-2b3c4d5e6f7a.json
+└── orders/
+    └── 019363f5-9c8d-7bcd-8000-3c4d5e6f7a8b.json
+```
+
+Files are named by UUIDv7. Because UUIDv7 is time-ordered, `ls` shows documents in creation order.
+
+---
+
+## UUIDv7 Primary Keys
+
+All tables use UUIDv7 as the default primary key type:
+
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid7(),
+    email TEXT UNIQUE,
+    name TEXT
 )
-
-type User struct {
-    ID    string `json:"id"`
-    Email string `json:"email"`
-    Name  string `json:"name"`
-}
-
-func main() {
-    // Create backend (filesystem for development)
-    backend := smarterbase.NewFilesystemBackend("./data")
-    defer backend.Close()
-
-    // Create store
-    store := smarterbase.NewStore(backend)
-    ctx := context.Background()
-
-    // Create
-    user := &User{
-        ID:    smarterbase.NewID(),
-        Email: "alice@example.com",
-        Name:  "Alice",
-    }
-    store.PutJSON(ctx, "users/"+user.ID, user)
-
-    // Read
-    var retrieved User
-    store.GetJSON(ctx, "users/"+user.ID, &retrieved)
-
-    // Update
-    retrieved.Name = "Alice Smith"
-    store.PutJSON(ctx, "users/"+user.ID, &retrieved)
-
-    // Delete
-    store.Delete(ctx, "users/"+user.ID)
-}
 ```
 
-### With Indexing
-
-```go
-// Setup Redis client for both locking and indexing
-// Reads from REDIS_ADDR env var, defaults to localhost:6379
-redisClient := redis.NewClient(smarterbase.RedisOptions())
-
-// ✅ Production-safe: S3 backend with distributed locking
-backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
-store := smarterbase.NewStore(backend)
-
-// Create Redis indexer
-redisIndexer := smarterbase.NewRedisIndexer(redisClient)
-
-// Register index
-redisIndexer.RegisterMultiValueIndex("users", "email", func(data []byte) (string, string, error) {
-    var user User
-    json.Unmarshal(data, &user)
-    return user.ID, user.Email, nil
-})
-
-// Create with automatic indexing
-indexManager := smarterbase.NewIndexManager(store).
-    WithRedisIndexer(redisIndexer)
-
-user := &User{ID: smarterbase.NewID(), Email: "bob@example.com"}
-indexManager.Create(ctx, "users/"+user.ID, user)
-
-// Query by index - O(1) lookup
-userIDs, _ := redisIndexer.QueryMultiValueIndex(ctx, "users", "email", "bob@example.com")
-```
-
-### Query Builder
-
-```go
-// Find all active users created in the last week
-var users []*User
-err := store.Query("users/").
-    FilterJSON(func(obj map[string]interface{}) bool {
-        createdAt, _ := time.Parse(time.RFC3339, obj["created_at"].(string))
-        isActive, _ := obj["active"].(bool)
-        return isActive && createdAt.After(time.Now().AddDate(0, 0, -7))
-    }).
-    SortByField("created_at", false).
-    Limit(50).
-    All(ctx, &users)
-```
-
-### Batch Operations
-
-```go
-// Batch write
-items := map[string]interface{}{
-    "users/1": &User{ID: "1", Email: "user1@example.com"},
-    "users/2": &User{ID: "2", Email: "user2@example.com"},
-    "users/3": &User{ID: "3", Email: "user3@example.com"},
-}
-results := store.BatchPutJSON(ctx, items)
-
-// Check results
-for _, result := range results {
-    if result.Error != nil {
-        log.Printf("Failed to write %s: %v", result.Key, result.Error)
-    }
-}
-```
-
-### Transactions & Atomic Updates
-
-SmarterBase provides two approaches for coordinating multiple operations:
-
-#### ✅ Atomic Updates (Recommended for Critical Operations)
-
-Use `WithAtomicUpdate()` with distributed locks for operations that require true isolation:
-
-```go
-// ✅ SAFE: Fully atomic with distributed lock protection
-lock := smarterbase.NewDistributedLock(redisClient, "smarterbase")
-
-err := smarterbase.WithAtomicUpdate(ctx, store, lock, "accounts/123", 10*time.Second,
-    func(ctx context.Context) error {
-        var account Account
-        store.GetJSON(ctx, "accounts/123", &account)
-
-        // ✅ SAFE: No other process can modify account during this function
-        account.Balance += 100
-        store.PutJSON(ctx, "accounts/123", &account)
-
-        // Can also update related records atomically
-        store.PutJSON(ctx, "transactions/"+txnID, &Transaction{
-            AccountID: account.ID,
-            Amount:    100,
-            Timestamp: time.Now(),
-        })
-
-        return nil
-    })
-```
-
-**Use atomic updates for:**
-- Financial transactions (account balances, payments)
-- Inventory updates
-- Counter increments
-- Any operation where race conditions would cause data corruption
-
-**Performance characteristics:**
-- No contention: +2-5ms latency (lock acquisition overhead)
-- Under contention: +10-50ms per retry with exponential backoff
-- Automatic retry: 3 attempts with exponential backoff before failure
-- Metrics tracked: `smarterbase.lock.contention`, `smarterbase.lock.wait_duration`, `smarterbase.lock.timeout`
-
-#### ⚠️ Optimistic Transactions (Low-Contention Only)
-
-For non-critical updates where eventual consistency is acceptable:
-
-```go
-// ⚠️ WARNING: NO ISOLATION - Another process can modify data concurrently
-err := store.WithTransaction(ctx, func(tx *smarterbase.OptimisticTransaction) error {
-    var user User
-    tx.Get(ctx, "users/123", &user)
-
-    // ⚠️ CAUTION: Another process could modify user here
-    user.LastSeen = time.Now()
-    user.LoginCount++
-
-    tx.Put("users/123", user) // ETag checked on commit
-    return nil
-})
-```
-
-**Limitations:**
-- **NOT true ACID transactions** - No isolation between concurrent operations
-- **Best-effort rollback** - Rollback may fail, leaving partial writes
-- **Low-contention only** - High concurrency causes conflicts
-- ETag conflicts will cause transaction to fail and retry
-
-## Storage Backends
-
-### Filesystem (Development)
-
-```go
-backend := smarterbase.NewFilesystemBackend("./storage")
-```
-
-- Fast local testing
-- Easy debugging (inspect JSON files directly)
-- No external dependencies
-
-### S3 (Production)
-
-```go
-cfg, _ := config.LoadDefaultConfig(ctx)
-s3Client := s3.NewFromConfig(cfg)
-
-// Initialize Redis for distributed locking
-// Reads from REDIS_ADDR env var, defaults to localhost:6379
-redisClient := redis.NewClient(smarterbase.RedisOptions())
-
-// ✅ RECOMMENDED: S3 with Redis distributed locks (prevents race conditions)
-backend := smarterbase.NewS3BackendWithRedisLock(s3Client, "my-bucket", redisClient)
-
-// ⚠️ ONLY for single-writer scenarios (batch jobs, development):
-// backend := smarterbase.NewS3Backend(s3Client, "my-bucket")
-```
-
-- Works with AWS S3, MinIO, DigitalOcean Spaces, Wasabi, Cloudflare R2
-- Scalable and durable
-- Cost-effective at scale
-- **Always use `S3BackendWithRedisLock` for multi-writer production deployments**
-
-### Google Cloud Storage
-
-```go
-gcsClient, _ := storage.NewClient(ctx)
-backend := smarterbase.NewGCSBackend(gcsClient, "my-bucket")
-```
-
-- Native GCS support
-- Strong consistency
-- Global availability
-
-### Custom Backend
-
-Implement the `Backend` interface:
-
-```go
-type Backend interface {
-    Get(ctx context.Context, key string) ([]byte, error)
-    Put(ctx context.Context, key string, data []byte) error
-    Delete(ctx context.Context, key string) error
-    List(ctx context.Context, prefix string) ([]string, error)
-    // ... more methods
-}
-```
-
-### Encryption at Rest
-
-Wrap any backend with AES-256-GCM encryption:
-
-```go
-// Generate or load 32-byte encryption key
-key := make([]byte, 32)
-rand.Read(key) // Or load from secrets manager
-
-// Wrap backend with encryption
-s3Backend := smarterbase.NewS3Backend(s3Client, "my-bucket")
-encryptedBackend, _ := smarterbase.NewEncryptionBackend(s3Backend, key)
-
-store := smarterbase.NewStore(encryptedBackend)
-// All data now encrypted before S3 upload, decrypted on retrieval
-```
-
-**Features:**
-- AES-256-GCM authenticated encryption
-- Random nonces for each operation
-- Transparent encryption/decryption
-- Works with any backend (S3, GCS, Filesystem)
-
-## Indexing
-
-### Redis Indexes
-
-For all queries (both 1:1 and 1:N relationships):
-
-```go
-redisIndexer := smarterbase.NewRedisIndexer(redisClient)
-
-// Register index for email → user (1:1)
-redisIndexer.RegisterMultiValueIndex("users", "email", func(data []byte) (string, string, error) {
-    var user User
-    json.Unmarshal(data, &user)
-    return user.ID, user.Email, nil
-})
-
-// Register index for user_id → orders (1:N)
-redisIndexer.RegisterMultiValueIndex("orders", "user_id", func(data []byte) (string, string, error) {
-    var order Order
-    json.Unmarshal(data, &order)
-    return order.ID, order.UserID, nil
-})
-
-// Query - O(1) lookup
-orderIDs, _ := redisIndexer.QueryMultiValueIndex(ctx, "orders", "user_id", "user-123")
-```
-
-## Schema Versioning & Evolution
-
-SmarterBase supports schema evolution without downtime through built-in migration capabilities. Unlike traditional databases that require ALTER TABLE statements and careful planning, SmarterBase migrations happen automatically and transparently when data is accessed.
-
-### How It Works
-
-1. **Add a version field** to your structs
-2. **Register migration functions** at app startup
-3. **Old data migrates automatically** when read
-4. **No downtime** required
-
-### Quick Example
-
-```go
-// Original schema (v0)
-type UserV0 struct {
-    ID    string `json:"id"`
-    Email string `json:"email"`
-    Name  string `json:"name"`
-}
-
-// Evolved schema (v2)
-type UserV2 struct {
-    V         int    `json:"_v"`          // Version field
-    ID        string `json:"id"`
-    Email     string `json:"email"`
-    FirstName string `json:"first_name"`  // Split from name
-    LastName  string `json:"last_name"`   // Split from name
-    Phone     string `json:"phone"`       // New field
-}
-
-// 1. Define type-safe migration function
-func migrateUserV0ToV2(old UserV0) (UserV2, error) {
-    parts := strings.Fields(old.Name)
-    firstName := parts[0]
-    lastName := ""
-    if len(parts) > 1 {
-        lastName = strings.Join(parts[1:], " ")
-    }
-
-    return UserV2{
-        V:         2,
-        ID:        old.ID,
-        Email:     old.Email,
-        FirstName: firstName,
-        LastName:  lastName,
-        Phone:     "", // New field with default
-    }, nil
-}
-
-// 2. Register with type safety
-func init() {
-    smarterbase.WithTypeSafe(
-        smarterbase.Migrate("UserV2").From(0).To(2),
-        migrateUserV0ToV2,
-    )
-}
-
-// 3. Read old data - automatically migrates to v2
-var user UserV2
-user.V = 2  // Set expected version
-store.GetJSON(ctx, "users/123", &user)  // Migration happens here
-```
-
-**Benefits:**
-- ✅ Full type safety - compiler catches errors
-- ✅ Easy to unit test migration logic
-- ✅ IDE autocomplete works
-- ✅ No runtime panics from type assertions
-
-### Migration Helpers
-
-Common migration patterns have built-in helpers:
-
-```go
-// Split a field
-smarterbase.Migrate("User").From(0).To(1).
-    Split("name", " ", "first_name", "last_name")
-
-// Add a new field with default value
-smarterbase.Migrate("Product").From(1).To(2).
-    AddField("stock", 0)
-
-// Rename a field
-smarterbase.Migrate("Order").From(2).To(3).
-    RenameField("price", "total_amount")
-
-// Remove a field
-smarterbase.Migrate("Config").From(3).To(4).
-    RemoveField("deprecated_flag")
-```
-
-### Migration Chaining
-
-Migrations automatically chain together:
-
-```go
-// Register each migration step
-smarterbase.Migrate("Product").From(0).To(1).AddField("sku", "")
-smarterbase.Migrate("Product").From(1).To(2).Split("name", " ", "brand", "product_name")
-smarterbase.Migrate("Product").From(2).To(3).Do(customTransform)
-
-// Reading v0 data with v3 struct → automatically runs 0→1→2→3
-```
-
-### Migration Policies
-
-Control when migrations are written back to storage:
-
-```go
-// Default: Migrate in memory only
-store := smarterbase.NewStore(backend)
-
-// Write back migrated data (gradual upgrade)
-store.WithMigrationPolicy(smarterbase.MigrateAndWrite)
-
-// Now when old data is read, it's migrated AND written back to S3
-```
-
-### Performance
-
-- **No migration**: Zero overhead (fast path)
-- **Version match**: ~50ns overhead (single field check)
-- **Migration needed**: ~2-5ms per version step
-
-**Recommendation**: Use `MigrateAndWrite` policy during low-traffic hours to gradually upgrade stored data.
-
-### Best Practices
-
-1. **Always increment versions** when changing schema
-2. **Keep migrations idempotent** (safe to run multiple times)
-3. **Test with production data samples** before deploying
-4. **Document breaking changes** in migration comments
-5. **Use semantic versioning** for major changes
-
-### Example: Product Catalog Evolution
-
-See [examples/schema-migrations](./examples/schema-migrations) for a complete example showing:
-- Version 0 → 1: Add inventory tracking
-- Version 1 → 2: Split name into brand and product name
-- Version 2 → 3: Convert single price to pricing tiers
-
-### Why This Beats Traditional Migrations
-
-**Traditional databases:**
-- ❌ Require downtime for ALTER TABLE
-- ❌ Need backfill scripts for existing data
-- ❌ Risk of migration failures mid-process
-- ❌ Coordinated deployment complexity
-
-**SmarterBase:**
-- ✅ Zero downtime - migrations happen on read
-- ✅ No backfill - data transforms lazily
-- ✅ Gradual rollout - old and new code coexist
-- ✅ JSON flexibility - storage adapts naturally
-
-## Reliability Features
-
-### Circuit Breaker
-
-Automatic circuit breaker protection prevents cascading failures when Redis becomes unavailable:
-
-```go
-// Circuit breaker is enabled by default in RedisIndexer
-redisIndexer := smarterbase.NewRedisIndexer(redisClient)
-
-// Automatically opens after 5 consecutive failures
-// Retries after 30 seconds in half-open state
-// Fails fast when open (no Redis calls)
-```
-
-**States:**
-- **Closed**: Normal operation, all requests pass through
-- **Open**: Redis failing, requests fail fast without calling Redis (prevents cascading failures)
-- **Half-Open**: Testing recovery, limited requests allowed
-
-**Benefits:**
-- Prevents application slowdown when Redis is down
-- Automatic recovery detection
-- Graceful degradation for non-critical operations
-
-## Observability
-
-### Metrics (Prometheus)
-
-```go
-metrics := smarterbase.NewPrometheusMetrics(prometheus.DefaultRegisterer)
-metrics.RegisterAll()
-
-store := smarterbase.NewStoreWithObservability(backend, logger, metrics)
-
-// Automatically tracks:
-// - smarterbase_get_success, smarterbase_get_error
-// - smarterbase_put_duration (histogram)
-// - smarterbase_query_results (histogram)
-```
-
-### Logging
-
-```go
-logger, _ := smarterbase.NewProductionZapLogger()
-store := smarterbase.NewStoreWithObservability(backend, logger, &smarterbase.NoOpMetrics{})
-
-// All operations logged with structured fields
-```
-
-## Advanced Examples
-
-### Complete Production Setup
-
-```go
-package main
-
-import (
-    "context"
-    "log"
-
-    "github.com/adrianmcphee/smarterbase/v2"
-    "github.com/aws/aws-sdk-go-v2/config"
-    "github.com/aws/aws-sdk-go-v2/service/s3"
-    "github.com/prometheus/client_golang/prometheus"
-    "github.com/redis/go-redis/v9"
-)
-
-func main() {
-    ctx := context.Background()
-
-    // 1. Initialize S3 backend
-    cfg, _ := config.LoadDefaultConfig(ctx)
-    s3Client := s3.NewFromConfig(cfg)
-
-    // 2. Initialize Redis for locking and indexing
-    // Reads from REDIS_ADDR env var, defaults to localhost:6379
-    redisClient := redis.NewClient(smarterbase.RedisOptions())
-
-    // 3. Create S3 backend with Redis distributed locking (production-safe)
-    s3Backend := smarterbase.NewS3BackendWithRedisLock(
-        s3Client,
-        "my-bucket",
-        redisClient,
-    )
-
-    // 4. Wrap with encryption (recommended for sensitive data)
-    encryptionKey := loadEncryptionKeyFromSecretsManager() // 32-byte key
-    backend, _ := smarterbase.NewEncryptionBackend(s3Backend, encryptionKey)
-
-    // 5. Add observability
-    logger, _ := smarterbase.NewProductionZapLogger()
-    metrics := smarterbase.NewPrometheusMetrics(prometheus.DefaultRegisterer)
-    store := smarterbase.NewStoreWithObservability(backend, logger, metrics)
-
-    // 6. Configure Redis indexes
-    redisIndexer := smarterbase.NewRedisIndexer(redisClient)
-
-    // Multi-value index: user_id → [order1, order2, ...]
-    redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
-        Name:       "orders-by-user",
-        EntityType: "orders",
-        ExtractFunc: smarterbase.ExtractJSONField("user_id"),
-    })
-
-    // Multi-value index: status → [order1, order2, ...]
-    redisIndexer.RegisterMultiIndex(&smarterbase.MultiIndexSpec{
-        Name:       "orders-by-status",
-        EntityType: "orders",
-        ExtractFunc: smarterbase.ExtractJSONField("status"),
-        TTL:        24 * time.Hour, // Auto-expire after 24h
-    })
-
-    // 7. Create index manager
-    indexManager := smarterbase.NewIndexManager(store).
-        WithRedisIndexer(redisIndexer)
-
-    // 8. Start health monitoring with self-healing (opinionated defaults)
-    monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer)
-
-    if err := monitor.Start(ctx); err != nil {
-        log.Fatal(err)
-    }
-    defer monitor.Stop()
-
-    // That's it! Monitor will automatically:
-    // - Check index health every 5 minutes
-    // - Repair drift >5% automatically
-    // - Log all actions with Prometheus metrics
-
-    // 9. Use in application
-    order := &Order{
-        ID:      smarterbase.NewID(),
-        UserID:  "user-123",
-        Status:  "pending",
-        Total:   99.99,
-    }
-
-    key := fmt.Sprintf("orders/%s.json", order.ID)
-    indexManager.Create(ctx, key, order)
-
-    // Query orders by user
-    orderKeys, _ := redisIndexer.Query(ctx, "orders", "user_id", "user-123")
-
-    // Query pending orders
-    pendingKeys, _ := redisIndexer.Query(ctx, "orders", "status", "pending")
-}
-```
+**Why UUIDv7:**
+- **Time-ordered** - IDs sort chronologically. No need for `created_at` index.
+- **No coordination** - Generate IDs anywhere without a central authority.
+- **PostgreSQL-native** - PostgreSQL 17+ supports UUIDv7. Migration is seamless.
+- **Filesystem-friendly** - Lexicographic sort = chronological sort.
 
 ---
 
-### Error Handling Patterns
+## SQL Examples
 
-```go
-// Retry on transient errors
-func saveWithRetry(ctx context.Context, store *smarterbase.Store, key string, data interface{}) error {
-    config := smarterbase.DefaultRetryConfig()
+```sql
+-- Data Definition
+CREATE TABLE users (id UUID PRIMARY KEY, email TEXT UNIQUE, name TEXT)
+CREATE INDEX idx_role ON users(role)
 
-    for i := 0; i < config.MaxRetries; i++ {
-        err := store.PutJSON(ctx, key, data)
-        if err == nil {
-            return nil
-        }
+-- Queries
+SELECT * FROM users WHERE id = $1
+SELECT * FROM users WHERE email = $1
+SELECT * FROM users WHERE role = 'admin' ORDER BY id DESC LIMIT 10
 
-        // Check if error is retryable
-        if !smarterbase.IsRetryable(err) {
-            return fmt.Errorf("permanent error: %w", err)
-        }
-
-        // Exponential backoff
-        backoff := config.InitialBackoff * time.Duration(1<<uint(i))
-        time.Sleep(backoff)
-    }
-
-    return fmt.Errorf("failed after %d retries", config.MaxRetries)
-}
-
-// Handle not found errors
-func getUser(ctx context.Context, store *smarterbase.Store, userID string) (*User, error) {
-    var user User
-    key := fmt.Sprintf("users/%s.json", userID)
-
-    err := store.GetJSON(ctx, key, &user)
-    if smarterbase.IsNotFound(err) {
-        // User doesn't exist - return nil, not an error
-        return nil, nil
-    }
-    if err != nil {
-        return nil, fmt.Errorf("failed to get user: %w", err)
-    }
-
-    return &user, nil
-}
+-- Mutations
+INSERT INTO users (email, name) VALUES ($1, $2)  -- auto-generates id
+UPDATE users SET name = $1 WHERE id = $2
+DELETE FROM users WHERE id = $1
 ```
+
+Note: `ORDER BY id DESC` gives you most-recent-first because UUIDv7 is time-ordered.
 
 ---
 
-### Advanced Queries
+## Migration to PostgreSQL
 
-```go
-// Complex filtering
-var premiumUsers []*User
-err := store.Query("users/").
-    FilterJSON(func(obj map[string]interface{}) bool {
-        // Multiple conditions
-        isPremium, _ := obj["subscription"].(string)
-        lastLogin, _ := time.Parse(time.RFC3339, obj["last_login"].(string))
-        age, _ := obj["age"].(float64)
-
-        return isPremium == "premium" &&
-               lastLogin.After(time.Now().AddDate(0, 0, -30)) &&
-               age >= 18
-    }).
-    SortByField("created_at", false). // Newest first
-    Limit(100).
-    All(ctx, &premiumUsers)
-
-// Streaming large result sets (memory efficient)
-err := store.Query("users/").Each(ctx, func(key string, data []byte) error {
-    var user User
-    json.Unmarshal(data, &user)
-
-    // Process one at a time
-    processUser(&user)
-
-    return nil // Continue, or return error to stop
-})
-
-// Pagination
-page := 0
-pageSize := 50
-
-for {
-    var users []*User
-    err := store.Query("users/").
-        Offset(page * pageSize).
-        Limit(pageSize).
-        All(ctx, &users)
-
-    if err != nil || len(users) == 0 {
-        break
-    }
-
-    processPage(users)
-    page++
-}
-```
-
----
-
-### Multi-Value Index Queries
-
-```go
-// OR query: Get orders for multiple users
-userIDs := []string{"user-1", "user-2", "user-3"}
-orderKeys, _ := redisIndexer.QueryMultiple(ctx, "orders", "user_id", userIDs)
-// Returns all orders for any of the 3 users
-
-// Count items in index
-count, _ := redisIndexer.Count(ctx, "orders", "status", "pending")
-fmt.Printf("Pending orders: %d\n", count)
-
-// Get index statistics
-stats, _ := redisIndexer.GetIndexStats(ctx, "orders", "status",
-    []string{"pending", "processing", "completed", "cancelled"})
-// stats = {"pending": 42, "processing": 15, "completed": 1203, "cancelled": 8}
-```
-
----
-
-### Atomic Update Patterns
-
-```go
-// ✅ RECOMMENDED: Transfer between accounts with distributed locks
-lock := smarterbase.NewDistributedLock(redisClient, "smarterbase")
-
-// Lock the "from" account to prevent concurrent modifications
-err := smarterbase.WithAtomicUpdate(ctx, store, lock, "accounts/from", 10*time.Second,
-    func(ctx context.Context) error {
-        var fromAccount Account
-        if err := store.GetJSON(ctx, "accounts/from", &fromAccount); err != nil {
-            return err
-        }
-
-        // Check balance
-        if fromAccount.Balance < 100 {
-            return fmt.Errorf("insufficient funds")
-        }
-
-        // Get destination account
-        var toAccount Account
-        if err := store.GetJSON(ctx, "accounts/to", &toAccount); err != nil {
-            return err
-        }
-
-        // Update balances (protected by lock)
-        fromAccount.Balance -= 100
-        toAccount.Balance += 100
-
-        // Save both accounts
-        store.PutJSON(ctx, "accounts/from", &fromAccount)
-        store.PutJSON(ctx, "accounts/to", &toAccount)
-
-        // Add audit log
-        store.PutJSON(ctx, "audit/txn-"+smarterbase.NewID(), AuditLog{
-            Type:      "transfer",
-            From:      fromAccount.ID,
-            To:        toAccount.ID,
-            Amount:    100,
-            Timestamp: time.Now(),
-        })
-
-        return nil
-    })
-
-if err != nil {
-    log.Printf("Transfer failed: %v", err)
-}
-```
-
----
-
-### Batch Operations
-
-```go
-// Bulk import with progress tracking
-func bulkImport(ctx context.Context, store *smarterbase.Store, users []*User) error {
-    batchSize := 100
-    batchWriter := store.NewBatchWriter(batchSize)
-
-    for i, user := range users {
-        key := fmt.Sprintf("users/%s.json", user.ID)
-
-        if err := batchWriter.Add(ctx, key, user); err != nil {
-            return fmt.Errorf("failed at user %d: %w", i, err)
-        }
-
-        // Progress tracking
-        if (i+1) % 1000 == 0 {
-            log.Printf("Imported %d/%d users", i+1, len(users))
-        }
-    }
-
-    // Flush remaining items
-    return batchWriter.Flush(ctx)
-}
-
-// Parallel batch operations with error handling
-items := map[string]interface{}{
-    "users/1": &User{ID: "1"},
-    "users/2": &User{ID: "2"},
-    // ... thousands more
-}
-
-results := store.BatchPutJSON(ctx, items)
-analysis := smarterbase.AnalyzeBatchResults(results)
-
-if analysis.Failed > 0 {
-    log.Printf("Batch operation: %d succeeded, %d failed",
-               analysis.Successful, analysis.Failed)
-
-    // Retry failed items
-    for _, op := range analysis.Errors {
-        log.Printf("Failed: %s - %v", op.Key, op.Error)
-    }
-}
-```
-
----
-
-### Index Health Monitoring
-
-```go
-// Simple: Just start the monitor with opinionated defaults
-// - Checks every 5 minutes
-// - Auto-repairs drift >5%
-// - Logs everything with metrics
-monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer)
-monitor.Start(ctx)
-defer monitor.Stop()
-
-// That's it! Self-healing by default.
-
-// Optional: Customize if needed
-monitor := smarterbase.NewIndexHealthMonitor(store, redisIndexer).
-    WithInterval(10 * time.Minute).  // Less frequent checks
-    WithDriftThreshold(10.0).         // Higher tolerance
-    WithAutoRepair(false)             // Disable auto-repair
-
-// Manual health check (if auto-repair disabled)
-report, err := monitor.Check(ctx, "users")
-if err != nil {
-    log.Printf("Health check failed: %v", err)
-}
-
-if report.DriftPercentage > 5.0 {
-    log.Printf("WARNING: Index drift detected: %.2f%%", report.DriftPercentage)
-    log.Printf("Missing in Redis: %d", report.MissingInRedis)
-    log.Printf("Extra in Redis: %d", report.ExtraInRedis)
-
-    // Manual repair
-    if err := monitor.RepairDrift(ctx, report); err != nil {
-        log.Printf("Repair failed: %v", err)
-    }
-}
-```
-
----
-
-### Load Testing Your Setup
-
-```go
-// Test your production configuration
-func benchmarkSetup() {
-    config := smarterbase.LoadTestConfig{
-        Duration:    60 * time.Second,
-        Concurrency: 20,
-        OperationMix: smarterbase.OperationMix{
-            ReadPercent:   70,
-            WritePercent:  25,
-            DeletePercent: 5,
-        },
-        KeyCount:  10000,
-        TargetRPS: 1000,
-    }
-
-    tester := smarterbase.NewLoadTester(store, config)
-    results, err := tester.Run(ctx)
-
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    fmt.Printf("Load Test Results:\n")
-    fmt.Printf("  Total operations: %d\n", results.TotalOperations)
-    fmt.Printf("  Success rate: %.2f%%\n", results.SuccessRate)
-    fmt.Printf("  Actual RPS: %.2f\n", results.ActualRPS)
-    fmt.Printf("  Avg latency: %v\n", results.AvgLatency)
-    fmt.Printf("  P95 latency: %v\n", results.P95Latency)
-    fmt.Printf("  P99 latency: %v\n", results.P99Latency)
-
-    // Validate performance requirements
-    if results.P95Latency > 200*time.Millisecond {
-        log.Printf("WARNING: P95 latency exceeds 200ms threshold")
-    }
-}
-```
-
----
-
-### Streaming Large Files
-
-```go
-// Upload large file (photos, videos)
-func uploadLargeFile(ctx context.Context, backend smarterbase.Backend, filePath string) error {
-    file, err := os.Open(filePath)
-    if err != nil {
-        return err
-    }
-    defer file.Close()
-
-    stat, _ := file.Stat()
-    key := fmt.Sprintf("files/%s", filepath.Base(filePath))
-
-    return backend.PutStream(ctx, key, file, stat.Size())
-}
-
-// Download large file
-func downloadLargeFile(ctx context.Context, backend smarterbase.Backend, key, outputPath string) error {
-    reader, err := backend.GetStream(ctx, key)
-    if err != nil {
-        return err
-    }
-    defer reader.Close()
-
-    output, err := os.Create(outputPath)
-    if err != nil {
-        return err
-    }
-    defer output.Close()
-
-    _, err = io.Copy(output, reader)
-    return err
-}
-```
-
----
-
-### Append-Only Event Logs (JSONL)
-
-```go
-// Append events to log file
-func logEvent(ctx context.Context, backend smarterbase.Backend, event Event) error {
-    eventJSON, _ := json.Marshal(event)
-    eventJSON = append(eventJSON, '\n') // JSONL format
-
-    key := fmt.Sprintf("logs/%s.jsonl", time.Now().Format("2006-01-02"))
-    return backend.Append(ctx, key, eventJSON)
-}
-
-// Read and process event log
-func processEventLog(ctx context.Context, store *smarterbase.Store, date string) error {
-    key := fmt.Sprintf("logs/%s.jsonl", date)
-    data, err := store.Backend().Get(ctx, key)
-    if err != nil {
-        return err
-    }
-
-    // Parse JSONL
-    scanner := bufio.NewScanner(bytes.NewReader(data))
-    for scanner.Scan() {
-        var event Event
-        json.Unmarshal(scanner.Bytes(), &event)
-        processEvent(&event)
-    }
-
-    return scanner.Err()
-}
-```
-
----
-
-## Examples Directory
-
-See [examples/](./examples/) directory for complete examples:
-
-- **[schema-migrations](./examples/schema-migrations)** - Schema evolution and versioning
-- **[user-management](./examples/user-management)** - User CRUD with Redis indexing
-- **[ecommerce-orders](./examples/ecommerce-orders)** - Order management with atomic updates
-- **[metrics-dashboard](./examples/metrics-dashboard)** - Prometheus metrics integration
-
-## Testing
+When you outgrow smarterbase:
 
 ```bash
-go test -v              # All tests
-go test -bench=.        # Benchmarks
-go test -cover          # Coverage
-go test -race           # Race detection
+smarterbase export > dump.sql
+psql myapp < dump.sql
 ```
 
-All tests use filesystem backend - no external dependencies required.
+Update your database config to point to PostgreSQL. Done.
 
-## Performance
+The export generates:
+- `CREATE TABLE` statements with proper UUID types
+- `INSERT` statements with all data
+- `CREATE INDEX` statements
 
-| Operation | Complexity | Notes |
-|-----------|-----------|-------|
-| Put | O(1) | Plus O(n) for n indexes |
-| Get | O(1) | Direct key lookup |
-| List | O(n) | Scans all keys with prefix |
-| Index Query | O(1) | Redis or file lookup |
+UUIDv7 values transfer directly - PostgreSQL's UUID type accepts them as-is.
 
-**Recommended limits:**
-- Objects: < 10M per backend
-- Indexes per object: < 10
-- Concurrent writes to same index: < 100/sec
+---
+
+## CLI
+
+```bash
+# Start server
+smarterbase serve
+
+# With options
+smarterbase serve --port 5433 --data ./data
+
+# Export to PostgreSQL format
+smarterbase export > dump.sql
+
+# Rebuild indexes after crash
+smarterbase rebuild-indexes
+```
+
+---
+
+## Configuration
+
+```yaml
+# smarterbase.yaml (optional)
+port: 5433
+data: ./data
+password: ""  # empty = no auth
+```
+
+Defaults work. Config is optional.
+
+---
+
+## Consistency Model
+
+**Document writes are atomic.** Temp file + rename ensures a document is either fully written or not written.
+
+**Index updates are best-effort.** If you crash between writing a document and updating its indexes, the indexes may be stale.
+
+**Recovery:**
+
+```bash
+smarterbase rebuild-indexes
+```
+
+This scans all documents and rebuilds all indexes. Run it if you suspect index drift after a crash.
+
+If you need crash-consistent indexes, use PostgreSQL.
+
+---
+
+## Limitations
+
+| Limitation | Implication |
+|------------|-------------|
+| No transactions | Crash between two INSERTs = partial state |
+| No JOINs | Query tables separately, join in app |
+| No aggregations | COUNT/SUM/AVG in app code |
+| Single server | No replication, no clustering |
+| ~1M rows/table | Beyond this, migrate to PostgreSQL |
+| Best-effort indexes | Run `rebuild-indexes` after crash |
+
+These are intentional. Keeping scope small keeps implementation simple.
+
+---
+
+## ORM/Framework Compatibility
+
+ORMs and migration tools probe the database on startup. We implement minimum pg_catalog:
+
+```sql
+SELECT * FROM pg_tables WHERE schemaname = 'public'
+SELECT * FROM information_schema.columns WHERE table_name = $1
+```
+
+**Tested frameworks:**
+- Python: SQLAlchemy, Django ORM, Alembic migrations
+- Ruby: ActiveRecord, Rails migrations
+- Node.js: Prisma, Knex, TypeORM
+- Go: GORM, sqlx
+- PHP: Laravel Eloquent, Doctrine
+
+---
 
 ## When to Use SmarterBase
 
-### ✅ Perfect For "No Database" Applications
+### Use It For
 
-**Use cases where you DON'T need a database:**
-- **User management** - Profiles, preferences, settings
-- **Configuration storage** - App configs, feature flags
-- **Content management** - Blog posts, articles, pages
-- **Order/invoice storage** - E-commerce transactions
-- **Metadata catalogs** - File metadata, asset tracking
-- **Event logs** - Audit trails, activity logs (JSONL)
-- **API caching** - Long-lived cached responses
+- **Prototypes** - Zero setup, start building immediately
+- **Small apps** - Internal tools, personal projects
+- **Development** - Human-readable data files, git-friendly
+- **Learning** - Understand your data without database tools
 
-**Team benefits:**
-- ✅ No database expertise required
-- ✅ No migration planning
-- ✅ Deploy like any Go app (no DB dependency)
-- ✅ Redis is just for speed (can rebuild indexes)
-- ✅ S3 is managed by AWS (11 9s durability)
+### Don't Use It For
 
-### ❌ Still Need a Database For
+- **Production at scale** - Use PostgreSQL
+- **Transactions** - Use PostgreSQL
+- **Complex queries** - Use PostgreSQL
+- **Multiple servers** - Use PostgreSQL
 
-**Use a real database when you need:**
-- Complex JOINs across multiple entity types
-- Real-time aggregations (SUM, COUNT, GROUP BY)
-- Strict ACID transactions (financial transfers)
-- Sub-millisecond response times at scale
-- Full-text search (use Elasticsearch)
-- Graph queries (use Neo4j)
-- Time-series analytics (use TimescaleDB)
-
-## Production Deployment
-
-**Critical requirements:**
-
-- ✅ Use `S3BackendWithRedisLock` (NOT plain `S3Backend`) - prevents race conditions
-- ✅ Enable encryption (`EncryptionBackend` wrapper) - 32-byte key from secrets manager
-- ✅ Redis cluster with persistence (AOF + RDB) - circuit breaker protects against failures
-- ✅ Observability configured (Prometheus + Zap) - monitor drift, locks, errors
-- ✅ Index health monitoring (5min checks, 5% drift threshold, auto-repair)
-- ✅ Load testing completed (20+ concurrent, failover scenarios validated)
-
-**Performance targets:** P95 < 200ms (reads), P99 < 500ms (writes), drift < 1%
-
-### Redis Configuration
-
-SmarterBase provides a `RedisOptions()` helper for production-ready Redis configuration:
-
-```go
-// Reads from environment variables (REDIS_ADDR, REDIS_PASSWORD, REDIS_DB)
-// Automatically enables TLS for managed Redis (port 25061)
-// Defaults to localhost:6379 for local development
-redisClient := redis.NewClient(smarterbase.RedisOptions())
-```
-
-**Environment variables:**
-- `REDIS_ADDR` - Redis server address (default: `localhost:6379`)
-- `REDIS_PASSWORD` - Redis password (default: empty)
-- `REDIS_DB` - Redis database number (default: `0`)
-- `REDIS_TLS_ENABLED` - Enable TLS connection (default: `false`, auto-enabled for port 25061)
-
-**Local development:**
-```bash
-# No environment variables needed - uses localhost:6379
-go run main.go
-```
-
-**Production deployment:**
-```bash
-export REDIS_ADDR=redis.prod.example.com:6379
-export REDIS_PASSWORD=your-redis-password
-export REDIS_DB=0
-go run main.go
-```
-
-**Advanced scenarios** (Redis Cluster, Sentinel, custom TLS):
-```go
-// For complex setups, use redis.Options directly
-redisClient := redis.NewClient(&redis.Options{
-    Addr:      "redis-cluster.example.com:6379",
-    Password:  os.Getenv("REDIS_PASSWORD"),
-    TLSConfig: &tls.Config{...},
-    PoolSize:  100,
-})
-```
-
-## Known Limitations
-
-- ⚠️ Plain `S3Backend` has race window in PutIfMatch - **Use `S3BackendWithRedisLock` for production**
-- ⚠️ Transactions are NOT ACID (no isolation) - **Use distributed locks for critical operations**
-- ⚠️ Query.All() loads into memory - **Use Each() or pagination for large datasets**
-- ⚠️ S3 base latency is 50-100ms - **Add caching layer for read-heavy workloads**
+---
 
 ## Documentation
 
-- [DATASHEET.md](./DATASHEET.md) - Technical specifications and architecture
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing guidelines
-- [Architecture Decision Records](./docs/adr/) - Design decisions and rationale
+- [RFC-0001: Filesystem-Native Storage with PostgreSQL Wire Protocol](./docs/rfc/0001-filesystem-native-postgres-protocol.md)
+- [ADR-0001: PostgreSQL Wire Protocol Over Filesystem Storage](./docs/adr/0001-postgresql-wire-protocol-over-filesystem.md)
 
-## Development Setup
-
-### Installing Git Hooks
-
-Install pre-commit hooks to ensure code quality and proper commit messages:
-
-```bash
-./scripts/install-hooks.sh
-```
-
-This installs:
-- **commit-msg hook** - Validates [Conventional Commits](https://www.conventionalcommits.org/) format
-- **pre-commit hook** - Runs build and tests before committing
-
-Commit messages must follow the format:
-```
-<type>: <description>
-
-Types: feat, fix, docs, refactor, test, chore
-Examples:
-  feat: add distributed lock support
-  fix: resolve race condition in index updates
-```
-
-See [.github/SEMANTIC_VERSIONING.md](./.github/SEMANTIC_VERSIONING.md) for details on semantic versioning.
+---
 
 ## Contributing
 
 Contributions welcome! Please ensure:
-- Git hooks installed: `./scripts/install-hooks.sh`
 - Tests pass: `go test -v -race`
 - Code is formatted: `go fmt`
-- Commit messages follow Conventional Commits format
-- Documentation is updated
+
+---
 
 ## License
 
 MIT License - See [LICENSE](./LICENSE) file for details
-
-## Credits
-
-Developed for production use at scale. Battle-tested with millions of objects.

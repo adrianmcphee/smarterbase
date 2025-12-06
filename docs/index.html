@@ -2,8 +2,8 @@
 <html lang="en" class="group/html" data-theme="dark">
     <head>
         <meta charset="utf-8" />
-<title>SmarterBase - Skip the Database. Use Redis + S3 Instead.</title>
-<meta content="Turn Redis + S3 into a queryable, transactional document store. 85% cost savings. Zero database complexity." name="description" />
+<title>SmarterBase - PostgreSQL Compatibility. Filesystem Simplicity.</title>
+<meta content="A PostgreSQL-compatible server that stores data as JSON files. Connect with any PostgreSQL driver. When you outgrow it, migrate to real PostgreSQL." name="description" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <link rel="shortcut icon" href="./images/favicon.ico" />
@@ -13,63 +13,47 @@
 
       <link rel="stylesheet" href="./assets/index.css">
       <style>
-        /* Prevent horizontal scroll on the entire page */
         html, body {
           overflow-x: hidden !important;
           max-width: 100vw !important;
           width: 100% !important;
         }
-
-        /* Force all elements to respect viewport width */
         * {
           max-width: 100% !important;
           box-sizing: border-box !important;
         }
-
-        /* Add horizontal padding to containers on all screens - force override */
         .container {
           padding-left: 1rem !important;
           padding-right: 1rem !important;
           max-width: 100vw !important;
           width: 100% !important;
         }
-
-        /* Increase padding on larger screens */
         @media (min-width: 640px) {
           .container {
             padding-left: 1.5rem !important;
             padding-right: 1.5rem !important;
           }
         }
-
         @media (min-width: 1024px) {
           .container {
             padding-left: 2rem !important;
             padding-right: 2rem !important;
           }
         }
-
-        /* Ensure pre/code blocks don't overflow on mobile */
         pre, code {
           max-width: 100% !important;
           overflow-x: auto !important;
           word-wrap: break-word !important;
           white-space: pre-wrap !important;
         }
-
-        /* Make sure grids don't cause horizontal overflow on small screens */
         .grid {
           max-width: 100% !important;
           width: 100% !important;
         }
-
-        /* Constrain sections */
         section {
           max-width: 100vw !important;
           overflow-x: hidden !important;
         }
-
-        /* Ensure headings wrap properly */
         h1, h2, h3, h4, h5, h6 {
           word-wrap: break-word !important;
           overflow-wrap: break-word !important;
@@ -78,13 +62,6 @@
     </head>
 
     <body>
-        <div class="bg-base-200 border-base-300 border-b px-1 py-1.5 text-center text-[11px] sm:text-sm">
-    <span>
-        <span class="text-primary font-medium">New in v2.0:</span>
-        Auto-Indexing with Struct Tags + Declarative Cascade Deletes
-    </span>
-</div>
-
 <div
     id="layout-topbar"
     class="bg-base-100 lg:bg-base-100/90 border-base-300 sticky top-0 z-10 border-b data-[at-top=true]:border-transparent lg:backdrop-blur-sm">
@@ -98,8 +75,6 @@
                     class="btn btn-square btn-ghost btn-sm lg:hidden">
                     <i class="fa-solid fa-bars"></i>
                 </label>
-
-                <!-- Navbar Brand logo -->
                 <a href="#" class="text-xl font-semibold">SmarterBase</a>
             </div>
 
@@ -107,10 +82,9 @@
                 <ul class="menu menu-horizontal gap-2 px-1">
                     <li class="font-medium"><a href="#home">Home</a></li>
                     <li class="font-medium"><a href="#features">Features</a></li>
+                    <li class="font-medium"><a href="#how-it-works">How It Works</a></li>
                     <li class="font-medium"><a href="#use-cases">Use Cases</a></li>
-                    <li class="font-medium"><a href="#comparison">vs Databases</a></li>
-                    <li class="font-medium"><a href="examples.html" class="text-primary">Examples</a></li>
-                    <li class="font-medium"><a href="#docs">Documentation</a></li>
+                    <li class="font-medium"><a href="#docs">Docs</a></li>
                 </ul>
             </div>
 
@@ -123,7 +97,6 @@
             </div>
         </nav>
 
-        <!-- sm screen menu (drawer) -->
         <div class="drawer">
             <input id="menu-drawer" type="checkbox" class="drawer-toggle" />
             <div class="drawer-side">
@@ -133,10 +106,9 @@
                     <ul class="menu w-full gap-2 p-0 pt-4">
                         <li class="font-medium"><a href="#home">Home</a></li>
                         <li class="font-medium"><a href="#features">Features</a></li>
+                        <li class="font-medium"><a href="#how-it-works">How It Works</a></li>
                         <li class="font-medium"><a href="#use-cases">Use Cases</a></li>
-                        <li class="font-medium"><a href="#comparison">vs Databases</a></li>
-                        <li class="font-medium"><a href="examples.html" class="text-primary">Examples</a></li>
-                        <li class="font-medium"><a href="#docs">Documentation</a></li>
+                        <li class="font-medium"><a href="#docs">Docs</a></li>
                     </ul>
                 </div>
             </div>
@@ -150,12 +122,13 @@
                 <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
                     <div>
                         <h1 class="text-4xl font-bold tracking-tight lg:text-6xl lg:leading-none">
-                            Skip the Database.
-                            <span class="text-primary">Use Redis + S3 Instead.</span>
+                            PostgreSQL Compatibility.
+                            <span class="text-primary">Filesystem Simplicity.</span>
                         </h1>
                         <p class="text-base-content/80 mt-8 sm:text-lg">
-                            Turn Redis (indexes) + S3 (storage) into a queryable, transactional document store.
-                            <strong>85% cost savings.</strong> Zero database complexity.
+                            A PostgreSQL-compatible server that stores data as JSON files.
+                            Connect with <strong>any PostgreSQL driver</strong>. Your data lives in readable files on disk.
+                            When you outgrow it, migrate to real PostgreSQL.
                         </p>
                         <div class="mt-8 inline-flex gap-3 sm:mt-16">
                             <a href="https://github.com/adrianmcphee/smarterbase" target="_blank">
@@ -169,76 +142,68 @@
                             </a>
                         </div>
                         <div class="mt-8 flex items-center gap-3">
-                            <div class="badge badge-outline">Go 1.18+</div>
+                            <div class="badge badge-outline">Go 1.21+</div>
                             <div class="badge badge-outline">MIT License</div>
-                            <div class="badge badge-outline">Production Ready</div>
+                            <div class="badge badge-outline">Any PostgreSQL Driver</div>
                         </div>
                     </div>
 
                     <div class="bg-base-200 rounded-box p-6">
-                        <pre class="text-sm overflow-x-auto max-w-full"><code>// Simple API - struct tags = instant queries
-import "github.com/adrianmcphee/smarterbase/v2/simple"
+                        <pre class="text-sm overflow-x-auto max-w-full"><code># Start the server
+smarterbase serve --port 5433 --data ./data
 
-type User struct {
-    ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index"`
-    Role  string `json:"role" sb:"index"`
-    Name  string `json:"name"`
-}
-
-// Zero config - auto-detects from env
-db := simple.MustConnect()
-defer db.Close()
-
-users := simple.NewCollection[User](db)
-
-// Create with auto-ID
-user, _ := users.Create(ctx, &User{
-    Email: "alice@example.com",
-    Name:  "Alice",
-    Role:  "admin",
-})
-
-// Query by any indexed field - O(1)
-admins, _ := users.Find(ctx, "role", "admin")
-alice, _ := users.FindOne(ctx, "email", "alice@example.com")</code></pre>
+# Connect from any language
+</code></pre>
+                        <pre class="text-sm overflow-x-auto max-w-full mt-4"><code class="language-python"># Python / SQLAlchemy
+DATABASE_URL = "postgresql://localhost:5433/myapp"</code></pre>
+                        <pre class="text-sm overflow-x-auto max-w-full mt-2"><code class="language-javascript">// Node.js
+const pool = new Pool({ host: 'localhost', port: 5433 });</code></pre>
+                        <pre class="text-sm overflow-x-auto max-w-full mt-2"><code class="language-ruby"># Ruby / Rails
+host: localhost
+port: 5433</code></pre>
+                        <pre class="text-sm overflow-x-auto max-w-full mt-2"><code class="language-go">// Go
+db, _ := sql.Open("postgres", "host=localhost port=5433")</code></pre>
                     </div>
                 </div>
 
                 <div class="mt-12 lg:mt-32">
                     <h2 class="text-base-content/60 text-center text-xl font-medium">
-                        Instead of This → Do This
+                        The Problem with Starting New Projects
                     </h2>
                     <div class="mt-8 grid gap-6 lg:grid-cols-2">
                         <div class="card border-error/30 border-2 bg-base-200">
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-error text-2xl">❌</span>
-                                    <h3 class="text-lg font-semibold">Traditional Database</h3>
+                                    <span class="text-error text-2xl">1</span>
+                                    <h3 class="text-lg font-semibold">Run PostgreSQL</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
-                                    <div>RDS PostgreSQL: <strong>$271/month</strong></div>
-                                    <div>❌ ALTER TABLE downtime</div>
-                                    <div>❌ Database servers to patch</div>
-                                    <div>❌ Backup strategies to test</div>
-                                    <div>❌ Connection pools to tune</div>
-                                    <div>❌ DBA expertise required</div>
+                                    <div>Docker, Homebrew, or managed service</div>
+                                    <div class="text-error">Overhead for a prototype</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card border-primary/30 border-2 bg-primary/5">
+                        <div class="card border-error/30 border-2 bg-base-200">
                             <div class="card-body">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-primary text-2xl">✅</span>
-                                    <h3 class="text-lg font-semibold">SmarterBase</h3>
+                                    <span class="text-error text-2xl">2</span>
+                                    <h3 class="text-lg font-semibold">Use SQLite</h3>
                                 </div>
                                 <div class="mt-4 space-y-2 text-sm">
-                                    <div>Redis + S3: <strong>$36/month</strong></div>
-                                    <div>✅ No ALTER TABLE statements</div>
-                                    <div>✅ Zero servers (S3 is serverless)</div>
-                                    <div>✅ Zero backups (11 9s durability)</div>
-                                    <div>✅ Simple key-value (no tuning)</div>
-                                    <div>✅ Junior devs can deploy</div>
+                                    <div>Different SQL dialect</div>
+                                    <div class="text-error">Migration to PostgreSQL means rewriting queries</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <div class="card border-primary/30 border-2 bg-primary/5">
+                            <div class="card-body text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <span class="text-primary text-2xl">SmarterBase</span>
+                                </div>
+                                <div class="mt-4 text-lg">
+                                    <strong>Zero setup now. Seamless PostgreSQL migration later.</strong>
                                 </div>
                             </div>
                         </div>
@@ -247,39 +212,29 @@ alice, _ := users.FindOne(ctx, "email", "alice@example.com")</code></pre>
             </div>
         </section>
 
-        <section class="py-8 lg:py-16 bg-base-300/30">
+        <section class="py-8 lg:py-16 bg-base-300/30" id="features">
             <div class="container">
                 <div class="text-center mb-12">
-                    <h2 class="text-2xl font-semibold sm:text-3xl">Why Developers Choose SmarterBase</h2>
+                    <h2 class="text-2xl font-semibold sm:text-3xl">Why SmarterBase Works</h2>
                 </div>
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-shield-halved text-4xl text-primary"></i>
+                                <i class="fa-solid fa-bolt text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">11 9s Durability</h3>
-                            <p class="text-sm text-base-content/70">99.999999999% data durability via S3 multi-AZ replication</p>
+                            <h3 class="text-xl font-bold text-primary">Local NVMe Speed</h3>
+                            <p class="text-sm text-base-content/70">10-100 microseconds vs 1-10ms network latency</p>
                         </div>
                     </div>
 
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-shield-heart text-4xl text-primary"></i>
+                                <i class="fa-solid fa-plug text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">Self-Healing</h3>
-                            <p class="text-sm text-base-content/70">Automatic index repair and circuit breaker protection built-in</p>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-100 border border-primary/20">
-                        <div class="card-body text-center">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-database text-4xl text-primary"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-primary">Zero Backups</h3>
-                            <p class="text-sm text-base-content/70">S3 handles durability automatically, no backup strategies needed</p>
+                            <h3 class="text-xl font-bold text-primary">Any PostgreSQL Driver</h3>
+                            <p class="text-sm text-base-content/70">Python, Ruby, Node.js, Go, PHP, Java</p>
                         </div>
                     </div>
 
@@ -288,25 +243,25 @@ alice, _ := users.FindOne(ctx, "email", "alice@example.com")</code></pre>
                             <div class="flex justify-center mb-3">
                                 <i class="fa-solid fa-file-code text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">Schema Evolution</h3>
-                            <p class="text-sm text-base-content/70">JSON documents with built-in versioning, migrations happen on read</p>
+                            <h3 class="text-xl font-bold text-primary">Human-Readable Data</h3>
+                            <p class="text-sm text-base-content/70">JSON files you can read, debug, and git commit</p>
                         </div>
                     </div>
 
                     <div class="card bg-base-100 border border-primary/20">
                         <div class="card-body text-center">
                             <div class="flex justify-center mb-3">
-                                <i class="fa-solid fa-file-circle-plus text-4xl text-primary"></i>
+                                <i class="fa-solid fa-arrow-right-arrow-left text-4xl text-primary"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-primary">JSONL Support</h3>
-                            <p class="text-sm text-base-content/70">Append-only event logs, perfect for audit trails and activity logs</p>
+                            <h3 class="text-xl font-bold text-primary">Easy Migration</h3>
+                            <p class="text-sm text-base-content/70">Export to PostgreSQL in minutes</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="relative py-8 lg:py-20" id="features">
+        <section class="relative py-8 lg:py-20" id="how-it-works">
             <div class="absolute start-[10%]">
                 <div
                     class="from-primary/10 to-secondary/10 pointer-events-none aspect-square w-60 rounded-full bg-gradient-to-r blur-3xl lg:w-[600px]"></div>
@@ -314,180 +269,192 @@ alice, _ := users.FindOne(ctx, "email", "alice@example.com")</code></pre>
 
             <div class="container">
                 <div class="flex flex-col items-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">Database Features Without the Database</h2>
+                    <h2 class="text-3xl font-semibold sm:text-4xl">How It Works</h2>
                     <p class="text-base-content/80 mt-4 sm:text-lg">
-                        Everything you need for document storage, built on infrastructure you already have
+                        PostgreSQL wire protocol over filesystem storage
                     </p>
                 </div>
 
-                <div class="mt-8 space-y-8 lg:mt-20 xl:space-y-20">
-                    <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
-                        <div class="bg-base-200 rounded-box p-6">
-                            <pre class="text-sm overflow-x-auto"><code>// Secondary indexes via Redis Sets
-redisIndexer.RegisterMultiValueIndex(
-    "orders", "user_id",
-    func(data []byte) (string, string, error) {
-        var order Order
-        json.Unmarshal(data, &order)
-        return order.ID, order.UserID, nil
-    },
-)
+                <div class="mt-8 lg:mt-16">
+                    <div class="bg-base-200 rounded-box p-6 max-w-3xl mx-auto">
+                        <pre class="text-sm overflow-x-auto"><code>Your App (any PostgreSQL driver)
+        |
+        | PostgreSQL wire protocol
+        v
+   smarterbase
+        |
+        v
+   JSON files on disk
 
-// Query - O(1) lookup
-orderIDs, _ := redisIndexer.QueryMultiValueIndex(
-    ctx, "orders", "user_id", "user-123",
-)</code></pre>
-                        </div>
-
-                        <div class="lg:mt-8">
-                            <div class="badge badge-soft badge-primary">Secondary Indexes</div>
-                            <h3 class="mt-3 text-xl font-medium sm:text-2xl">
-                                Fast O(1) Lookups via Redis
-                            </h3>
-                            <p class="text-base-content/80 mt-1">
-                                Indexes stored in Redis Sets. Query by any field with constant-time lookups. Redis is required for indexing.
-                            </p>
-                            <ul class="mt-4 list-inside list-disc">
-                                <li>O(1) index queries</li>
-                                <li>1:N relationships (user → orders)</li>
-                                <li>Automatic index updates</li>
-                                <li>Self-healing with auto-repair</li>
-                                <li>Circuit breaker protection</li>
-                            </ul>
-                        </div>
+./data/
+|-- _schema/
+|   \-- users.json
+|-- _idx/
+|   \-- users/
+|       |-- email.json      # {"alice@example.com": "019363e8-..."}
+|       \-- role/
+|           |-- admin.json  # ["019363e8-...", "019363f2-..."]
+|           \-- user.json   # ["019363f5-..."]
+|-- users/
+|   |-- 019363e8-7a6b-7def-8000-1a2b3c4d5e6f.json
+|   \-- 019363f2-8b7c-7abc-8000-2b3c4d5e6f7a.json
+\-- orders/
+    \-- 019363f5-9c8d-7bcd-8000-3c4d5e6f7a8b.json</code></pre>
                     </div>
 
-                    <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
-                        <div>
-                            <div class="badge badge-soft badge-secondary">Distributed Locks</div>
-                            <h3 class="mt-3 text-xl font-medium sm:text-2xl">Race-Free Updates</h3>
-                            <p class="text-base-content/80 mt-1">
-                                Redis distributed locks eliminate S3 race conditions. True atomic operations across multiple servers.
-                            </p>
-
-                            <ul class="mt-4 list-inside list-disc">
-                                <li>Prevents lost updates</li>
-                                <li>Automatic retry with backoff</li>
-                                <li>TTL protection against deadlocks</li>
-                                <li>Production-tested at scale</li>
-                            </ul>
+                    <div class="mt-12 grid gap-8 lg:grid-cols-3">
+                        <div class="card card-border">
+                            <div class="card-body">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                        <i class="fa-solid fa-network-wired text-2xl text-primary"></i>
+                                    </div>
+                                    <h3 class="text-lg font-medium">Protocol</h3>
+                                </div>
+                                <p class="mt-2">
+                                    <code>jackc/pgproto3</code> handles PostgreSQL wire protocol. Any pg driver works.
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="order-first lg:order-last">
-                            <div class="bg-base-200 rounded-box p-6">
-                                <pre class="text-sm overflow-x-auto"><code>// Atomic updates with distributed lock
-lock := smarterbase.NewDistributedLock(
-    redisClient, "smarterbase",
-)
+                        <div class="card card-border">
+                            <div class="card-body">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                        <i class="fa-solid fa-code text-2xl text-primary"></i>
+                                    </div>
+                                    <h3 class="text-lg font-medium">Parser</h3>
+                                </div>
+                                <p class="mt-2">
+                                    <code>vitess/sqlparser</code> parses SQL to AST. No query planner needed.
+                                </p>
+                            </div>
+                        </div>
 
-smarterbase.WithAtomicUpdate(
-    ctx, store, lock,
-    "accounts/123", 10*time.Second,
-    func(ctx context.Context) error {
-        var account Account
-        store.GetJSON(ctx, "accounts/123", &account)
-        account.Balance += 100
-        store.PutJSON(ctx, "accounts/123", &account)
-        return nil
-    },
-)</code></pre>
+                        <div class="card card-border">
+                            <div class="card-body">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                        <i class="fa-solid fa-hard-drive text-2xl text-primary"></i>
+                                    </div>
+                                    <h3 class="text-lg font-medium">Storage</h3>
+                                </div>
+                                <p class="mt-2">
+                                    JSON files + JSON indexes. Atomic writes via temp file + rename.
+                                </p>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
 
-                    <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
-                        <div class="bg-base-200 rounded-box p-6">
-                            <pre class="text-sm overflow-x-auto"><code>// Full observability built-in
-metrics := smarterbase.NewPrometheusMetrics(
-    prometheus.DefaultRegisterer,
+        <section class="py-8 lg:py-20" id="sql">
+            <div class="container">
+                <div class="text-center">
+                    <h2 class="text-3xl font-semibold sm:text-4xl">Supported SQL</h2>
+                    <p class="text-base-content/80 mt-4 sm:text-lg">
+                        Single-table CRUD covers 90% of prototype needs
+                    </p>
+                </div>
+
+                <div class="mt-8 grid gap-8 lg:grid-cols-2">
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-primary">Supported</h3>
+                            <pre class="text-sm overflow-x-auto mt-4"><code class="language-sql">-- Data Definition
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid7(),
+    email TEXT UNIQUE,
+    name TEXT
 )
-logger, _ := smarterbase.NewProductionZapLogger()
-store := smarterbase.NewStoreWithObservability(
-    backend, logger, metrics,
-)
+CREATE INDEX idx_role ON users(role)
 
-// Automatic tracking:
-// - Operation latency (histogram)
-// - Success/error rates
-// - Circuit breaker state
-// - Index health & drift
-// - Transaction rollback failures
-// - Query performance</code></pre>
-                        </div>
+-- Queries
+SELECT * FROM users WHERE id = $1
+SELECT * FROM users WHERE email = $1
+SELECT * FROM users WHERE role = 'admin'
+    ORDER BY id DESC LIMIT 10
 
-                        <div class="lg:mt-8">
-                            <div class="badge badge-soft badge-error">Observability</div>
-                            <h3 class="mt-3 text-xl font-medium sm:text-2xl">
-                                Production-Grade Monitoring
-                            </h3>
-                            <p class="text-base-content/80 mt-1">
-                                Prometheus metrics and structured logging out of the box. Know exactly what's happening in production.
-                            </p>
-                            <ul class="mt-4 list-inside list-disc">
-                                <li>15+ Prometheus metrics</li>
-                                <li>Zap structured logging</li>
-                                <li>Index health monitoring</li>
-                                <li>Transaction error tracking</li>
-                                <li>Query profiling</li>
-                            </ul>
+-- Mutations
+INSERT INTO users (email, name) VALUES ($1, $2)
+UPDATE users SET name = $1 WHERE id = $2
+DELETE FROM users WHERE id = $1</code></pre>
                         </div>
                     </div>
 
-                    <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
-                        <div>
-                            <div class="badge badge-soft badge-accent">Schema Versioning</div>
-                            <h3 class="mt-3 text-xl font-medium sm:text-2xl">Evolve Schemas Without Downtime</h3>
-                            <p class="text-base-content/80 mt-1">
-                                Add a version field, register migrations, and your data transforms automatically on read. No ALTER TABLE statements, no downtime.
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-error">Not Supported (Use PostgreSQL)</h3>
+                            <pre class="text-sm overflow-x-auto mt-4"><code class="language-sql">-- No JOINs
+SELECT * FROM users u
+JOIN orders o ON o.user_id = u.id
+
+-- No aggregations
+SELECT COUNT(*) FROM users
+WHERE role = 'admin'
+
+-- No subqueries
+SELECT * FROM users
+WHERE id IN (SELECT user_id FROM ...)
+
+-- No transactions
+BEGIN; INSERT ...; INSERT ...; COMMIT;</code></pre>
+                            <p class="mt-4 text-sm text-base-content/70">
+                                If you need these, you need PostgreSQL. That's the point: migrate when you're ready.
                             </p>
-
-                            <ul class="mt-4 list-inside list-disc">
-                                <li>Opt-in with _v field</li>
-                                <li>Lazy migration on read</li>
-                                <li>Automatic version chaining</li>
-                                <li>Zero overhead when not used</li>
-                                <li>Gradual write-back policy</li>
-                            </ul>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                        <div class="order-first lg:order-last">
-                            <div class="bg-base-200 rounded-box p-6">
-                                <pre class="text-sm overflow-x-auto"><code>// Define version evolution
-type UserV0 struct {
-    Name  string
-    Email string
-}
+        <section class="py-8 lg:py-20 bg-base-300/30" id="uuidv7">
+            <div class="container">
+                <div class="grid gap-8 lg:grid-cols-2 lg:gap-16">
+                    <div>
+                        <h2 class="text-3xl font-semibold sm:text-4xl">UUIDv7 Primary Keys</h2>
+                        <p class="text-base-content/80 mt-4 sm:text-lg">
+                            Time-ordered UUIDs that sort chronologically
+                        </p>
 
-type UserV2 struct {
-    V         int    `json:"_v"`
-    FirstName string `json:"first_name"`
-    LastName  string `json:"last_name"`
-    Email     string
-}
+                        <ul class="mt-8 space-y-4">
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>Time-ordered</strong> - IDs sort chronologically. No need for <code>created_at</code> index.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>No coordination</strong> - Generate IDs anywhere without a central authority.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>PostgreSQL-native</strong> - PostgreSQL 17+ supports UUIDv7. Migration is seamless.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-check text-primary mt-1"></i>
+                                <div>
+                                    <strong>Filesystem-friendly</strong> - Lexicographic sort = chronological sort.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
 
-// Type-safe migration function
-func migrateUser(old UserV0) (UserV2, error) {
-    parts := strings.Fields(old.Name)
-    return UserV2{
-        V:         2,
-        FirstName: parts[0],
-        LastName:  strings.Join(parts[1:], " "),
-        Email:     old.Email,
-    }, nil
-}
+                    <div class="bg-base-200 rounded-box p-6">
+                        <pre class="text-sm overflow-x-auto"><code>019363e8-7a6b-7def-8000-1a2b3c4d5e6f
+|        |    |
+|        |    +-- version 7 marker
+|        +-- random bits
++-- millisecond timestamp (48 bits)
 
-// Register with zero boilerplate
-smarterbase.WithTypeSafe(
-    smarterbase.Migrate("UserV2").From(0).To(2),
-    migrateUser,
-)
-
-// Old data migrates automatically
-var user UserV2
-user.V = 2
-store.GetJSON(ctx, "users/123", &user)</code></pre>
-                            </div>
-                        </div>
+# ORDER BY id DESC = most recent first
+# ls ./data/users/ = creation order</code></pre>
                     </div>
                 </div>
             </div>
@@ -496,167 +463,54 @@ store.GetJSON(ctx, "users/123", &user)</code></pre>
         <section class="py-8 lg:py-20" id="use-cases">
             <div class="container">
                 <div class="text-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">Perfect for "No Database" Applications</h2>
-                    <p class="text-base-content/80 mt-4 sm:text-lg">
-                        If you don't need JOINs or complex aggregations, you probably don't need a database
-                    </p>
+                    <h2 class="text-3xl font-semibold sm:text-4xl">When to Use SmarterBase</h2>
                 </div>
 
-                <div class="mt-8 grid gap-6 lg:grid-cols-3">
-                    <div class="card card-border">
-                        <div class="card-body">
-                            <div class="flex items-center gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-circle-user text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium">User Management</h3>
-                            </div>
-                            <p class="mt-2">
-                                Store user profiles, preferences, sessions. No schema migrations when adding new fields.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="card card-border">
-                        <div class="card-body">
-                            <div class="flex items-center gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-bag-shopping text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium">E-commerce</h3>
-                            </div>
-                            <p class="mt-2">
-                                Orders, invoices, product catalogs. Index by user, status, date without complex queries.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="card card-border">
-                        <div class="card-body">
-                            <div class="flex items-center gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-sliders text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium">Configuration</h3>
-                            </div>
-                            <p class="mt-2">
-                                App configs, feature flags, tenant settings. Update instantly without migrations.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="card card-border">
-                        <div class="card-body">
-                            <div class="flex items-center gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-newspaper text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium">Content Management</h3>
-                            </div>
-                            <p class="mt-2">
-                                Blog posts, articles, documentation. Store rich JSON without rigid schemas.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="card card-border">
-                        <div class="card-body">
-                            <div class="flex items-center gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-scroll text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium">Event Logging</h3>
-                            </div>
-                            <p class="mt-2">
-                                Audit trails, activity logs. Append-only JSONL format for efficient writes.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="card card-border">
-                        <div class="card-body">
-                            <div class="flex items-center gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-layer-group text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium">Multi-tenant SaaS</h3>
-                            </div>
-                            <p class="mt-2">
-                                Per-tenant configuration and data. Scale without database partitioning complexity.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="py-8 lg:py-20" id="comparison">
-            <div class="container">
-                <div class="text-center">
-                    <h2 class="text-3xl font-semibold sm:text-4xl">Cost Comparison</h2>
-                    <p class="text-base-content/80 mt-2 sm:text-lg">
-                        85% cheaper than managed databases (1TB data, 1M requests/day)
-                    </p>
-                </div>
-
-                <div class="mt-8 grid gap-8 lg:grid-cols-4">
+                <div class="mt-8 grid gap-6 lg:grid-cols-2">
                     <div class="card border-primary/30 border-2 bg-primary/5">
                         <div class="card-body">
-                            <div class="flex items-center gap-2">
-                                <span class="text-primary text-2xl">✅</span>
-                                <h3 class="text-lg font-semibold">SmarterBase</h3>
-                            </div>
-                            <p class="mt-4 flex items-baseline">
-                                <span class="text-5xl font-semibold tracking-tight text-primary">$41</span>
-                                <span class="ml-1 text-xl font-medium">/month</span>
-                            </p>
-                            <div class="mt-4 space-y-2 text-sm">
-                                <div>S3: $23</div>
-                                <div>Requests: $5</div>
-                                <div>Redis: $13</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card border-base-300 border">
-                        <div class="card-body">
-                            <h3 class="text-lg font-semibold">RDS PostgreSQL</h3>
-                            <p class="mt-4 flex items-baseline">
-                                <span class="text-5xl font-semibold tracking-tight">$271</span>
-                                <span class="ml-1 text-xl font-medium">/month</span>
-                            </p>
-                            <div class="mt-4 space-y-2 text-sm">
-                                <div>Instance: $41</div>
-                                <div>Storage: $115</div>
-                                <div>Backups: $115</div>
+                            <h3 class="text-lg font-semibold text-primary">Use It For</h3>
+                            <div class="mt-4 space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-primary"></i>
+                                    <span><strong>Prototypes</strong> - Zero setup, start building immediately</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-primary"></i>
+                                    <span><strong>Small apps</strong> - Internal tools, personal projects</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-primary"></i>
+                                    <span><strong>Development</strong> - Human-readable data files, git-friendly</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-check text-primary"></i>
+                                    <span><strong>Learning</strong> - Understand your data without database tools</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card border-base-300 border">
+                    <div class="card border-error/30 border-2 bg-base-200">
                         <div class="card-body">
-                            <h3 class="text-lg font-semibold">DynamoDB</h3>
-                            <p class="mt-4 flex items-baseline">
-                                <span class="text-5xl font-semibold tracking-tight">$300</span>
-                                <span class="ml-1 text-xl font-medium">/month</span>
-                            </p>
-                            <div class="mt-4 space-y-2 text-sm">
-                                <div>Storage: $250</div>
-                                <div>Read/Write: $50+</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card border-base-300 border">
-                        <div class="card-body">
-                            <h3 class="text-lg font-semibold">MongoDB Atlas</h3>
-                            <p class="mt-4 flex items-baseline">
-                                <span class="text-5xl font-semibold tracking-tight">$100</span>
-                                <span class="ml-1 text-xl font-medium">/month</span>
-                            </p>
-                            <div class="mt-4 space-y-2 text-sm">
-                                <div>M10 cluster: $57</div>
-                                <div>Storage: $43+</div>
+                            <h3 class="text-lg font-semibold text-error">Don't Use It For</h3>
+                            <div class="mt-4 space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-xmark text-error"></i>
+                                    <span><strong>Production at scale</strong> - Use PostgreSQL</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-xmark text-error"></i>
+                                    <span><strong>Transactions</strong> - Use PostgreSQL</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-xmark text-error"></i>
+                                    <span><strong>Complex queries</strong> - Use PostgreSQL</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-xmark text-error"></i>
+                                    <span><strong>Multiple servers</strong> - Use PostgreSQL</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -669,7 +523,7 @@ store.GetJSON(ctx, "users/123", &user)</code></pre>
                 <div class="text-center">
                     <h2 class="text-3xl font-semibold sm:text-4xl">Quick Start</h2>
                     <p class="text-base-content/80 mt-2 sm:text-lg">
-                        Get started in minutes with Go 1.18+
+                        Get started in minutes
                     </p>
                 </div>
 
@@ -678,9 +532,9 @@ store.GetJSON(ctx, "users/123", &user)</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">1</div>
-                                <h3 class="text-xl font-medium">Installation</h3>
+                                <h3 class="text-xl font-medium">Install</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>go get github.com/adrianmcphee/smarterbase/v2</code></pre>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest</code></pre>
                         </div>
                     </div>
 
@@ -688,39 +542,9 @@ store.GetJSON(ctx, "users/123", &user)</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">2</div>
-                                <h3 class="text-xl font-medium">Simple API - Quick Start</h3>
+                                <h3 class="text-xl font-medium">Start Server</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>package main
-
-import (
-    "context"
-    "github.com/adrianmcphee/smarterbase/v2/simple"
-)
-
-type User struct {
-    ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index"`
-    Name  string `json:"name"`
-}
-
-func main() {
-    ctx := context.Background()
-
-    // Auto-detects backend (DATA_PATH env or ./data)
-    db := simple.MustConnect()
-    defer db.Close()
-
-    users := simple.NewCollection[User](db)
-
-    // Create - ID auto-generated, indexes auto-updated
-    user, _ := users.Create(ctx, &User{
-        Email: "alice@example.com",
-        Name:  "Alice",
-    })
-
-    // Query by indexed field
-    found, _ := users.FindOne(ctx, "email", "alice@example.com")
-}</code></pre>
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto"><code>smarterbase serve --port 5433 --data ./data</code></pre>
                         </div>
                     </div>
 
@@ -728,29 +552,24 @@ func main() {
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">3</div>
-                                <h3 class="text-xl font-medium">Indexing (Core API)</h3>
+                                <h3 class="text-xl font-medium">Connect from Your Language</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11: Auto-Indexing with Struct Tags
-// Define your indexes on the model, auto-register them. That's it.
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Python / SQLAlchemy / Django / Alembic
+DATABASE_URL = "postgresql://localhost:5433/myapp"
 
-type User struct {
-    ID    string `json:"id" sb:"id"`
-    Email string `json:"email" sb:"index"`
-    Role  string `json:"role" sb:"index"`
-}
+# Node.js / Prisma / TypeORM
+const pool = new Pool({ host: 'localhost', port: 5433 });
 
-backend := smarterbase.NewFilesystemBackend("./data")
-store := smarterbase.NewStore(backend)
-redisIndexer := smarterbase.NewRedisIndexer(redisClient)
+# Ruby / Rails / ActiveRecord
+host: localhost
+port: 5433
 
-// Auto-register all indexes from struct tags
-smarterbase.AutoRegisterIndexes(redisIndexer, "users", &User{})
+# Go / GORM / sqlx
+db, _ := sql.Open("postgres", "host=localhost port=5433 dbname=myapp sslmode=disable")
 
-// That's it! Indexes are ready to use
-indexManager := smarterbase.NewIndexManager(store, redisIndexer)
-
-user := &User{ID: smarterbase.NewID(), Email: "alice@example.com"}
-indexManager.Create(ctx, "users/"+user.ID, user)</code></pre>
+# PHP / Laravel / Doctrine
+DB_HOST=localhost
+DB_PORT=5433</code></pre>
                         </div>
                     </div>
 
@@ -758,32 +577,16 @@ indexManager.Create(ctx, "users/"+user.ID, user)</code></pre>
                         <div class="card-body">
                             <div class="flex items-center gap-2 mb-4">
                                 <div class="badge badge-primary">4</div>
-                                <h3 class="text-xl font-medium">Cascade Deletes (Core API)</h3>
+                                <h3 class="text-xl font-medium">Migrate to PostgreSQL (When Ready)</h3>
                             </div>
-                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code>// ✨ NEW in v1.11: Declarative Cascade Deletes
-// Register parent-child relationships, delete recursively with one call
+                            <pre class="bg-base-200 rounded-box p-4 overflow-x-auto text-sm"><code># Export your data
+smarterbase export > dump.sql
 
-cascadeIM := smarterbase.NewCascadeIndexManager(store, redisIndexer)
+# Import to PostgreSQL
+psql myapp < dump.sql
 
-// Register cascade chain: property → areas → photos
-cascadeIM.RegisterCascadeChain("properties", []smarterbase.CascadeSpec{
-    {
-        ChildEntityType: "areas",
-        ForeignKeyField: "property_id",
-        DeleteFunc:      s.DeleteArea,  // Recursive!
-    },
-})
-
-cascadeIM.RegisterCascadeChain("areas", []smarterbase.CascadeSpec{
-    {
-        ChildEntityType: "photos",
-        ForeignKeyField: "area_id",
-        DeleteFunc:      s.DeletePhoto,
-    },
-})
-
-// Delete property - automatically cascades to areas & photos!
-cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)</code></pre>
+# Update your config
+DATABASE_URL = "postgresql://prod-db:5432/myapp"</code></pre>
                         </div>
                     </div>
                 </div>
@@ -801,9 +604,6 @@ cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)</code></
             <div class="container">
                 <div class="text-center">
                     <h2 class="text-3xl font-semibold sm:text-4xl">Documentation</h2>
-                    <p class="text-base-content/80 mt-2 sm:text-lg">
-                        Comprehensive guides and technical documentation
-                    </p>
                 </div>
 
                 <div class="mt-12 grid gap-6 lg:grid-cols-2">
@@ -818,23 +618,39 @@ cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)</code></
                                 <i class="fa-solid fa-arrow-right"></i>
                             </div>
                             <p class="mt-2">
-                                Complete user guide with examples, quick start, and best practices.
+                                Complete user guide with examples and quick start.
                             </p>
                         </div>
                     </a>
 
-                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/DATASHEET.md" target="_blank"
+                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/rfc/0001-filesystem-native-postgres-protocol.md" target="_blank"
                        class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
                         <div class="card-body">
                             <div class="flex items-center justify-between gap-4">
                                 <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
                                     <i class="fa-solid fa-file-lines text-2xl text-primary"></i>
                                 </div>
-                                <h3 class="text-lg font-medium flex-1">Technical Datasheet</h3>
+                                <h3 class="text-lg font-medium flex-1">RFC-0001: Technical Specification</h3>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </div>
                             <p class="mt-2">
-                                Architecture, performance characteristics, and detailed specifications.
+                                Architecture, implementation details, and design decisions.
+                            </p>
+                        </div>
+                    </a>
+
+                    <a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/adr/0001-postgresql-wire-protocol-over-filesystem.md" target="_blank"
+                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
+                                    <i class="fa-solid fa-clipboard-check text-2xl text-primary"></i>
+                                </div>
+                                <h3 class="text-lg font-medium flex-1">ADR-0001: Architecture Decision</h3>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+                            <p class="mt-2">
+                                Why PostgreSQL wire protocol over filesystem storage.
                             </p>
                         </div>
                     </a>
@@ -850,23 +666,7 @@ cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)</code></
                                 <i class="fa-solid fa-arrow-right"></i>
                             </div>
                             <p class="mt-2">
-                                Development setup, testing guidelines, and contribution workflow.
-                            </p>
-                        </div>
-                    </a>
-
-                    <a href="examples.html"
-                       class="card card-border cursor-pointer transition-all hover:shadow hover:border-primary/30">
-                        <div class="card-body">
-                            <div class="flex items-center justify-between gap-4">
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full p-3">
-                                    <i class="fa-solid fa-code text-2xl text-primary"></i>
-                                </div>
-                                <h3 class="text-lg font-medium flex-1">Examples</h3>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </div>
-                            <p class="mt-2">
-                                7 working examples with interactive code and comparisons. User management, e-commerce, event logging, and more.
+                                Development setup and contribution workflow.
                             </p>
                         </div>
                     </a>
@@ -881,7 +681,7 @@ cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)</code></
                         <div>
                             <p class="text-xl font-medium">SmarterBase</p>
                             <p class="mt-4 text-sm text-base-content/70">
-                                Skip the database. Use Redis + S3 instead.
+                                PostgreSQL compatibility. Filesystem simplicity.
                             </p>
                         </div>
 
@@ -890,8 +690,7 @@ cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)</code></
                             <div class="mt-4 space-y-2 text-sm">
                                 <a href="https://github.com/adrianmcphee/smarterbase" target="_blank" class="block hover:text-primary transition-all">GitHub</a>
                                 <a href="https://github.com/adrianmcphee/smarterbase/blob/main/README.md" target="_blank" class="block hover:text-primary transition-all">Documentation</a>
-                                <a href="examples.html" class="block hover:text-primary transition-all">Examples</a>
-                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/DATASHEET.md" target="_blank" class="block hover:text-primary transition-all">Datasheet</a>
+                                <a href="https://github.com/adrianmcphee/smarterbase/blob/main/docs/rfc/0001-filesystem-native-postgres-protocol.md" target="_blank" class="block hover:text-primary transition-all">RFC</a>
                             </div>
                         </div>
 
@@ -915,11 +714,10 @@ cascadeIM.DeleteWithCascade(ctx, "properties", propertyKey, propertyID)</code></
                 </div>
 
                 <div class="border-base-300 border-t px-8 py-4 text-center text-sm text-base-content/70">
-                    Built with Go. Production-tested at scale.
+                    Built with Go. PostgreSQL wire protocol via jackc/pgproto3. SQL parsing via vitess/sqlparser.
                 </div>
             </div>
         </footer>
-
 
         <script src="./app.js"></script>
     </body>
