@@ -182,7 +182,7 @@
 
         <!-- Driver Support Banner -->
         <div class="max-w-7xl mx-auto px-6 mt-16 reveal-on-scroll" data-delay="700">
-            <p class="text-zinc-500 text-sm mb-4">Works with any PostgreSQL driver</p>
+            <p class="text-zinc-500 text-sm mb-4" id="driver-heading">Works with <span class="text-zinc-300" id="driver-name">ActiveRecord</span> in <span class="text-zinc-300" id="driver-lang">Ruby on Rails</span></p>
             <div class="terminal-window rounded-xl overflow-hidden" id="driver-terminal-window">
                 <div class="terminal-header flex items-center gap-2 px-4 py-2">
                     <div class="flex gap-2">
@@ -190,9 +190,9 @@
                         <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
                         <div class="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50"></div>
                     </div>
-                    <div class="text-xs text-zinc-500 font-mono ml-4">Any Language</div>
+                    <div class="text-xs text-zinc-500 font-mono ml-4" id="driver-terminal-title">db/migrate/</div>
                 </div>
-                <div class="p-4 pl-6 font-mono text-xs overflow-y-auto" style="height: 180px;" id="driver-terminal-body">
+                <div class="p-4 pl-6 font-mono text-xs overflow-y-auto" style="height: 220px;" id="driver-terminal-body">
                     <div id="driver-terminal-content"></div>
                 </div>
             </div>
@@ -903,85 +903,171 @@
             if (container) observer.observe(container);
         })();
 
-        // Driver Terminal Animation - Shows AI iteration creating migration debt
+        // Driver Terminal Animation - Cycles through languages showing migration chaos
         (function() {
-            const driverScript = [
-                // AI iterating fast = migrations piling up
-                { type: 'line', text: '<span class="code-syntax-orange">MONDAY 9 AM</span> <span class="comment"># prototyping with Cursor</span>' },
-                { type: 'line', text: '' },
-                { type: 'prompt', text: '> ' },
-                { type: 'type', text: 'create users table', speed: 12 },
-                { type: 'line', text: '<span class="output">✓ 001_create_users.rb</span>' },
-                { type: 'prompt', text: '> ' },
-                { type: 'type', text: 'add role field', speed: 15 },
-                { type: 'line', text: '<span class="output">✓ 002_add_role.rb</span>' },
-                { type: 'prompt', text: '> ' },
-                { type: 'type', text: 'rename to user_type', speed: 12 },
-                { type: 'line', text: '<span class="output">✓ 003_rename.rb</span>' },
-                { type: 'prompt', text: '> ' },
-                { type: 'type', text: 'actually remove it', speed: 15 },
-                { type: 'line', text: '<span class="output">✓ 004_drop.rb</span>' },
-                { type: 'prompt', text: '> ' },
-                { type: 'type', text: 'wait add it back', speed: 12 },
-                { type: 'line', text: '<span class="output">✓ 005_add_role.rb</span>' },
-                { type: 'wait', ms: 800 },
-                { type: 'clear' },
-                // More iterations
-                { type: 'line', text: '<span class="code-syntax-orange">MONDAY 2 PM</span> <span class="comment"># still figuring it out</span>' },
-                { type: 'line', text: '' },
-                { type: 'line', text: '<span class="output">✓ 006_add_status.rb</span>' },
-                { type: 'line', text: '<span class="output">✓ 007_status_to_enum.rb</span>' },
-                { type: 'line', text: '<span class="output">✓ 008_add_metadata.rb</span>' },
-                { type: 'line', text: '<span class="output">✓ 009_drop_metadata.rb</span>' },
-                { type: 'line', text: '<span class="output">✓ 010_add_settings.rb</span>' },
-                { type: 'line', text: '<span class="output">✓ 011_rename_settings.rb</span>' },
-                { type: 'line', text: '<span class="output">✓ 012_drop_settings.rb</span>' },
-                { type: 'wait', ms: 1000 },
-                { type: 'clear' },
-                // Fast forward
-                { type: 'line', text: '<span class="code-syntax-orange">FRIDAY</span> <span class="comment"># ready to ship</span>' },
-                { type: 'line', text: '' },
-                { type: 'prompt', text: '$ ' },
-                { type: 'type', text: 'ls db/migrate | wc -l', speed: 25 },
-                { type: 'line', text: '<span class="code-syntax-orange">47</span>' },
-                { type: 'line', text: '' },
-                { type: 'prompt', text: '$ ' },
-                { type: 'type', text: 'rails db:migrate:status | tail -1', speed: 20 },
-                { type: 'line', text: '<span class="output">047_final_users_schema_v3.rb</span>' },
-                { type: 'line', text: '' },
-                { type: 'line', text: '<span class="comment"># 47 migrations for a 4-column table</span>' },
-                { type: 'wait', ms: 2000 },
-                { type: 'clear' },
-                // New dev joins
-                { type: 'line', text: '<span class="code-syntax-orange">6 MONTHS LATER</span> <span class="comment"># new dev joins</span>' },
-                { type: 'line', text: '' },
-                { type: 'prompt', text: '$ ' },
-                { type: 'type', text: 'rails db:migrate', speed: 30 },
-                { type: 'line', text: '<span class="output">Running 47 migrations...</span>' },
-                { type: 'line', text: '<span class="output">001 CREATE users</span>' },
-                { type: 'line', text: '<span class="output">002 ADD role</span>' },
-                { type: 'line', text: '<span class="output">003 RENAME role → user_type</span>' },
-                { type: 'line', text: '<span class="output">004 DROP user_type</span>' },
-                { type: 'line', text: '<span class="output">005 ADD role</span> <span class="comment"># ???</span>' },
-                { type: 'line', text: '<span class="output">...</span>' },
-                { type: 'line', text: '' },
-                { type: 'line', text: '<span class="comment"># "Why did they add and remove role 3 times?"</span>' },
-                { type: 'wait', ms: 2500 },
-                { type: 'clear' },
-                // SmarterBase comparison
-                { type: 'line', text: '<span class="success">SMARTERBASE</span> <span class="comment"># same week of exploration</span>' },
-                { type: 'line', text: '' },
-                { type: 'line', text: '<span class="info">Final result:</span> <span class="code-syntax-green">users (id, email, role, status)</span>' },
-                { type: 'line', text: '<span class="info">Migration history:</span> <span class="code-syntax-green">none</span>' },
-                { type: 'line', text: '' },
-                { type: 'line', text: '<span class="comment"># Graduate to PostgreSQL with one clean CREATE TABLE</span>' },
-                { type: 'line', text: '<span class="comment"># Not 47 ALTER TABLEs from your Monday morning</span>' },
-                { type: 'wait', ms: 3000 },
+            // Different frameworks with their migration mess
+            const frameworks = [
+                {
+                    driver: 'ActiveRecord',
+                    lang: 'Ruby on Rails',
+                    dir: 'db/migrate/',
+                    ext: '.rb',
+                    countCmd: 'ls db/migrate | wc -l',
+                    runCmd: 'rails db:migrate',
+                    migrations: [
+                        '001_create_users',
+                        '002_add_role_to_users',
+                        '003_rename_role_to_user_type',
+                        '004_remove_user_type',
+                        '005_add_role_back_to_users',
+                        '006_add_email_to_users',
+                        '007_add_status_to_users',
+                        '008_change_status_to_enum',
+                        '009_add_metadata_to_users',
+                        '010_remove_metadata_from_users',
+                        '011_add_settings_jsonb',
+                        '012_rename_settings_to_preferences',
+                        '013_remove_preferences',
+                        '014_add_profile_to_users',
+                        '015_split_profile_into_columns',
+                        '016_add_avatar_url',
+                        '017_rename_avatar_url_to_image',
+                        '018_remove_image',
+                        '019_add_avatar_back',
+                        '020_create_profiles_table',
+                        '021_move_avatar_to_profiles',
+                        '022_drop_profiles_table',
+                        '023_add_avatar_to_users_again',
+                        // ... fast forward
+                        '097_add_last_login',
+                        '098_rename_last_login_to_last_seen',
+                        '099_final_cleanup_v2',
+                        '100_actually_final_schema_v3',
+                    ]
+                },
+                {
+                    driver: 'Alembic',
+                    lang: 'Python / Django',
+                    dir: 'alembic/versions/',
+                    ext: '.py',
+                    countCmd: 'ls alembic/versions | wc -l',
+                    runCmd: 'alembic upgrade head',
+                    migrations: [
+                        'a1b2c3_create_users',
+                        'd4e5f6_add_role',
+                        'g7h8i9_rename_role',
+                        'j0k1l2_drop_role',
+                        'm3n4o5_add_role_again',
+                        'p6q7r8_add_email',
+                        's9t0u1_add_status',
+                        'v2w3x4_status_enum',
+                        'y5z6a7_add_metadata',
+                        'b8c9d0_drop_metadata',
+                        'e1f2g3_add_preferences',
+                        'h4i5j6_rename_preferences',
+                        'k7l8m9_drop_preferences',
+                        'n0o1p2_add_bio',
+                        'q3r4s5_bio_to_text',
+                        't6u7v8_add_avatar',
+                        'w9x0y1_drop_avatar',
+                        'z2a3b4_add_photo_url',
+                        'c5d6e7_rename_photo',
+                        'f8g9h0_create_profiles',
+                        'i1j2k3_move_to_profiles',
+                        'l4m5n6_drop_profiles',
+                        'o7p8q9_restore_columns',
+                        // ... fast forward
+                        'r0s1t2_v97_add_timestamps',
+                        'u3v4w5_v98_rename_timestamps',
+                        'x6y7z8_v99_cleanup',
+                        'a9b0c1_v100_final_maybe',
+                    ]
+                },
+                {
+                    driver: 'Prisma',
+                    lang: 'TypeScript / Node.js',
+                    dir: 'prisma/migrations/',
+                    ext: '/migration.sql',
+                    countCmd: 'ls prisma/migrations | wc -l',
+                    runCmd: 'npx prisma migrate deploy',
+                    migrations: [
+                        '20240101_create_users',
+                        '20240101_add_role',
+                        '20240102_rename_role',
+                        '20240102_remove_role',
+                        '20240102_readd_role',
+                        '20240103_add_email',
+                        '20240103_add_status',
+                        '20240104_status_enum',
+                        '20240104_add_metadata',
+                        '20240105_drop_metadata',
+                        '20240105_add_prefs',
+                        '20240106_rename_prefs',
+                        '20240106_drop_prefs',
+                        '20240107_add_profile',
+                        '20240107_flatten_profile',
+                        '20240108_add_image',
+                        '20240108_drop_image',
+                        '20240109_add_avatar',
+                        '20240109_rename_avatar',
+                        '20240110_profiles_table',
+                        '20240110_move_avatar',
+                        '20240111_drop_profiles',
+                        '20240111_avatar_back',
+                        // ... fast forward
+                        '20240597_timestamps',
+                        '20240598_fix_timestamps',
+                        '20240599_cleanup',
+                        '20240600_final_v3',
+                    ]
+                },
+                {
+                    driver: 'GORM',
+                    lang: 'Go',
+                    dir: 'migrations/',
+                    ext: '.go',
+                    countCmd: 'ls migrations/*.go | wc -l',
+                    runCmd: 'go run ./cmd/migrate up',
+                    migrations: [
+                        '000001_create_users',
+                        '000002_add_role',
+                        '000003_rename_role',
+                        '000004_drop_role',
+                        '000005_add_role_v2',
+                        '000006_add_email',
+                        '000007_add_status',
+                        '000008_status_type',
+                        '000009_add_meta',
+                        '000010_drop_meta',
+                        '000011_add_settings',
+                        '000012_rename_settings',
+                        '000013_drop_settings',
+                        '000014_add_profile',
+                        '000015_inline_profile',
+                        '000016_add_avatar',
+                        '000017_drop_avatar',
+                        '000018_add_image_url',
+                        '000019_rename_image',
+                        '000020_profiles_table',
+                        '000021_migrate_avatar',
+                        '000022_drop_profiles',
+                        '000023_restore_avatar',
+                        // ... fast forward
+                        '000097_add_updated',
+                        '000098_rename_updated',
+                        '000099_cleanup_final',
+                        '000100_schema_v4_final',
+                    ]
+                },
             ];
 
             const container = document.getElementById('driver-terminal-content');
             const terminalBody = document.getElementById('driver-terminal-body');
+            const driverNameEl = document.getElementById('driver-name');
+            const driverLangEl = document.getElementById('driver-lang');
+            const terminalTitle = document.getElementById('driver-terminal-title');
             let currentLine = null;
+            let currentFramework = 0;
 
             async function sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
@@ -997,40 +1083,173 @@
                 }
             }
 
-            async function runDriverTerminal() {
-                if (!container) return;
+            function scrollToBottom() {
+                if (terminalBody) terminalBody.scrollTop = terminalBody.scrollHeight;
+            }
+
+            async function runFrameworkDemo(fw) {
+                // Update heading
+                if (driverNameEl) driverNameEl.textContent = fw.driver;
+                if (driverLangEl) driverLangEl.textContent = fw.lang;
+                if (terminalTitle) terminalTitle.textContent = fw.dir;
+
                 container.innerHTML = '';
                 currentLine = document.createElement('div');
                 container.appendChild(currentLine);
 
-                for (const step of driverScript) {
-                    switch (step.type) {
-                        case 'prompt':
-                            const prompt = document.createElement('span');
-                            prompt.className = 'info';
-                            prompt.textContent = step.text;
-                            currentLine.appendChild(prompt);
-                            break;
-                        case 'type':
-                            await typeText(step.text, step.speed);
-                            break;
-                        case 'line':
-                            currentLine = document.createElement('div');
-                            currentLine.innerHTML = step.text || '&nbsp;';
-                            container.appendChild(currentLine);
-                            break;
-                        case 'wait':
-                            await sleep(step.ms);
-                            break;
-                        case 'clear':
-                            container.innerHTML = '';
-                            currentLine = document.createElement('div');
-                            container.appendChild(currentLine);
-                            break;
-                    }
+                // Show migration chaos building up
+                const line1 = document.createElement('div');
+                line1.innerHTML = '<span class="code-syntax-orange">AI-ASSISTED DEV</span> <span class="comment"># 1 week of exploration</span>';
+                container.appendChild(line1);
+                container.appendChild(document.createElement('div'));
+                scrollToBottom();
+                await sleep(400);
+
+                // Show migrations scrolling by fast
+                for (let i = 0; i < Math.min(12, fw.migrations.length); i++) {
+                    const migLine = document.createElement('div');
+                    migLine.innerHTML = `<span class="output">✓ ${fw.migrations[i]}${fw.ext}</span>`;
+                    container.appendChild(migLine);
+                    scrollToBottom();
+                    await sleep(80);
                 }
+
+                // Show ellipsis
+                const ellipsis = document.createElement('div');
+                ellipsis.innerHTML = '<span class="output">...</span>';
+                container.appendChild(ellipsis);
+                scrollToBottom();
+                await sleep(300);
+
+                // Show more migrations fast
+                for (let i = fw.migrations.length - 4; i < fw.migrations.length; i++) {
+                    const migLine = document.createElement('div');
+                    migLine.innerHTML = `<span class="output">✓ ${fw.migrations[i]}${fw.ext}</span>`;
+                    container.appendChild(migLine);
+                    scrollToBottom();
+                    await sleep(80);
+                }
+
+                await sleep(600);
+
+                // Show the count
+                container.innerHTML = '';
+                const countHeader = document.createElement('div');
+                countHeader.innerHTML = '<span class="code-syntax-orange">THE RESULT</span>';
+                container.appendChild(countHeader);
+                container.appendChild(document.createElement('div'));
+                scrollToBottom();
+
+                currentLine = document.createElement('div');
+                const prompt = document.createElement('span');
+                prompt.className = 'prompt';
+                prompt.textContent = '$ ';
+                currentLine.appendChild(prompt);
+                container.appendChild(currentLine);
+                await typeText(fw.countCmd, 25);
+
+                const countLine = document.createElement('div');
+                countLine.innerHTML = '<span class="code-syntax-orange" style="font-size: 1.2em; font-weight: bold;">100</span>';
+                container.appendChild(countLine);
+                container.appendChild(document.createElement('div'));
+                scrollToBottom();
+
+                const commentLine = document.createElement('div');
+                commentLine.innerHTML = '<span class="comment"># 100 migrations for a 5-column table</span>';
+                container.appendChild(commentLine);
+                scrollToBottom();
+
+                await sleep(1500);
+
+                // Show new dev perspective
+                container.innerHTML = '';
+                const newDevHeader = document.createElement('div');
+                newDevHeader.innerHTML = '<span class="code-syntax-orange">NEW DEV JOINS</span> <span class="comment"># 3 months later</span>';
+                container.appendChild(newDevHeader);
+                container.appendChild(document.createElement('div'));
+                scrollToBottom();
+
+                currentLine = document.createElement('div');
+                const prompt2 = document.createElement('span');
+                prompt2.className = 'prompt';
+                prompt2.textContent = '$ ';
+                currentLine.appendChild(prompt2);
+                container.appendChild(currentLine);
+                await typeText(fw.runCmd, 30);
+
+                const runningLine = document.createElement('div');
+                runningLine.innerHTML = '<span class="output">Running 100 migrations...</span>';
+                container.appendChild(runningLine);
+                scrollToBottom();
+                await sleep(300);
+
+                // Show confusing migrations
+                const confusing = [
+                    '002 ADD role',
+                    '003 RENAME role → user_type',
+                    '004 DROP user_type',
+                    '005 ADD role <span class="comment"># wait what?</span>',
+                    '016 ADD avatar',
+                    '017 DROP avatar',
+                    '018 ADD photo_url',
+                    '019 RENAME photo_url → avatar <span class="comment"># ???</span>',
+                    '...',
+                ];
+                for (const m of confusing) {
+                    const mLine = document.createElement('div');
+                    mLine.innerHTML = `<span class="output">${m}</span>`;
+                    container.appendChild(mLine);
+                    scrollToBottom();
+                    await sleep(150);
+                }
+
+                const wtf = document.createElement('div');
+                wtf.innerHTML = '<span class="comment"># "Why did they add and remove avatar 4 times?"</span>';
+                container.appendChild(wtf);
+                scrollToBottom();
+
+                await sleep(2000);
+
+                // Show SmarterBase comparison
+                container.innerHTML = '';
+                const sbHeader = document.createElement('div');
+                sbHeader.innerHTML = '<span class="success" style="font-size: 1.1em;">SMARTERBASE</span> <span class="comment"># same exploration</span>';
+                container.appendChild(sbHeader);
+                container.appendChild(document.createElement('div'));
+                scrollToBottom();
+
+                await sleep(300);
+
+                const finalSchema = document.createElement('div');
+                finalSchema.innerHTML = '<span class="info">Final schema:</span> <span class="code-syntax-green">users (id, email, role, status, avatar)</span>';
+                container.appendChild(finalSchema);
+                scrollToBottom();
+
+                const migHistory = document.createElement('div');
+                migHistory.innerHTML = '<span class="info">Migration files:</span> <span class="code-syntax-green">0</span>';
+                container.appendChild(migHistory);
+                container.appendChild(document.createElement('div'));
+                scrollToBottom();
+
+                const export1 = document.createElement('div');
+                export1.innerHTML = '<span class="comment"># Export one clean CREATE TABLE to PostgreSQL</span>';
+                container.appendChild(export1);
+                const export2 = document.createElement('div');
+                export2.innerHTML = '<span class="comment"># Not 100 ALTER TABLEs from your exploration</span>';
+                container.appendChild(export2);
+                scrollToBottom();
+
                 await sleep(3000);
-                runDriverTerminal();
+            }
+
+            async function runDriverTerminal() {
+                if (!container) return;
+
+                while (true) {
+                    await runFrameworkDemo(frameworks[currentFramework]);
+                    currentFramework = (currentFramework + 1) % frameworks.length;
+                    await sleep(500);
+                }
             }
 
             const observer = new IntersectionObserver((entries) => {
