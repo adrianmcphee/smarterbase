@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/adrianmcphee/smarterbase/compare/v1.3.0...v1.4.0) (2025-12-07)
+
+### Features
+
+* show AI prompts causing migrations in driver terminal ([fad2735](https://github.com/adrianmcphee/smarterbase/commit/fad27354c3ea0c10bc205f9cc4d8142420473764))
+
 ## [1.3.0](https://github.com/adrianmcphee/smarterbase/compare/v1.2.0...v1.3.0) (2025-12-07)
 
 ### Features
