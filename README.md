@@ -82,7 +82,7 @@ Creates `data/_schema/users.json`:
 
 ```bash
 # Install
-go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
+go install github.com/adrianmcphee/smarterbase/v2/cmd/smarterbase@latest
 
 # Start the server
 smarterbase --port 5433 --data ./data
@@ -291,8 +291,12 @@ smarterbase --port 5433 --data ./data
 # Export to PostgreSQL format
 smarterbase export > dump.sql
 
-# Rebuild indexes after crash
-smarterbase rebuild-indexes
+# Export options
+smarterbase export --ddl-only     # Schema only (CREATE TABLE)
+smarterbase export --data-only    # Data only (INSERT statements)
+
+# Show help
+smarterbase help
 ```
 
 ---
@@ -316,19 +320,9 @@ smarterbase --port 5433 --data ./data
 
 ## Consistency Model
 
-**Document writes are atomic.** Temp file + rename ensures a document is either fully written or not written.
+**Document writes are atomic.** Temp file + rename ensures a JSONL file is either fully written or not written.
 
-**Index updates are best-effort.** If you crash between writing a document and updating its indexes, the indexes may be stale.
-
-**Recovery:**
-
-```bash
-smarterbase rebuild-indexes
-```
-
-This scans all documents and rebuilds all indexes. Run it if you suspect index drift after a crash.
-
-If you need crash-consistent indexes, use PostgreSQL.
+**No WAL or transaction log.** If you crash mid-operation, you may have partial state. This is fine for exploration—if you need ACID guarantees, graduate to PostgreSQL.
 
 ---
 
@@ -341,7 +335,6 @@ If you need crash-consistent indexes, use PostgreSQL.
 | No aggregations | COUNT/SUM/AVG in app code |
 | Single server | No replication, no clustering |
 | ~1M rows/table | Beyond this, migrate to PostgreSQL |
-| Best-effort indexes | Run `rebuild-indexes` after crash |
 
 These are intentional. Keeping scope small keeps implementation simple.
 
