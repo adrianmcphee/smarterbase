@@ -947,7 +947,6 @@
                         '021_move_avatar_to_profiles',
                         '022_drop_profiles_table',
                         '023_add_avatar_to_users_again',
-                        // ... fast forward
                         '097_add_last_login',
                         '098_rename_last_login_to_last_seen',
                         '099_final_cleanup_v2',
@@ -985,7 +984,6 @@
                         '0021_move_avatar_to_profile',
                         '0022_delete_profile',
                         '0023_user_avatar_restored',
-                        // ... fast forward
                         '0097_user_last_login',
                         '0098_rename_last_login_last_seen',
                         '0099_squash_0001_0098',
@@ -1023,7 +1021,6 @@
                         'i1j2k3_move_to_profiles',
                         'l4m5n6_drop_profiles',
                         'o7p8q9_restore_columns',
-                        // ... fast forward
                         'r0s1t2_v97_timestamps',
                         'u3v4w5_v98_rename_ts',
                         'x6y7z8_v99_cleanup',
@@ -1061,7 +1058,6 @@
                         '2024_01_08_000021_move_avatar',
                         '2024_01_09_000022_drop_profiles',
                         '2024_01_09_000023_restore_avatar',
-                        // ... fast forward
                         '2024_06_01_000097_add_last_login',
                         '2024_06_01_000098_rename_login_seen',
                         '2024_06_02_000099_cleanup',
@@ -1099,7 +1095,6 @@
                         '20240110_move_avatar',
                         '20240111_drop_profiles',
                         '20240111_avatar_back',
-                        // ... fast forward
                         '20240597_timestamps',
                         '20240598_fix_timestamps',
                         '20240599_cleanup',
@@ -1137,13 +1132,21 @@
                         '000021_migrate_avatar',
                         '000022_drop_profiles',
                         '000023_restore_avatar',
-                        // ... fast forward
                         '000097_add_updated',
                         '000098_rename_updated',
                         '000099_cleanup_final',
                         '000100_schema_v4_final',
                     ]
                 },
+            ];
+
+            // AI prompts that create migrations (shared across frameworks)
+            const aiPrompts = [
+                { time: '9:14', prompt: 'cursor "create a users table"' },
+                { time: '9:15', prompt: 'cursor "add a role field"' },
+                { time: '9:17', prompt: 'cursor "rename role to user_type"' },
+                { time: '9:17', prompt: 'cursor "actually just remove it"' },
+                { time: '9:18', prompt: 'cursor "wait no, add role back"' },
             ];
 
             const container = document.getElementById('driver-terminal-content');
@@ -1184,30 +1187,34 @@
 
                 // Show rapid AI iteration with timestamps
                 const line1 = document.createElement('div');
-                line1.innerHTML = '<span class="code-syntax-orange">MONDAY 9:14 AM</span> <span class="comment"># exploring with Cursor</span>';
+                line1.innerHTML = '<span class="code-syntax-orange">MONDAY 9:14 AM</span>';
                 container.appendChild(line1);
                 scrollToBottom();
-                await sleep(300);
+                await sleep(200);
 
-                // Show migrations with timestamps showing speed
-                const rapidMigrations = [
-                    { time: '9:14', name: fw.migrations[0] },
-                    { time: '9:15', name: fw.migrations[1] },
-                    { time: '9:17', name: fw.migrations[2] },
-                    { time: '9:17', name: fw.migrations[3] },
-                    { time: '9:18', name: fw.migrations[4] },
-                    { time: '9:22', name: fw.migrations[5] },
-                    { time: '9:23', name: fw.migrations[6] },
-                    { time: '9:23', name: fw.migrations[7] },
-                ];
-                for (const m of rapidMigrations) {
+                // Show AI prompts creating migrations
+                for (let i = 0; i < aiPrompts.length; i++) {
+                    const ap = aiPrompts[i];
+                    // Show the AI prompt
+                    const promptLine = document.createElement('div');
+                    promptLine.innerHTML = `<span class="prompt">${ap.time}</span> <span class="command">$ ${ap.prompt}</span>`;
+                    container.appendChild(promptLine);
+                    scrollToBottom();
+                    await sleep(80);
+
+                    // Show the migration file it created
                     const migLine = document.createElement('div');
-                    migLine.innerHTML = `<span class="prompt">${m.time}</span> <span class="output">✓ ${m.name}${fw.ext}</span>`;
+                    migLine.innerHTML = `<span class="output">  → ${fw.migrations[i]}${fw.ext}</span>`;
                     container.appendChild(migLine);
                     scrollToBottom();
-                    await sleep(60);
+                    await sleep(40);
                 }
 
+                // Velocity callout
+                const velocityLine = document.createElement('div');
+                velocityLine.innerHTML = '<span class="comment"># 5 migrations in 4 minutes</span>';
+                container.appendChild(velocityLine);
+                scrollToBottom();
                 await sleep(400);
 
                 // Afternoon session
@@ -1217,16 +1224,16 @@
                 scrollToBottom();
                 await sleep(200);
 
-                for (let i = 8; i < 16; i++) {
+                for (let i = 5; i < 12; i++) {
                     const migLine = document.createElement('div');
-                    migLine.innerHTML = `<span class="output">✓ ${fw.migrations[i]}${fw.ext}</span>`;
+                    migLine.innerHTML = `<span class="output">  → ${fw.migrations[i]}${fw.ext}</span>`;
                     container.appendChild(migLine);
                     scrollToBottom();
-                    await sleep(50);
+                    await sleep(40);
                 }
 
                 const dots = document.createElement('div');
-                dots.innerHTML = '<span class="output">... 84 more migrations ...</span>';
+                dots.innerHTML = '<span class="output">  ... 88 more migrations ...</span>';
                 container.appendChild(dots);
                 scrollToBottom();
                 await sleep(400);
@@ -1239,10 +1246,10 @@
 
                 for (let i = fw.migrations.length - 4; i < fw.migrations.length; i++) {
                     const migLine = document.createElement('div');
-                    migLine.innerHTML = `<span class="output">✓ ${fw.migrations[i]}${fw.ext}</span>`;
+                    migLine.innerHTML = `<span class="output">  → ${fw.migrations[i]}${fw.ext}</span>`;
                     container.appendChild(migLine);
                     scrollToBottom();
-                    await sleep(60);
+                    await sleep(50);
                 }
 
                 await sleep(800);
@@ -1274,7 +1281,7 @@
 
                 await sleep(1200);
 
-                // New dev perspective with more frustration
+                // New dev perspective
                 container.innerHTML = '';
                 const newDevHeader = document.createElement('div');
                 newDevHeader.innerHTML = '<span class="code-syntax-orange">3 MONTHS LATER</span> <span class="comment"># new hire onboarding</span>';
@@ -1296,7 +1303,7 @@
                 scrollToBottom();
                 await sleep(250);
 
-                // Show confusing sequence with dev reactions
+                // Show confusing sequence
                 const confusing = [
                     { text: '002 ADD COLUMN role', comment: '' },
                     { text: '003 RENAME role → user_type', comment: '' },
@@ -1316,11 +1323,6 @@
                     await sleep(120);
                 }
 
-                const wtf = document.createElement('div');
-                wtf.innerHTML = '';
-                container.appendChild(wtf);
-                scrollToBottom();
-
                 const devThought = document.createElement('div');
                 devThought.innerHTML = '<span class="comment"># "I need to understand 100 migrations to change one column"</span>';
                 container.appendChild(devThought);
@@ -1328,37 +1330,47 @@
 
                 await sleep(1800);
 
-                // SmarterBase comparison - more impactful
+                // SmarterBase comparison
                 container.innerHTML = '';
                 const sbHeader = document.createElement('div');
-                sbHeader.innerHTML = '<span class="success" style="font-size: 1.2em; font-weight: bold;">WITH SMARTERBASE</span>';
+                sbHeader.innerHTML = '<span class="success" style="font-size: 1.1em; font-weight: bold;">WITH SMARTERBASE</span>';
                 container.appendChild(sbHeader);
                 container.appendChild(document.createElement('div'));
                 scrollToBottom();
 
-                await sleep(250);
+                await sleep(200);
 
-                const sameWork = document.createElement('div');
-                sameWork.innerHTML = '<span class="output">Same week of exploration. Same schema changes.</span>';
-                container.appendChild(sameWork);
+                // Show the same AI prompts but with different outcome
+                const sbLine1 = document.createElement('div');
+                sbLine1.innerHTML = '<span class="output">Same AI. Same exploration. Same week.</span>';
+                container.appendChild(sbLine1);
                 container.appendChild(document.createElement('div'));
                 scrollToBottom();
                 await sleep(300);
 
-                const finalSchema = document.createElement('div');
-                finalSchema.innerHTML = '<span class="info">Current schema:</span> <span class="code-syntax-green">users (id, email, role, status, avatar)</span>';
-                container.appendChild(finalSchema);
+                // Show contrast
+                const tradLine = document.createElement('div');
+                tradLine.innerHTML = '<span class="code-syntax-orange">Traditional:</span> <span class="output">100 migrations (replayed forever)</span>';
+                container.appendChild(tradLine);
                 scrollToBottom();
+                await sleep(200);
 
-                const migHistory = document.createElement('div');
-                migHistory.innerHTML = '<span class="info">Migration debt:</span> <span class="success" style="font-size: 1.2em; font-weight: bold;">0</span>';
-                container.appendChild(migHistory);
+                const sbResultLine = document.createElement('div');
+                sbResultLine.innerHTML = '<span class="success">SmarterBase:</span>  <span class="success" style="font-weight: bold;">1 JSON file</span> <span class="output">(export when ready)</span>';
+                container.appendChild(sbResultLine);
                 container.appendChild(document.createElement('div'));
                 scrollToBottom();
+                await sleep(400);
 
-                const export1 = document.createElement('div');
-                export1.innerHTML = '<span class="comment"># When stable, export one clean CREATE TABLE to PostgreSQL</span>';
-                container.appendChild(export1);
+                const exportLine = document.createElement('div');
+                exportLine.innerHTML = '<span class="prompt">$</span> <span class="command">smarterbase export | psql prod</span>';
+                container.appendChild(exportLine);
+                scrollToBottom();
+                await sleep(100);
+
+                const exportResult = document.createElement('div');
+                exportResult.innerHTML = '<span class="success">✓ CREATE TABLE users (id, email, role, status, avatar)</span>';
+                container.appendChild(exportResult);
                 scrollToBottom();
 
                 await sleep(3500);
