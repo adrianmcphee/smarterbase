@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/adrianmcphee/smarterbase/compare/v1.2.0...v1.3.0) (2025-12-07)
+
+### Features
+
+* enhance terminal animations for more impact ([ac80673](https://github.com/adrianmcphee/smarterbase/commit/ac80673442f21a1c2ca368fd3f908a2783fcf943))
+
 ## [1.2.0](https://github.com/adrianmcphee/smarterbase/compare/v1.1.0...v1.2.0) (2025-12-07)
 
 ### Features
