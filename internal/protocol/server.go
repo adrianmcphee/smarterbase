@@ -219,7 +219,7 @@ func (s *Server) handleQuery(conn net.Conn, query string) {
 	switch {
 	case query == "SELECT version()" || query == "SELECT version();":
 		buf = appendRowDescription(buf, []string{"version"}, []int32{25})
-		buf = appendDataRow(buf, []string{"SmarterBase 0.1.0 - PostgreSQL compatible file store"})
+		buf = appendDataRow(buf, []string{"SmarterBase 1.0.0 - PostgreSQL compatible file store"})
 		buf = appendCommandComplete(buf, "SELECT 1")
 
 	default:
@@ -249,7 +249,9 @@ func (s *Server) handleQuery(conn net.Conn, query string) {
 	buf = appendInt32(buf, 5)
 	buf = append(buf, 'I')
 
-	conn.Write(buf)
+	if _, err := conn.Write(buf); err != nil {
+		log.Printf("write error: %v", err)
+	}
 }
 
 // Helper functions to build protocol messages

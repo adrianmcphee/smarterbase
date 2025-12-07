@@ -1,133 +1,34 @@
-## [4.1.1](https://github.com/adrianmcphee/smarterbase/compare/v4.1.0...v4.1.1) (2025-12-07)
-
-### Documentation
-
-* fix install command and remove unimplemented features ([9eeeac2](https://github.com/adrianmcphee/smarterbase/commit/9eeeac2831a18dbfcd14392e149f0e65b161a4ed))
-
-### Code Refactoring
-
-* simplify module path to v1 ([a0b4259](https://github.com/adrianmcphee/smarterbase/commit/a0b4259fa107a41c60df596899ac6bbc4a1e2fc9))
-
-## [4.1.0](https://github.com/adrianmcphee/smarterbase/compare/v4.0.5...v4.1.0) (2025-12-07)
-
-### Features
-
-* add export command for PostgreSQL migration ([ae81e28](https://github.com/adrianmcphee/smarterbase/commit/ae81e28627b4d5b17f018f598f6cda9cab80b15c))
-
-### Documentation
-
-* add new dev perspective to migration debt story ([358f8ab](https://github.com/adrianmcphee/smarterbase/commit/358f8ab66691a6e6cc74d843bef4c040608c81bf))
-* improve driver terminal with old vs new contrast ([42a7a7e](https://github.com/adrianmcphee/smarterbase/commit/42a7a7ec3bd1d4bfaba484ee588dd50003aef1d4))
-* show AI-accelerated migration debt in terminal ([fa2eee1](https://github.com/adrianmcphee/smarterbase/commit/fa2eee1df877d36de692014b389830972db8a379))
-* show migration debt vs clean schema in terminal ([d654f0d](https://github.com/adrianmcphee/smarterbase/commit/d654f0d4d1e3e08c57e81d8d6be39f908c8311e2))
-
-## [4.0.5](https://github.com/adrianmcphee/smarterbase/compare/v4.0.4...v4.0.5) (2025-12-06)
-
-### Bug Fixes
-
-* use HTML entities for logo block characters ([b0d386e](https://github.com/adrianmcphee/smarterbase/commit/b0d386e01870e792bce94826cefb1fd530807249))
-
-## [4.0.4](https://github.com/adrianmcphee/smarterbase/compare/v4.0.3...v4.0.4) (2025-12-06)
-
-### Bug Fixes
-
-* use more visible terracotta color for logo ([33e1307](https://github.com/adrianmcphee/smarterbase/commit/33e1307ab59834697f3c30dcd18380de63daff65))
-
-## [4.0.3](https://github.com/adrianmcphee/smarterbase/compare/v4.0.2...v4.0.3) (2025-12-06)
-
-### Bug Fixes
-
-* use correct quadrant block characters for logo ([c07acbe](https://github.com/adrianmcphee/smarterbase/commit/c07acbe17fc1732af82e2e72a28a0b1f18ab3b80))
-
-## [4.0.2](https://github.com/adrianmcphee/smarterbase/compare/v4.0.1...v4.0.2) (2025-12-06)
-
-### Bug Fixes
-
-* update terminal logo to pixel art style ([c69871d](https://github.com/adrianmcphee/smarterbase/commit/c69871d338900211ac184ee45171fd6756c159b5))
-
-## [4.0.1](https://github.com/adrianmcphee/smarterbase/compare/v4.0.0...v4.0.1) (2025-12-06)
-
-### Bug Fixes
-
-* terminal animation comment/prompt line break and logo ([1388315](https://github.com/adrianmcphee/smarterbase/commit/13883158522c62f736a12c11c4afe7ee85a0f82d))
-
-### Documentation
-
-* add smarterbase.com to site URLs ([854c65d](https://github.com/adrianmcphee/smarterbase/commit/854c65df2bfde3a5fab50e75a5786eb1b6de537c))
-* reframe value prop around exploration and clean graduation ([1a6d308](https://github.com/adrianmcphee/smarterbase/commit/1a6d3081dcd4886923dadda2db28384aff2b8d2e))
-* update hero terminal to show schema editing workflow ([20316f5](https://github.com/adrianmcphee/smarterbase/commit/20316f508dbcc7f5eaeac4b1dc127c2b5063ed2a))
-
 # Changelog
 
 All notable changes to SmarterBase will be documented in this file.
 
-## [4.0.0] - 2025-12-06
+## [1.0.0] - 2025-12-07
 
-### Changed
-
-- **Remove old Redis+S3 library code** - SmarterBase is now purely a PostgreSQL wire protocol server
-- Clean up dependencies (removed ~50 packages, kept 4)
-- Simplified CI workflow (removed Redis/MinIO services)
-- Updated documentation (SECURITY.md, CONTRIBUTING.md, Makefile)
-
-### Removed
-
-- All root-level Go library files (store, backend, redis, s3, encryption, metrics, etc.)
-- `examples/` directory
-- `simple/` package
-- `DATASHEET.md`
-- `scripts/` directory
-
-## [3.6.0] - 2025-12-06
+Initial release of SmarterBase as a PostgreSQL wire protocol server.
 
 ### Features
 
-- Redesigned website with dark theme and animated terminals
-- Fixed height terminals with auto-scroll
+- **PostgreSQL wire protocol** - Connect with any PostgreSQL driver (psql, SQLAlchemy, ActiveRecord, Prisma, GORM, etc.)
+- **JSON file storage** - Schema as JSON, data as JSONL (one file per table)
+- **SQL support** - CREATE TABLE, CREATE INDEX, SELECT, INSERT, UPDATE, DELETE
+- **WHERE clauses** - =, <, >, IN, LIKE operators
+- **ORDER BY, LIMIT, OFFSET** - Full pagination support
+- **UUIDv7 primary keys** - Time-ordered, generated with `gen_random_uuid7()`
+- **Export to PostgreSQL** - `smarterbase export` generates clean DDL + INSERT statements
 
-## [3.5.0] - 2025-12-06
+### Philosophy
 
-### Features
+SmarterBase separates exploration from production:
 
-- Add animated terminal demos showing PostgreSQL driver usage
-- Multi-language examples (Python, Go, Ruby, Node.js)
+- During development: Schema is JSON files, AI assistants edit directly, no migrations accumulate
+- When ready: Export to PostgreSQL with a clean schema, not 100 exploratory migrations
 
-## [3.4.0] - 2025-12-06
+### Out of Scope (by design)
 
-### Features
+These features require database internals we intentionally don't build:
 
-- Implement JSONL storage format (one file per table, one JSON per line)
-
-## [3.3.0] - 2025-12-06
-
-### Features
-
-- Implement working SQL executor with JSONL storage
-
-## [3.0.0] - 2025-12-06
-
-### Breaking Changes
-
-Complete architecture pivot from Redis+S3 to PostgreSQL wire protocol.
-
-**New architecture:**
-- PostgreSQL wire protocol via jackc/pgproto3
-- SQL parsing via vitess/sqlparser
-- JSONL file storage with atomic writes
-- UUIDv7 primary keys (time-ordered)
-
-**Works with any PostgreSQL driver:**
-- Python: SQLAlchemy, Django
-- Ruby: ActiveRecord, Rails
-- Node.js: Prisma, Knex
-- Go: GORM, sqlx
-
-**Scope:**
-- Single-table CRUD (SELECT, INSERT, UPDATE, DELETE)
-- WHERE with =, <, >, IN, LIKE
-- ORDER BY, LIMIT, OFFSET
-- CREATE TABLE, CREATE INDEX
-- Export to PostgreSQL
-
-**Out of scope (use PostgreSQL):**
-- Transactions, JOINs, aggregations, subqueries, replication
+- Transactions (requires WAL)
+- JOINs (query each table, join in app)
+- Aggregations (COUNT/SUM in app code)
+- Subqueries
+- Replication
