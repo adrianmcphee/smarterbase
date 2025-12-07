@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/adrianmcphee/smarterbase/compare/v1.1.0...v1.2.0) (2025-12-07)
+
+### Features
+
+* add Django ORM and Laravel/Eloquent to driver terminal ([8805466](https://github.com/adrianmcphee/smarterbase/commit/8805466db21b4e43a68fef0e417dac087414994b))
+
 ## [1.1.0](https://github.com/adrianmcphee/smarterbase/compare/v1.0.1...v1.1.0) (2025-12-07)
 
 ### Features
