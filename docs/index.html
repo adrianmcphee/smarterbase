@@ -787,43 +787,52 @@
                 { type: 'wait', ms: 200 },
                 { type: 'line', text: '<span class="success glow">| SMARTERBASE |</span> <span class="output">Listening on :5433</span>' },
                 { type: 'line', text: '' },
-                { type: 'comment', text: '# Create a table with SQL' },
+                { type: 'comment', text: '# Iterate fast with AI - no migrations needed' },
                 { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: 'psql -h localhost -p 5433 -c "CREATE TABLE users (id TEXT PRIMARY KEY, name TEXT);"', speed: 25 },
+                { type: 'type', text: 'claude "create a users table"', speed: 30 },
                 { type: 'wait', ms: 150 },
-                { type: 'line', text: '<span class="output">CREATE TABLE</span>' },
+                { type: 'line', text: '<span class="success">✓ Edit data/_schema/users.json</span> <span class="comment">(id, name, email)</span>' },
                 { type: 'line', text: '' },
-                { type: 'comment', text: '# Ask Claude Code to add an email column' },
                 { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: 'claude "add an email column to users"', speed: 30 },
-                { type: 'wait', ms: 200 },
-                { type: 'line', text: '<span class="claude-logo">&#9623; &#9623;   &#9622; &#9622;</span>  <span class="claude-logo">Claude Code</span>' },
-                { type: 'line', text: '           <span class="claude-logo">Opus 4.5 · Claude Max</span>' },
-                { type: 'line', text: '<span class="claude-logo">  &#9624;&#9624; &#9629;&#9629;</span>    <span class="claude-logo">~/myproject</span>' },
-                { type: 'wait', ms: 200 },
-                { type: 'line', text: '<span class="output">I\'ll add an email column to the users table.</span>' },
+                { type: 'type', text: 'claude "add a role column"', speed: 35 },
+                { type: 'wait', ms: 100 },
+                { type: 'line', text: '<span class="success">✓ Edit data/_schema/users.json</span> <span class="comment">(+role)</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'claude "actually rename that to user_type"', speed: 30 },
+                { type: 'wait', ms: 100 },
+                { type: 'line', text: '<span class="success">✓ Edit data/_schema/users.json</span> <span class="comment">(role→user_type)</span>' },
+                { type: 'line', text: '' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'claude "hmm remove it, just use email"', speed: 30 },
+                { type: 'wait', ms: 100 },
+                { type: 'line', text: '<span class="success">✓ Edit data/_schema/users.json</span> <span class="comment">(-user_type)</span>' },
+                { type: 'line', text: '' },
+                { type: 'comment', text: '# Made a mistake? Just revert.' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'git checkout data/_schema/users.json', speed: 25 },
+                { type: 'wait', ms: 100 },
+                { type: 'line', text: '<span class="output">Updated 1 path from the index</span>' },
+                { type: 'line', text: '' },
+                { type: 'comment', text: '# SQL queries work - same PostgreSQL dialect' },
+                { type: 'prompt', text: '~/myproject $ ' },
+                { type: 'type', text: 'psql -p 5433 -c "SELECT * FROM users;"', speed: 30 },
                 { type: 'wait', ms: 150 },
-                { type: 'line', text: '<span class="success">✓ Edit data/_schema/users.json</span>' },
+                { type: 'line', text: '<span class="output"> id  |  name  |       email       | role</span>' },
+                { type: 'line', text: '<span class="output">-----+--------+-------------------+-------</span>' },
+                { type: 'line', text: '<span class="success"> u1  | Alice  | alice@example.com | admin</span>' },
+                { type: 'line', text: '<span class="output">(1 row)</span>' },
                 { type: 'line', text: '' },
-                { type: 'comment', text: '# Ask Claude to create test data' },
+                { type: 'comment', text: '# Ready for production? Export clean schema.' },
                 { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: 'claude "add 2 test users with emails"', speed: 30 },
-                { type: 'wait', ms: 200 },
-                { type: 'line', text: '<span class="output">Adding test records to users table...</span>' },
+                { type: 'type', text: 'smarterbase export --ddl-only', speed: 30 },
                 { type: 'wait', ms: 150 },
-                { type: 'line', text: '<span class="success">✓ Edit data/users.jsonl</span>' },
+                { type: 'line', text: '<span class="info">CREATE TABLE users (</span>' },
+                { type: 'line', text: '<span class="info">  id UUID PRIMARY KEY,</span>' },
+                { type: 'line', text: '<span class="info">  name TEXT, email TEXT, role TEXT</span>' },
+                { type: 'line', text: '<span class="info">);</span>' },
                 { type: 'line', text: '' },
-                { type: 'comment', text: '# Query with SQL - it just works!' },
-                { type: 'prompt', text: '~/myproject $ ' },
-                { type: 'type', text: 'psql -h localhost -p 5433 -c "SELECT * FROM users;"', speed: 25 },
-                { type: 'wait', ms: 200 },
-                { type: 'line', text: '<span class="output"> id  |  name  |       email</span>' },
-                { type: 'line', text: '<span class="output">-----+--------+---------------------</span>' },
-                { type: 'line', text: '<span class="success"> u1  | Alice  | alice@example.com</span>' },
-                { type: 'line', text: '<span class="success"> u2  | Bob    | bob@example.com</span>' },
-                { type: 'line', text: '<span class="output">(2 rows)</span>' },
-                { type: 'line', text: '' },
-                { type: 'comment', text: '# No migrations. AI edits JSON. SQL queries work.' },
+                { type: 'comment', text: '# One clean CREATE TABLE. Not 47 ALTER TABLEs.' },
                 { type: 'prompt', text: '~/myproject $ ' },
             ];
 
@@ -1173,47 +1182,76 @@
                 currentLine = document.createElement('div');
                 container.appendChild(currentLine);
 
-                // Show migration chaos building up
+                // Show rapid AI iteration with timestamps
                 const line1 = document.createElement('div');
-                line1.innerHTML = '<span class="code-syntax-orange">AI-ASSISTED DEV</span> <span class="comment"># 1 week of exploration</span>';
+                line1.innerHTML = '<span class="code-syntax-orange">MONDAY 9:14 AM</span> <span class="comment"># exploring with Cursor</span>';
                 container.appendChild(line1);
-                container.appendChild(document.createElement('div'));
                 scrollToBottom();
+                await sleep(300);
+
+                // Show migrations with timestamps showing speed
+                const rapidMigrations = [
+                    { time: '9:14', name: fw.migrations[0] },
+                    { time: '9:15', name: fw.migrations[1] },
+                    { time: '9:17', name: fw.migrations[2] },
+                    { time: '9:17', name: fw.migrations[3] },
+                    { time: '9:18', name: fw.migrations[4] },
+                    { time: '9:22', name: fw.migrations[5] },
+                    { time: '9:23', name: fw.migrations[6] },
+                    { time: '9:23', name: fw.migrations[7] },
+                ];
+                for (const m of rapidMigrations) {
+                    const migLine = document.createElement('div');
+                    migLine.innerHTML = `<span class="prompt">${m.time}</span> <span class="output">✓ ${m.name}${fw.ext}</span>`;
+                    container.appendChild(migLine);
+                    scrollToBottom();
+                    await sleep(60);
+                }
+
                 await sleep(400);
 
-                // Show migrations scrolling by fast
-                for (let i = 0; i < Math.min(12, fw.migrations.length); i++) {
+                // Afternoon session
+                const afternoon = document.createElement('div');
+                afternoon.innerHTML = '<span class="code-syntax-orange">MONDAY 2:41 PM</span> <span class="comment"># "let me try a different approach"</span>';
+                container.appendChild(afternoon);
+                scrollToBottom();
+                await sleep(200);
+
+                for (let i = 8; i < 16; i++) {
                     const migLine = document.createElement('div');
                     migLine.innerHTML = `<span class="output">✓ ${fw.migrations[i]}${fw.ext}</span>`;
                     container.appendChild(migLine);
                     scrollToBottom();
-                    await sleep(80);
+                    await sleep(50);
                 }
 
-                // Show ellipsis
-                const ellipsis = document.createElement('div');
-                ellipsis.innerHTML = '<span class="output">...</span>';
-                container.appendChild(ellipsis);
+                const dots = document.createElement('div');
+                dots.innerHTML = '<span class="output">... 84 more migrations ...</span>';
+                container.appendChild(dots);
                 scrollToBottom();
-                await sleep(300);
+                await sleep(400);
 
-                // Show more migrations fast
+                // Friday
+                const friday = document.createElement('div');
+                friday.innerHTML = '<span class="code-syntax-orange">FRIDAY 4:30 PM</span> <span class="comment"># "finally done"</span>';
+                container.appendChild(friday);
+                scrollToBottom();
+
                 for (let i = fw.migrations.length - 4; i < fw.migrations.length; i++) {
                     const migLine = document.createElement('div');
                     migLine.innerHTML = `<span class="output">✓ ${fw.migrations[i]}${fw.ext}</span>`;
                     container.appendChild(migLine);
                     scrollToBottom();
-                    await sleep(80);
+                    await sleep(60);
                 }
 
-                await sleep(600);
+                await sleep(800);
 
-                // Show the count
+                // Show the result
                 container.innerHTML = '';
                 const countHeader = document.createElement('div');
-                countHeader.innerHTML = '<span class="code-syntax-orange">THE RESULT</span>';
+                countHeader.innerHTML = '<span class="code-syntax-orange">THE DAMAGE</span>';
                 container.appendChild(countHeader);
-                container.appendChild(document.createElement('div'));
                 scrollToBottom();
 
                 currentLine = document.createElement('div');
@@ -1225,22 +1263,21 @@
                 await typeText(fw.countCmd, 25);
 
                 const countLine = document.createElement('div');
-                countLine.innerHTML = '<span class="code-syntax-orange" style="font-size: 1.2em; font-weight: bold;">100</span>';
+                countLine.innerHTML = '<span class="code-syntax-orange" style="font-size: 1.3em; font-weight: bold;">100</span> <span class="comment">migrations</span>';
                 container.appendChild(countLine);
-                container.appendChild(document.createElement('div'));
                 scrollToBottom();
 
-                const commentLine = document.createElement('div');
-                commentLine.innerHTML = '<span class="comment"># 100 migrations for a 5-column table</span>';
-                container.appendChild(commentLine);
+                const tableComment = document.createElement('div');
+                tableComment.innerHTML = '<span class="comment"># for a table with 5 columns</span>';
+                container.appendChild(tableComment);
                 scrollToBottom();
 
-                await sleep(1500);
+                await sleep(1200);
 
-                // Show new dev perspective
+                // New dev perspective with more frustration
                 container.innerHTML = '';
                 const newDevHeader = document.createElement('div');
-                newDevHeader.innerHTML = '<span class="code-syntax-orange">NEW DEV JOINS</span> <span class="comment"># 3 months later</span>';
+                newDevHeader.innerHTML = '<span class="code-syntax-orange">3 MONTHS LATER</span> <span class="comment"># new hire onboarding</span>';
                 container.appendChild(newDevHeader);
                 container.appendChild(document.createElement('div'));
                 scrollToBottom();
@@ -1257,65 +1294,74 @@
                 runningLine.innerHTML = '<span class="output">Running 100 migrations...</span>';
                 container.appendChild(runningLine);
                 scrollToBottom();
-                await sleep(300);
+                await sleep(250);
 
-                // Show confusing migrations
+                // Show confusing sequence with dev reactions
                 const confusing = [
-                    '002 ADD role',
-                    '003 RENAME role → user_type',
-                    '004 DROP user_type',
-                    '005 ADD role <span class="comment"># wait what?</span>',
-                    '016 ADD avatar',
-                    '017 DROP avatar',
-                    '018 ADD photo_url',
-                    '019 RENAME photo_url → avatar <span class="comment"># ???</span>',
-                    '...',
+                    { text: '002 ADD COLUMN role', comment: '' },
+                    { text: '003 RENAME role → user_type', comment: '' },
+                    { text: '004 DROP COLUMN user_type', comment: '' },
+                    { text: '005 ADD COLUMN role', comment: '<span class="code-syntax-orange"># again??</span>' },
+                    { text: '...', comment: '' },
+                    { text: '020 CREATE TABLE profiles', comment: '' },
+                    { text: '021 MOVE avatar TO profiles', comment: '' },
+                    { text: '022 DROP TABLE profiles', comment: '<span class="code-syntax-orange"># wait why</span>' },
+                    { text: '023 ADD COLUMN avatar', comment: '<span class="code-syntax-orange"># back here?!</span>' },
                 ];
                 for (const m of confusing) {
                     const mLine = document.createElement('div');
-                    mLine.innerHTML = `<span class="output">${m}</span>`;
+                    mLine.innerHTML = `<span class="output">${m.text}</span> ${m.comment}`;
                     container.appendChild(mLine);
                     scrollToBottom();
-                    await sleep(150);
+                    await sleep(120);
                 }
 
                 const wtf = document.createElement('div');
-                wtf.innerHTML = '<span class="comment"># "Why did they add and remove avatar 4 times?"</span>';
+                wtf.innerHTML = '';
                 container.appendChild(wtf);
                 scrollToBottom();
 
-                await sleep(2000);
+                const devThought = document.createElement('div');
+                devThought.innerHTML = '<span class="comment"># "I need to understand 100 migrations to change one column"</span>';
+                container.appendChild(devThought);
+                scrollToBottom();
 
-                // Show SmarterBase comparison
+                await sleep(1800);
+
+                // SmarterBase comparison - more impactful
                 container.innerHTML = '';
                 const sbHeader = document.createElement('div');
-                sbHeader.innerHTML = '<span class="success" style="font-size: 1.1em;">SMARTERBASE</span> <span class="comment"># same exploration</span>';
+                sbHeader.innerHTML = '<span class="success" style="font-size: 1.2em; font-weight: bold;">WITH SMARTERBASE</span>';
                 container.appendChild(sbHeader);
                 container.appendChild(document.createElement('div'));
                 scrollToBottom();
 
+                await sleep(250);
+
+                const sameWork = document.createElement('div');
+                sameWork.innerHTML = '<span class="output">Same week of exploration. Same schema changes.</span>';
+                container.appendChild(sameWork);
+                container.appendChild(document.createElement('div'));
+                scrollToBottom();
                 await sleep(300);
 
                 const finalSchema = document.createElement('div');
-                finalSchema.innerHTML = '<span class="info">Final schema:</span> <span class="code-syntax-green">users (id, email, role, status, avatar)</span>';
+                finalSchema.innerHTML = '<span class="info">Current schema:</span> <span class="code-syntax-green">users (id, email, role, status, avatar)</span>';
                 container.appendChild(finalSchema);
                 scrollToBottom();
 
                 const migHistory = document.createElement('div');
-                migHistory.innerHTML = '<span class="info">Migration files:</span> <span class="code-syntax-green">0</span>';
+                migHistory.innerHTML = '<span class="info">Migration debt:</span> <span class="success" style="font-size: 1.2em; font-weight: bold;">0</span>';
                 container.appendChild(migHistory);
                 container.appendChild(document.createElement('div'));
                 scrollToBottom();
 
                 const export1 = document.createElement('div');
-                export1.innerHTML = '<span class="comment"># Export one clean CREATE TABLE to PostgreSQL</span>';
+                export1.innerHTML = '<span class="comment"># When stable, export one clean CREATE TABLE to PostgreSQL</span>';
                 container.appendChild(export1);
-                const export2 = document.createElement('div');
-                export2.innerHTML = '<span class="comment"># Not 100 ALTER TABLEs from your exploration</span>';
-                container.appendChild(export2);
                 scrollToBottom();
 
-                await sleep(3000);
+                await sleep(3500);
             }
 
             async function runDriverTerminal() {
