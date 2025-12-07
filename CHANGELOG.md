@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/adrianmcphee/smarterbase/compare/v1.0.0...v1.0.1) (2025-12-07)
+
+### Bug Fixes
+
+* update version string and error handling for v1.0.0 ([e5d0c1c](https://github.com/adrianmcphee/smarterbase/commit/e5d0c1c0ec451336626a72d63a9ad7c667f1e349))
+
 # Changelog
 
 All notable changes to SmarterBase will be documented in this file.
