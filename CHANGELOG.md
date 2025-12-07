@@ -1,3 +1,13 @@
+## [4.1.1](https://github.com/adrianmcphee/smarterbase/compare/v4.1.0...v4.1.1) (2025-12-07)
+
+### Documentation
+
+* fix install command and remove unimplemented features ([9eeeac2](https://github.com/adrianmcphee/smarterbase/commit/9eeeac2831a18dbfcd14392e149f0e65b161a4ed))
+
+### Code Refactoring
+
+* simplify module path to v1 ([a0b4259](https://github.com/adrianmcphee/smarterbase/commit/a0b4259fa107a41c60df596899ac6bbc4a1e2fc9))
+
 ## [4.1.0](https://github.com/adrianmcphee/smarterbase/compare/v4.0.5...v4.1.0) (2025-12-07)
 
 ### Features
