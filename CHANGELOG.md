@@ -1,3 +1,16 @@
+## [4.1.0](https://github.com/adrianmcphee/smarterbase/compare/v4.0.5...v4.1.0) (2025-12-07)
+
+### Features
+
+* add export command for PostgreSQL migration ([ae81e28](https://github.com/adrianmcphee/smarterbase/commit/ae81e28627b4d5b17f018f598f6cda9cab80b15c))
+
+### Documentation
+
+* add new dev perspective to migration debt story ([358f8ab](https://github.com/adrianmcphee/smarterbase/commit/358f8ab66691a6e6cc74d843bef4c040608c81bf))
+* improve driver terminal with old vs new contrast ([42a7a7e](https://github.com/adrianmcphee/smarterbase/commit/42a7a7ec3bd1d4bfaba484ee588dd50003aef1d4))
+* show AI-accelerated migration debt in terminal ([fa2eee1](https://github.com/adrianmcphee/smarterbase/commit/fa2eee1df877d36de692014b389830972db8a379))
+* show migration debt vs clean schema in terminal ([d654f0d](https://github.com/adrianmcphee/smarterbase/commit/d654f0d4d1e3e08c57e81d8d6be39f908c8311e2))
+
 ## [4.0.5](https://github.com/adrianmcphee/smarterbase/compare/v4.0.4...v4.0.5) (2025-12-06)
 
 ### Bug Fixes
