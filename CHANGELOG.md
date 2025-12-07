@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/adrianmcphee/smarterbase/compare/v1.0.1...v1.1.0) (2025-12-07)
+
+### Features
+
+* cycle languages in driver terminal with 100 chaotic migrations ([a2c1922](https://github.com/adrianmcphee/smarterbase/commit/a2c19220e997f29d94564f42eb503cfeea1c36b5))
+
 ## [1.0.1](https://github.com/adrianmcphee/smarterbase/compare/v1.0.0...v1.0.1) (2025-12-07)
 
 ### Bug Fixes
