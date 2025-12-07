@@ -82,7 +82,7 @@ Creates `data/_schema/users.json`:
 
 ```bash
 # Install
-go install github.com/adrianmcphee/smarterbase/v2/cmd/smarterbase@latest
+go install github.com/adrianmcphee/smarterbase/cmd/smarterbase@latest
 
 # Start the server
 smarterbase --port 5433 --data ./data

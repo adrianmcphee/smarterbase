@@ -10,9 +10,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/adrianmcphee/smarterbase/v2/internal/export"
-	"github.com/adrianmcphee/smarterbase/v2/internal/protocol"
-	"github.com/adrianmcphee/smarterbase/v2/internal/storage"
+	"github.com/adrianmcphee/smarterbase/internal/export"
+	"github.com/adrianmcphee/smarterbase/internal/protocol"
+	"github.com/adrianmcphee/smarterbase/internal/storage"
 )
 
 func main() {

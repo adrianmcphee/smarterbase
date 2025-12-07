@@ -8,8 +8,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/adrianmcphee/smarterbase/v2/internal/executor"
-	"github.com/adrianmcphee/smarterbase/v2/internal/storage"
+	"github.com/adrianmcphee/smarterbase/internal/executor"
+	"github.com/adrianmcphee/smarterbase/internal/storage"
 	"github.com/jackc/pgproto3/v2"
 )
 

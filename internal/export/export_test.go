@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/adrianmcphee/smarterbase/v2/internal/storage"
+	"github.com/adrianmcphee/smarterbase/internal/storage"
 )
 
 func setupTestStore(t *testing.T) (*storage.Store, string) {

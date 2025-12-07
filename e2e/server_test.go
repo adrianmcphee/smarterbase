@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/adrianmcphee/smarterbase/v2/internal/protocol"
+	"github.com/adrianmcphee/smarterbase/internal/protocol"
 	"github.com/jackc/pgx/v5"
 )
 

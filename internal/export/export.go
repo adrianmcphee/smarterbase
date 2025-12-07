@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/adrianmcphee/smarterbase/v2/internal/storage"
+	"github.com/adrianmcphee/smarterbase/internal/storage"
 )
 
 // ExportDDL generates PostgreSQL CREATE TABLE statements from all schemas

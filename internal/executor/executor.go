@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/adrianmcphee/smarterbase/v2/internal/storage"
+	"github.com/adrianmcphee/smarterbase/internal/storage"
 	"github.com/xwb1989/sqlparser"
 )
 
